@@ -67,5 +67,6 @@ cp .env.example .env                                      # COPA_API_KEY 입력
 uv run --group wikigen python -m tools.wikigen plan       # 문서 계획 (manifest.yaml)
 uv run --group wikigen python -m tools.wikigen write      # 본문 생성. 이미 쓴 문서는 건너뛴다
 uv run python -m tools.wikigen lint                       # 점검
+docker compose up -d postgres                             # 검색 DB (pgvector)
 uv run wiki-rag-index --wiki-dir data/wiki --reset        # 색인
 ```

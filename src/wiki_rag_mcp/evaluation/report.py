@@ -49,17 +49,3 @@ def paired(base: list[dict[str, Any]], candidate: list[dict[str, Any]], metric: 
     ids = sorted(a)
     return compare([a[i] for i in ids], [b[i] for i in ids])
 
-
-def lexical_overlap(golden: list[dict[str, Any]], analyze, bodies: dict[str, str]) -> list[float]:
-    """질문의 형태소 가운데 정답 문서에도 있는 비율 (ADR-14). 높을수록 키워드 검색에 유리한 골든셋이다.
-
-    analyze는 문자열을 형태소 집합으로 바꾸는 함수(nori)다. 정답 문서가 여럿이면 가장 많이 겹치는 문서로 잰다.
-    """
-    out = []
-    for q in golden:
-        if not q["relevant"]:
-            continue
-        terms = analyze(q["question"])
-        if terms:
-            out.append(max(len(terms & analyze(bodies[d])) / len(terms) for d in q["relevant"]))
-    return out

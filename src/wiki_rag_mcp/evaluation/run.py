@@ -1,4 +1,7 @@
-"""판정 실험 실행 (7장 실험 기록 표). 구성과 측정 방법은 첫 실험 전에 이 파일로 고정한다.
+"""판정 실험 실행 (7장 실험 기록 표). 구성과 측정 방법은 실험 전에 이 파일로 고정한다.
+
+M2 판정(하이브리드, 상용 임베딩 비교 포함)의 코드는 태그 m2-judgement에 있다. 판정 뒤에는 서버가 쓰는
+pgvector 구성만 남겼다.
 
 - 모든 구성은 권한 pre-filter를 켠 채 문항의 질문자로 검색한다 (ADR-20).
 - 질문 임베딩과 리랭커는 CPU에서 돌린다. 배포 서버에 GPU가 없고, ADR-20이 장비 사양(CPU, 메모리)을 적게 한다.
@@ -27,37 +30,25 @@ RERANK_PASSES = 3
 @dataclass(frozen=True)
 class Index:
     alias: str
-    embedder: str  # "bge-m3" 또는 "gemini"
     with_header: bool
 
 
 INDEXES = {
-    "main": Index("wiki-chunks", "bge-m3", True),  # 서버가 쓰는 인덱스
-    "noheader": Index("wiki-eval-noheader", "bge-m3", False),
-    "gemini": Index("wiki-eval-gemini", "gemini", True),
+    "main": Index("wiki-chunks", True),  # 서버가 쓰는 인덱스
+    "noheader": Index("wiki-eval-noheader", False),
 }
 
 
 @dataclass(frozen=True)
 class Config:
     index: str
-    mode: str  # "vector" 또는 "hybrid"
     rerank: bool = False
-    backend: str = "opensearch"  # "opensearch" 또는 "postgres"
 
 
-# 7장 실험 기록 표의 행. 리랭커와 상용 임베딩 행은 앞 판정 결과에 따라 vector 또는 hybrid 쪽을 쓴다
 CONFIGS = {
-    "baseline": Config("main", "vector"),
-    "no-header": Config("noheader", "vector"),
-    "hybrid": Config("main", "hybrid"),
-    "no-header-hybrid": Config("noheader", "hybrid"),
-    "vector-rerank": Config("main", "vector", rerank=True),
-    "hybrid-rerank": Config("main", "hybrid", rerank=True),
-    "gemini-vector": Config("gemini", "vector"),
-    "gemini-hybrid": Config("gemini", "hybrid"),
-    # ADR-02 "단순화할 때": pgvector로 옮긴 뒤 같은 골든셋으로 다시 재서 OpenSearch 벡터 검색(baseline)과 비교한다
-    "pg-vector": Config("main", "vector", backend="postgres"),
+    "baseline": Config("main"),
+    "no-header": Config("noheader"),
+    "vector-rerank": Config("main", rerank=True),
 }
 
 
@@ -99,10 +90,7 @@ class Runner:
         vector = self.embedder.encode_query(question)
         embedded = time.perf_counter()
         depth = CANDIDATES if self.config.rerank else TOP
-        if self.config.mode == "hybrid":
-            hits = self.store.hybrid_search(vector, question, principals, depth)
-        else:
-            hits = self.store.knn_search(vector, principals, depth)
+        hits = self.store.knn_search(vector, principals, depth)
         searched = time.perf_counter()
         if self.reranker is not None:
             hits = self.reranker.rerank(question, hits)

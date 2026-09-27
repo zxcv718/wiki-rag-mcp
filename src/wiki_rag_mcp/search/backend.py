@@ -1,4 +1,4 @@
-"""설정에 따라 검색 저장소를 연다. 서버, 색인, 평가가 모두 이 함수로 저장소를 얻는다."""
+"""검색 저장소를 연다. 서버, 색인, 평가가 모두 이 함수로 저장소를 얻는다 (ADR-22)."""
 
 from datetime import datetime
 from typing import Any, Protocol
@@ -11,7 +11,7 @@ class SearchStore(Protocol):
 
     alias: str
 
-    def ensure_index(self, version: int = 1, dim: int = EMBEDDING_DIM) -> str: ...
+    def ensure_index(self, dim: int = EMBEDDING_DIM) -> str: ...
 
     def drop(self) -> None: ...
 
@@ -29,14 +29,9 @@ class SearchStore(Protocol):
 
 
 def open_store(settings: Settings, alias: str | None = None) -> SearchStore:
-    """SEARCH_BACKEND가 postgres면 PostgreSQL + pgvector, opensearch면 OpenSearch 저장소를 연다."""
-    alias = alias or settings.index_alias
-    if settings.search_backend == "postgres":
-        from wiki_rag_mcp.search.pg_store import PgStore
+    """PostgreSQL + pgvector 저장소를 연다. alias는 테이블 이름이다(하이픈은 밑줄로 바뀐다)."""
+    from dataclasses import replace
 
-        return PgStore.from_settings(Settings(**{**settings.__dict__, "index_alias": alias}))
-    if settings.search_backend == "opensearch":
-        from wiki_rag_mcp.search.store import OpenSearchStore
+    from wiki_rag_mcp.search.pg_store import PgStore
 
-        return OpenSearchStore(OpenSearchStore.from_settings(settings).client, alias)
-    raise ValueError(f"알 수 없는 검색 저장소: {settings.search_backend!r}")
+    return PgStore.from_settings(replace(settings, index_alias=alias or settings.index_alias))

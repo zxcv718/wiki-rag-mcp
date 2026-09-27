@@ -29,7 +29,7 @@ _TABLE = re.compile(r"^[a-z][a-z0-9_]{0,62}$")
 _COLUMNS = ["chunk_id", "doc_id", "chunk_index", "space", "title", "section_path", "text", "url", "version",
             "revision", "updated_at", "section_hash", "space_principals", "restricted_principals", "classification",
             "embedding_model", "embedding_revision", "embedding_dtype"]
-# HNSW 매개변수는 OpenSearch 매핑과 같게 둔다. 옮긴 뒤 같은 골든셋으로 다시 재서 비교하기 위해서다 (ADR-02)
+# HNSW 매개변수는 M2 판정 때의 OpenSearch 매핑과 같은 값이다. 옮긴 뒤 같은 골든셋으로 비교했다 (ADR-22)
 HNSW_M, HNSW_EF_CONSTRUCTION = 16, 128
 EF_SEARCH_MIN = 40  # pgvector 기본값. k가 더 크면 k로 올린다
 
@@ -58,8 +58,8 @@ class PgStore:
     def _t(self) -> sql.Identifier:
         return sql.Identifier(self.table)
 
-    def ensure_index(self, version: int = 1, dim: int = EMBEDDING_DIM) -> str:
-        """테이블과 인덱스를 만든다. version은 OpenSearch 인덱스와 인터페이스를 맞추려고 받지만 쓰지 않는다."""
+    def ensure_index(self, dim: int = EMBEDDING_DIM) -> str:
+        """테이블과 인덱스를 만든다. 이미 있으면 그대로 둔다."""
         t = self._t()
         with self._lock:
             self.conn.execute(sql.SQL("""

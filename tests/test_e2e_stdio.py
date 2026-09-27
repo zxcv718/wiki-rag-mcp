@@ -32,7 +32,6 @@ def alias():
 
 def call(alias: str, user: str | None, tool: str, args: dict, tier: str = "external"):
     env = {**os.environ, "WIKI_DIR": str(FIXTURE), "WIKI_INDEX_ALIAS": alias, "WIKI_CLIENT_TIER": tier,
-           "SEARCH_BACKEND": "postgres",
            "TOKENIZERS_PARALLELISM": "false"}
     env.pop("WIKI_USER", None)
     if user:

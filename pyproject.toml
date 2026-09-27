@@ -6,7 +6,6 @@ requires-python = ">=3.12"
 dependencies = [
     "mcp>=2.2.0",
     "numpy>=2.5.3",
-    "opensearch-py>=3.2.0",
     "pgvector>=0.4",
     "psycopg[binary]>=3.2",
     "pyyaml>=6.0.3",
@@ -44,7 +43,7 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]  # tools/wikigen 테스트용
-markers = ["integration: 로컬 OpenSearch(docker compose)가 떠 있어야 하는 테스트"]
+markers = ["integration: 로컬 PostgreSQL(docker compose up -d postgres)이 떠 있어야 하는 테스트"]
 
 [tool.pyright]
 venvPath = "."
