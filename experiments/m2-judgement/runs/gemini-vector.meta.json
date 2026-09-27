@@ -1,0 +1,28 @@
+{
+ "config": "gemini-vector",
+ "index": {
+  "alias": "wiki-eval-gemini",
+  "embedder": "gemini",
+  "with_header": true
+ },
+ "mode": "vector",
+ "rerank": false,
+ "backend": "opensearch",
+ "store": "OpenSearchStore",
+ "embedder": "gemini-embedding-001",
+ "embedder_revision": "api-v1beta",
+ "reranker": null,
+ "reranker_revision": null,
+ "device": "api",
+ "passes": 1,
+ "warmup": 10,
+ "questions": 300,
+ "git": "36c7c261cfc77e24eb51bce9ea8ea48de83d0835",
+ "machine": {
+  "cpu": "Apple M1 Pro",
+  "cores": "10",
+  "memory_gb": 16,
+  "os": "macOS-27.0-arm64-arm-64bit"
+ },
+ "at": "2026-09-27T13:08:27+00:00"
+}
