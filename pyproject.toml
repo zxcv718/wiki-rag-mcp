@@ -15,6 +15,7 @@ dependencies = [
 [project.scripts]
 wiki-rag-mcp = "wiki_rag_mcp.server.app:main"
 wiki-rag-index = "wiki_rag_mcp.indexing.cli:main"
+wiki-rag-eval = "wiki_rag_mcp.evaluation.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]
