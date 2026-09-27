@@ -1,0 +1,6 @@
+{
+  "recall@5": 0.9704,
+  "mrr@10": 0.9099,
+  "ndcg@10": 0.9244,
+  "note": "M2 판정 뒤 서버 구성(pgvector 벡터 검색, 맥락 헤더, 리랭커 없음)의 실행 결과 experiments/m2-judgement/runs/pg-vector.jsonl을 evaluation.report.summary로 계산해 소수 넷째 자리로 반올림한 값이다. 정답이 있는 270문항 기준이다. CI 회귀 검사(wiki-rag-eval regress)는 Recall@5가 이 값보다 2%p 이상 떨어지면 실패한다(7장 CI 회귀 테스트). MRR@10과 nDCG@10은 기록만 하고 판정에 쓰지 않는다."
+}
