@@ -9,26 +9,17 @@
 
 ## 현재 단계
 
-**M1 (2주)**: Python MCP 서버 + 벡터 검색, stdio 연동, 가상 위키 200문서
+**M1 완료**: Python MCP 서버(도구 3개와 문서 리소스), stdio 연동, 가상 위키 200문서(`data/wiki`), 권한·등급 테스트셋.
 
-- 권한 필드(`space_principals`, `restricted_principals`)와 등급 필드(`classification`)는 M1부터 인덱스 스키마에 포함합니다. 나중에 전체 재색인을 하지 않기 위해서입니다.
-- 청크에 임베딩 모델 이름, 버전, 불러온 형식(float32)을 기록합니다 (ADR-11).
-- k-NN 권한 필터는 knn 절 안의 `filter`에 두고, 엔진은 lucene 또는 faiss로 인덱스 매핑에 명시합니다 (4장 "벡터 검색의 필터 적용 방식"). knn 쿼리를 `bool`로 감싼 filter 절이나 `post_filter`에 두면 post-filter가 됩니다. knn 절 안의 `filter`에 `bool`로 두 권한 조건을 묶는 것은 괜찮습니다.
-- 가상 위키는 생성 스키마·생성 기록과 함께 만듭니다 (7장 "평가용 데이터"). 골든셋 300문항의 유형 비율(ADR-20)을 채울 만큼 약어, 개정 전후 문서, 제한 문서를 심습니다.
-- 검색 저장소(OpenSearch)를 다루는 코드는 한 모듈에 모읍니다. M2 판정에서 ADR-02가 보류나 기각으로 나오면 PostgreSQL + pgvector로 옮기기 때문입니다 (ADR-02 "단순화할 때", ADR-20).
+**M2 (2주)**: 골든셋 300문항, 평가 스크립트, ADR-02·11·12·13 판정 실험
 
-M1 진행 순서 (문서 10개로 끝까지 먼저 돌린 뒤 200문서로 넓힙니다):
+- 골든셋은 `data/golden/`, 태그 `golden-v1`로 고정했습니다. 판정 계획과 결과는 `experiments/m2-judgement/README.md`에 있고, 평가는 `wiki-rag-eval`로 돌립니다.
+- 판정 결과: 맥락 헤더 유지, 하이브리드 보류로 검색 저장소를 PostgreSQL + pgvector로 단순화(ADR-22), 리랭커는 지연 예산 초과로 도입하지 않음. 상용 임베딩 비교(ADR-11, gemini-embedding-001)는 무료 등급 하루 한도 때문에 이어서 잽니다.
+- 검색 저장소는 PostgreSQL + pgvector입니다(`search/pg_store.py`, `SEARCH_BACKEND=postgres` 기본). 로컬 DB는 `docker compose up -d postgres`로 띄우고 127.0.0.1:5433에 엽니다. OpenSearch 코드와 컨테이너는 상용 임베딩 비교가 끝나면 지웁니다(pgvector HNSW가 2,000차원까지만 지원해, 3,072차원 비교는 기준선과 같은 OpenSearch에서 합니다).
+- 권한 필터는 두 필드를 배열 겹침(`&&`)으로 WHERE 절에 겁니다. HNSW가 필터를 스캔 뒤에 적용하므로 검색마다 `hnsw.iterative_scan = strict_order`를 켜고, 결과 수 테스트로 k개가 나오는지 확인합니다(4장 "벡터 검색의 필터 적용 방식").
+- 판정 뒤 새로 드러난 과제(최근 문서 우선, 경량 리랭커)는 판정 기준을 먼저 적은 뒤 별도 실험으로 다룹니다. 결과를 본 뒤 바로 설정을 바꾸지 않습니다.
 
-0. 뼈대: uv 프로젝트, ruff·pytest, docker compose(OpenSearch + analysis-nori 플러그인)
-1. 인덱스 매핑(엔진 lucene)과 권한 필터 함수, 단위 테스트
-2. 청크 분할기(섹션 기준, 표·코드 보존, 맥락 헤더, 섹션 해시), 단위 테스트
-3. 임베딩(bge-m3)과 색인
-4. `search_wiki`를 stdio MCP 서버로 붙여 Claude Code에서 호출 (1주차 목표)
-5. 가상 위키 200문서: 생성 스키마, `tools/wikigen/` 스크립트로 LLM API 생성, 생성 기록, 점검. 도메인은 일반 IT 회사
-6. `get_document`, `list_recent_changes`, `wiki://doc/{doc_id}` 리소스, 등급 정책, 응답 상한과 표시
-7. 200문서 전체 색인, 4장 권한·등급·결과 수 테스트
-
-M1 구현 원칙:
+구현 원칙:
 
 - 위키 접근은 `WikiSource` 인터페이스로 감쌉니다. M1은 `data/wiki/`의 파일을 읽고, M3에서 Spring 위키 API로 바꿔 끼웁니다.
 - M1은 OAuth 없이 stdio로만 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 가상 위키 조직도에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다.
@@ -54,7 +45,7 @@ M1 구현 원칙:
 - **색인·반환 대상은 위키 원문 문서의 청크입니다** (ADR-18). 여러 문서를 LLM이 종합한 페이지는 권한을 표현할 수 없습니다.
 - 인덱싱 이벤트는 신호로만 쓰고 문서 상태는 위키에서 다시 읽습니다. 순서는 내용·권한·등급·삭제마다 오르는 문서 `revision`으로 판단하며, 응답의 `version`(내용 버전)과 다릅니다 (ADR-19).
 - 그룹 멤버십은 인덱스에 넣지 않고, 검색할 때 해석합니다 (ADR-08). 그룹 목록을 읽지 못하면 사용자 id만으로 검색하지 않고 오류를 돌려줍니다.
-- 문서 권한은 `space_principals`(스페이스 보기 권한)와 `restricted_principals`(문서 제한) 두 필드이고, 둘 다 만족해야 보입니다. 검색 필터는 두 조건을 AND로 묶어 knn 절 안에 둡니다 (ADR-21).
+- 문서 권한은 `space_principals`(스페이스 보기 권한)와 `restricted_principals`(문서 제한) 두 필드이고, 둘 다 만족해야 보입니다. 검색 필터는 두 조건을 AND로 묶어 검색 쿼리 안에서 겁니다 (ADR-21, ADR-22).
 - 권한 필드가 비어 있으면 아무도 볼 수 없는 문서로 다룹니다. 공개는 `all`로만 표시하고, 제한 없는 문서의 `restricted_principals`도 `all`입니다 (4장 "권한 모델").
 - 클라이언트 신뢰 등급은 요청 파라미터로 받지 않고, OAuth 클라이언트 id로 서버가 정합니다 (ADR-17).
 - 임베딩 모델은 MCP 서버 안에서 직접 돌리는 `BAAI/bge-m3`이고, float32로 불러옵니다 (ADR-11, 선택 근거는 `experiments/embedding-model/README.md`). BGE-M3의 문장 벡터는 CLS 토큰 벡터입니다. 상용 임베딩 API는 비교 실험에만 씁니다.
@@ -90,4 +81,4 @@ M1 구현 원칙:
 - 결정 하나당 파일 하나(`docs/adr/ADR-NN.md`)로 기록합니다.
 - 원본은 `docs/design.md`의 ADR 절입니다. 설계서를 고친 뒤 `python3 scripts/adr_sync.py`로 파일과 목록을 다시 만들고, ADR 파일을 직접 고치지 않습니다.
 - 결정이 바뀌면 기존 파일을 지우지 않습니다. 상태를 `대체됨`으로 바꾸고 새 ADR을 추가합니다.
-- "실험으로 검증" 상태인 ADR(02, 11, 12, 13)은 판정 기준이 이미 정해져 있습니다. 결과를 본 뒤 기준을 바꾸지 않습니다. 판정 방법(부트스트랩 신뢰구간, 보류일 때의 선택)은 ADR-20을 따릅니다.
+- "실험으로 검증" 상태인 ADR은 판정 기준이 이미 정해져 있습니다. 결과를 본 뒤 기준을 바꾸지 않습니다. 판정 방법(부트스트랩 신뢰구간, 보류일 때의 선택)은 ADR-20을 따릅니다. M2에서 ADR-02·12·13을 판정했고 ADR-11이 남았습니다.
