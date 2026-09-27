@@ -1,0 +1,1 @@
+RESULT {"model": "intfloat/multilingual-e5-base", "queries": 592, "docs": 9251, "recall5": 0.8597972972972973, "ndcg10": 0.7635480199874948, "corpus_min_mps": 1.6777450736165822, "docs_per_s_mps": 91.89914234167442, "cpu_q_p50_ms": 37.80277099576779, "cpu_q_p95_ms": 52.08104199846275, "dim": 768}
