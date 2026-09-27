@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "wiki-rag": {
+      "command": "uv",
+      "args": ["run", "--quiet", "wiki-rag-mcp"],
+      "env": {
+        "WIKI_DIR": "tests/fixtures/wiki",
+        "WIKI_USER": "bob",
+        "TOKENIZERS_PARALLELISM": "false"
+      }
+    }
+  }
+}
