@@ -4,7 +4,7 @@ import re
 
 from wiki_rag_mcp.wiki.source import WikiSource
 
-_USER_ID = re.compile(r"^[A-Za-z0-9._-]+$")
+_USER_ID = re.compile(r"[A-Za-z0-9._-]+")
 
 
 def principals_for(user: str, source: WikiSource) -> list[str]:
@@ -14,6 +14,6 @@ def principals_for(user: str, source: WikiSource) -> list[str]:
     사용자가 문서가 없다고 잘못 믿게 되므로, 결과를 줄이지 않고 요청 전체를 실패시킨다.
     """
     user_id = user.removeprefix("user:")
-    if not _USER_ID.match(user_id):
+    if not _USER_ID.fullmatch(user_id):
         raise ValueError(f"잘못된 사용자 id: {user!r}")
     return [f"user:{user_id}", *source.groups_of(user_id)]

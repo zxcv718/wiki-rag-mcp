@@ -8,14 +8,15 @@ import re
 from collections.abc import Iterable
 
 ALL = "all"
-_PRINCIPAL = re.compile(r"^(user|group):[A-Za-z0-9._-]+$")
+# fullmatch로 쓴다. match와 $는 끝의 줄바꿈("group:eng\n")을 통과시킨다
+_PRINCIPAL = re.compile(r"(user|group):[A-Za-z0-9._-]+")
 
 
 def validate_stored_principals(values: Iterable[str]) -> tuple[str, ...]:
     """문서에 저장할 권한 목록을 검사한다. all은 허용하고, 빈 목록은 아무도 못 보는 문서로 그대로 둔다."""
     result = tuple(values)
     for p in result:
-        if p != ALL and not _PRINCIPAL.match(p):
+        if p != ALL and not _PRINCIPAL.fullmatch(p):
             raise ValueError(f"잘못된 principal 형식: {p!r}")
     return result
 
@@ -26,7 +27,7 @@ def principal_set(principals: Iterable[str]) -> list[str]:
     for p in principals:
         if p == ALL:
             continue
-        if not _PRINCIPAL.match(p):
+        if not _PRINCIPAL.fullmatch(p):
             raise ValueError(f"잘못된 principal 형식: {p!r}")
         result.add(p)
     return sorted(result)
