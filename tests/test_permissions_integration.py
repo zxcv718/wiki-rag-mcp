@@ -9,7 +9,6 @@
 
 import hashlib
 import json
-import uuid
 from pathlib import Path
 
 import anyio
@@ -17,12 +16,11 @@ import numpy as np
 import pytest
 from mcp import Client
 from mcp.shared.exceptions import MCPError
-from opensearchpy import OpenSearch
 
+from tests.pg import count, new_store
 from tools.wikigen.spec import load_spec
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.indexing.indexer import index_all
-from wiki_rag_mcp.search.store import OpenSearchStore
 from wiki_rag_mcp.server.app import Services, build_server
 from wiki_rag_mcp.server.responses import NOT_FOUND
 from wiki_rag_mcp.wiki.files import FileWikiSource
@@ -52,14 +50,8 @@ class FakeEncoder:
 def wiki():
     if not any((WIKI / "docs").glob("*.md")):
         pytest.skip("가상 위키가 아직 생성되지 않았다 (python -m tools.wikigen)")
-    client = OpenSearch(hosts=["http://127.0.0.1:9200"], timeout=60)
-    try:
-        client.info()
-    except Exception:
-        pytest.skip("로컬 OpenSearch가 떠 있지 않다")
     source = FileWikiSource(WIKI)
-    store = OpenSearchStore(client, f"test-perm-{uuid.uuid4().hex[:8]}")
-    store.ensure_index(dim=DIM)
+    store = new_store("perm", DIM)
     index_all(source, store, FakeEncoder(), lambda text: len(text.split()))
     spec = load_spec(WIKI / "schema.yaml", ROOT / "tools" / "wikigen" / "plants.yaml")
     yield spec, source, store
@@ -148,23 +140,7 @@ def test_restricted_users_still_get_k_results(wiki):
         principals = [f"user:{user}", *source.groups_of(user)]
         for title in [d.title for d in source.documents()][:20]:
             hits = store.knn_search(enc.encode_query(title), principals, 10)
-            allowed_chunks = store.client.count(index=store.alias, body={"query": {"bool": {"filter": [
-                {"terms": {"space_principals": sorted({*principals, "all"})}},
-                {"terms": {"restricted_principals": sorted({*principals, "all"})}},
-            ]}}})["count"]
+            mine = sorted({*principals, "all"})
+            allowed_chunks = count(store, "space_principals && %s AND restricted_principals && %s", (mine, mine))
             assert len(hits) == min(10, allowed_chunks), (user, title)
 
-
-def test_keyword_and_hybrid_search_do_not_leak(wiki):
-    """하이브리드 검색(ADR-12)도 두 검색 모두 권한 필터를 통과한 후보만 합치는지 본다. 채택되면 서버가 쓴다."""
-    spec, source, store = wiki
-    enc = FakeEncoder()
-    titles = [d.title for d in source.documents()]
-    for user in spec.users:
-        allowed = visible(spec, source, user)
-        principals = [f"user:{user}", *source.groups_of(user)]
-        for title in titles:
-            for hits in (store.bm25_search(title, principals, 10),
-                         store.hybrid_search(enc.encode_query(title), title, principals, 10)):
-                leaked = {h["doc_id"] for h in hits} - allowed
-                assert not leaked, (user, title, leaked)

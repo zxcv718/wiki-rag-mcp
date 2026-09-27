@@ -16,7 +16,7 @@ from mcp.types import ToolAnnotations
 from wiki_rag_mcp.auth.principals import principals_for
 from wiki_rag_mcp.auth.tiers import ClientTier
 from wiki_rag_mcp.config import Settings
-from wiki_rag_mcp.search.store import OpenSearchStore
+from wiki_rag_mcp.search.backend import SearchStore
 from wiki_rag_mcp.server.responses import (
     NOT_FOUND,
     SectionNotFound,
@@ -73,7 +73,7 @@ class DocumentNotFound(Exception):
 class Services:
     """도구가 쓰는 의존성. 테스트에서 바꿔 끼울 수 있게 한곳에 모은다."""
 
-    def __init__(self, settings: Settings, source: WikiSource, store: OpenSearchStore | None, embedder: Any):
+    def __init__(self, settings: Settings, source: WikiSource, store: SearchStore | None, embedder: Any):
         self.settings = settings
         self.source = source
         self.store = store
@@ -129,7 +129,7 @@ def build_server(services: Services) -> MCPServer:
         except RequestFailed as e:
             raise ToolError(str(e)) from e
 
-    def store() -> OpenSearchStore:
+    def store() -> SearchStore:
         if services.store is None:
             raise ToolError("검색 저장소가 설정되지 않았습니다.")
         return services.store
@@ -181,11 +181,11 @@ def build_server(services: Services) -> MCPServer:
 
 def main() -> None:
     from wiki_rag_mcp.indexing.embedder import Embedder
+    from wiki_rag_mcp.search.backend import open_store
     from wiki_rag_mcp.wiki.files import FileWikiSource
 
     settings = Settings.from_env()
-    services = Services(settings, FileWikiSource(settings.wiki_dir), OpenSearchStore.from_settings(settings),
-                        Embedder())
+    services = Services(settings, FileWikiSource(settings.wiki_dir), open_store(settings), Embedder())
     build_server(services).run("stdio")
 
 

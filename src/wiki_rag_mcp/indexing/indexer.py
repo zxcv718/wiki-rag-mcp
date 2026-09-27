@@ -11,7 +11,7 @@ import numpy as np
 
 from wiki_rag_mcp.indexing.chunker import CountTokens, chunk_document, context_header
 from wiki_rag_mcp.models import Chunk, Document
-from wiki_rag_mcp.search.store import OpenSearchStore
+from wiki_rag_mcp.search.backend import SearchStore
 from wiki_rag_mcp.wiki.source import WikiSource
 
 
@@ -64,7 +64,7 @@ def to_index_doc(doc: Document, chunk: Chunk, vector: np.ndarray, encoder: Docum
     }
 
 
-def index_all(source: WikiSource, store: OpenSearchStore, encoder: DocumentEncoder, count: CountTokens,
+def index_all(source: WikiSource, store: SearchStore, encoder: DocumentEncoder, count: CountTokens,
               with_header: bool = True) -> IndexStats:
     started = time.perf_counter()
     docs = source.documents()

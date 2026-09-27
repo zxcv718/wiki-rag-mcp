@@ -4,16 +4,14 @@
 """
 
 import hashlib
-import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
 import pytest
-from opensearchpy import OpenSearch
 
+from tests.pg import count, new_store
 from wiki_rag_mcp.indexing.indexer import index_all
-from wiki_rag_mcp.search.store import OpenSearchStore
 from wiki_rag_mcp.wiki.files import FileWikiSource
 
 pytestmark = pytest.mark.integration
@@ -36,28 +34,19 @@ def words(text):
 
 @pytest.fixture
 def store():
-    client = OpenSearch(hosts=["http://127.0.0.1:9200"], timeout=30)
-    try:
-        client.info()
-    except Exception:
-        pytest.skip("로컬 OpenSearch가 떠 있지 않다")
-    s = OpenSearchStore(client, f"test-index-{uuid.uuid4().hex[:8]}")
-    s.ensure_index(dim=DIM)
+    s = new_store("index", DIM)
     yield s
     s.drop()
-
-
-def count(store, **term):
-    body = {"query": {"term": term}} if term else {"query": {"match_all": {}}}
-    return store.client.count(index=store.alias, body=body)["count"]
 
 
 def test_indexes_every_document_with_permission_fields(store):
     stats = index_all(FileWikiSource(FIXTURE), store, FakeEncoder(), words)
     assert stats.documents == 11
     assert count(store) == stats.chunks
-    hit = store.client.search(index=store.alias, body={"query": {"term": {"doc_id": "infra-002"}}})["hits"]["hits"][0]
-    src = hit["_source"]
+    src = store.conn.execute(
+        f"SELECT restricted_principals, space_principals, embedding_model, text FROM {store.table} "
+        "WHERE doc_id = 'infra-002' LIMIT 1").fetchone()
+    src = dict(zip(["restricted_principals", "space_principals", "embedding_model", "text"], src, strict=True))
     assert src["restricted_principals"] == ["group:dba"]
     assert src["space_principals"] == ["group:infra", "group:eng"]
     assert src["embedding_model"] == "fake"
@@ -70,11 +59,11 @@ def test_reindex_removes_chunks_of_deleted_sections(store, tmp_path):
     wiki = tmp_path / "wiki"
     shutil.copytree(FIXTURE, wiki)
     index_all(FileWikiSource(wiki), store, FakeEncoder(), words)
-    before = count(store, doc_id="eng-001")
+    before = count(store, "doc_id = %s", ("eng-001",))
     doc = wiki / "docs" / "eng-001.md"
     doc.write_text(doc.read_text(encoding="utf-8").split("## 재발 방지")[0], encoding="utf-8")
     index_all(FileWikiSource(wiki), store, FakeEncoder(), words)
-    assert count(store, doc_id="eng-001") == before - 1
+    assert count(store, "doc_id = %s", ("eng-001",)) == before - 1
 
 
 @pytest.mark.parametrize("user", ["bob", "dana", "erin", "hana", "kim"])

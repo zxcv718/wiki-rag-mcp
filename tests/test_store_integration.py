@@ -1,6 +1,7 @@
-"""실제 OpenSearch에서 권한 필터의 의미와 결과 수를 확인한다 (4장 검증 방법, ADR-07, ADR-21).
+"""실제 검색 저장소에서 권한 필터의 의미와 결과 수를 확인한다 (4장 검증 방법, ADR-07, ADR-21).
 
-`docker compose up -d`로 OpenSearch를 띄운 뒤 실행한다. 떠 있지 않으면 건너뛴다.
+`docker compose up -d`로 저장소를 띄운 뒤 실행한다. 떠 있지 않으면 건너뛴다. 같은 테스트를 OpenSearch와
+PostgreSQL + pgvector에 모두 돌려, 저장소를 옮겨도 권한의 의미가 같은지 확인한다 (ADR-02 "단순화할 때").
 """
 
 import uuid
@@ -10,22 +11,41 @@ import numpy as np
 import pytest
 from opensearchpy import OpenSearch
 
+from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.search.store import OpenSearchStore
 
 pytestmark = pytest.mark.integration
 DIM = 8
 URL = "http://127.0.0.1:9200"
+BACKENDS = ["opensearch", "postgres"]
 
 
-@pytest.fixture(scope="module")
-def store():
-    client = OpenSearch(hosts=[URL], timeout=30)
-    try:
-        client.info()
-    except Exception:
-        pytest.skip("로컬 OpenSearch가 떠 있지 않다")
-    s = OpenSearchStore(client, f"test-chunks-{uuid.uuid4().hex[:8]}")
+def make_store(backend: str, prefix: str):
+    """저장소를 새 이름으로 만든다. 저장소가 떠 있지 않으면 테스트를 건너뛴다."""
+    name = f"test_{prefix}_{uuid.uuid4().hex[:8]}"
+    if backend == "opensearch":
+        client = OpenSearch(hosts=[URL], timeout=30)
+        try:
+            client.info()
+        except Exception:
+            pytest.skip("로컬 OpenSearch가 떠 있지 않다")
+        s = OpenSearchStore(client, name.replace("_", "-"))
+    else:
+        import psycopg
+
+        from wiki_rag_mcp.search.pg_store import PgStore
+
+        try:
+            s = PgStore.from_settings(Settings(index_alias=name))
+        except psycopg.OperationalError:
+            pytest.skip("로컬 PostgreSQL이 떠 있지 않다")
     s.ensure_index(dim=DIM)
+    return s
+
+
+@pytest.fixture(scope="module", params=BACKENDS)
+def store(request):
+    s = make_store(request.param, "chunks")
     yield s
     s.drop()
 
@@ -95,18 +115,14 @@ def test_anonymous_sees_only_public(store):
     assert visible(store, []) == {"public"}
 
 
-def test_returns_k_results_even_when_nearest_chunks_are_forbidden():
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_returns_k_results_even_when_nearest_chunks_are_forbidden(backend):
     """가장 가까운 청크가 모두 권한 밖이어도 볼 수 있는 청크 k개를 돌려받아야 한다.
 
-    사후 필터라면 상위 후보가 전부 걸러져 결과가 0개가 된다(ADR-07이 기각한 문제).
+    사후 필터라면 상위 후보가 전부 걸러져 결과가 0개가 된다(ADR-07이 기각한 문제). pgvector는 필터를 인덱스
+    스캔 뒤에 적용하므로, iterative scan이 권한 밖 후보를 지나 더 스캔하는지가 이 테스트로 드러난다.
     """
-    client = OpenSearch(hosts=[URL], timeout=30)
-    try:
-        client.info()
-    except Exception:
-        pytest.skip("로컬 OpenSearch가 떠 있지 않다")
-    s = OpenSearchStore(client, f"test-count-{uuid.uuid4().hex[:8]}")
-    s.ensure_index(dim=DIM)
+    s = make_store(backend, "count")
     try:
         rng = np.random.default_rng(0)
         forbidden = [chunk(f"hr-{i}", unit(np.array(Q) + rng.normal(0, 0.01, DIM)), ["group:hr"], ["all"],

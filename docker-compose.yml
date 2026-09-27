@@ -1,5 +1,23 @@
-# 로컬 개발용 구성 (M1). 보안 플러그인을 끈 대신 포트는 127.0.0.1에만 연다.
+# 로컬 개발용 구성. 인증을 단순하게 둔 대신 포트는 127.0.0.1에만 연다.
 services:
+  # 검색 인덱스 (ADR-02 "단순화할 때"). 위키 DB와 분리한 데이터베이스다 (ADR-01)
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18
+    environment:
+      POSTGRES_USER: wiki
+      POSTGRES_PASSWORD: wiki  # 로컬 개발용. 127.0.0.1에만 열려 있다
+      POSTGRES_DB: wiki_search
+    ports:
+      - "127.0.0.1:5433:5432"  # 5432는 다른 PostgreSQL과 겹치지 않게 비워 둔다
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wiki -d wiki_search"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # M2 판정 전의 검색 저장소. pgvector로 옮긴 뒤 같은 골든셋으로 비교할 때까지만 둔다
   opensearch:
     build: docker/opensearch
     image: wiki-rag-mcp/opensearch:3.8.0-nori
@@ -19,4 +37,5 @@ services:
       retries: 30
 
 volumes:
+  postgres-data:
   opensearch-data:
