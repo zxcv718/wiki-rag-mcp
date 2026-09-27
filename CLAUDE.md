@@ -19,9 +19,17 @@
 - 권한 필터는 두 필드를 배열 겹침(`&&`)으로 WHERE 절에 겁니다. HNSW가 필터를 스캔 뒤에 적용하므로 검색마다 `hnsw.iterative_scan = strict_order`를 켜고, 결과 수 테스트로 k개가 나오는지 확인합니다(4장 "벡터 검색의 필터 적용 방식").
 - 판정 뒤 새로 드러난 과제(최근 문서 우선, 경량 리랭커)는 판정 기준을 먼저 적은 뒤 별도 실험으로 다룹니다. 결과를 본 뒤 바로 설정을 바꾸지 않습니다.
 
+**M3 완료**: Spring 위키 서비스(`wiki-service/`), 아웃박스, Redis Streams, 증분 인덱싱 워커
+
+- 위키 API와 이벤트 형식의 계약은 `wiki-service/README.md`입니다. 위키(Java)와 인덱서(Python)는 이 계약만 알고, 한쪽을 바꿀 때는 계약부터 고칩니다.
+- 로컬 실행: `docker compose up -d`(검색 DB 5433, 위키 DB 5434, Redis 6380, 위키 8081), `uv run wiki-rag-seed`(가상 위키 200문서를 위키로 옮김, 빈 위키에서만), `uv run wiki-rag-worker`(이벤트 소비), `uv run wiki-rag-reconcile`(야간 정합성 배치, `--dry-run` 가능). 위키 테스트는 `cd wiki-service && ./gradlew test`이고, OrbStack이면 `DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock`이 필요할 수 있습니다.
+- 인덱서는 이벤트를 신호로만 쓰고 위키에서 상태를 다시 읽습니다. 반영 순서는 권한·등급(먼저 커밋), 바뀐 섹션만 임베딩, 청크 교체와 `doc_state` 기록(한 트랜잭션)입니다(ADR-19, ADR-10). 이 순서를 바꾸면 `tests/test_incremental.py`의 시나리오 테스트가 잡습니다.
+- 측정(`experiments/m3-indexing`): 수정 후 검색 반영 p95는 평상시 1.1초 이하, 새 문서 20개를 한꺼번에 만들 때 8.05초로 목표(30초) 안입니다. 임베딩 절감률은 섹션 하나 수정 82.6%, 권한·등급 변경 100%, 제목 변경 0%입니다.
+- 검색 서버는 아직 파일 위키(`FileWikiSource`)로 그룹을 해석하고 본문을 재확인합니다. 위키 API(`HttpWikiSource`)로 바꾸고 그룹 캐시와 `wiki:membership` 소비를 붙이는 일은 M4입니다.
+
 구현 원칙:
 
-- 위키 접근은 `WikiSource` 인터페이스로 감쌉니다. M1은 `data/wiki/`의 파일을 읽고, M3에서 Spring 위키 API로 바꿔 끼웁니다.
+- 위키 접근은 `wiki/source.py`의 인터페이스로 감쌉니다. 파일 위키(`data/wiki/`, 평가·테스트용)와 Spring 위키 API(`wiki/http.py`) 두 구현이 있고, 인덱서는 M3부터 위키 API를 읽습니다.
 - M1은 OAuth 없이 stdio로만 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 가상 위키 조직도에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다.
 - 서버 밖 LLM 작업(가상 위키 생성 등)은 코디세이 Public API(`https://copa.codyssey.kr`)의 OpenAI 호환 엔드포인트(`/v1/chat/completions`)와 `gpt-5.4`를 씁니다. 키가 OpenAI 호환용이라 Claude 모델은 이 키로 부를 수 없습니다. 키는 `.env`의 `COPA_API_KEY`에 두고(형식은 `.env.example`), `.env`는 커밋하지 않습니다.
 

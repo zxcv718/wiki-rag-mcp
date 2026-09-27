@@ -1,0 +1,5 @@
+{"scenario": "typo", "documents": 200, "corpus_chunks": 1151, "whole_doc_chunks": 1151, "embedded": 200, "saving_vs_whole_doc": 0.826}
+{"scenario": "add_section", "documents": 200, "corpus_chunks": 1151, "whole_doc_chunks": 1151, "embedded": 200, "saving_vs_whole_doc": 0.826}
+{"scenario": "restrict", "documents": 200, "corpus_chunks": 1151, "whole_doc_chunks": 1151, "embedded": 0, "saving_vs_whole_doc": 1.0}
+{"scenario": "classify", "documents": 200, "corpus_chunks": 1151, "whole_doc_chunks": 1151, "embedded": 0, "saving_vs_whole_doc": 1.0}
+{"scenario": "rename", "documents": 200, "corpus_chunks": 1151, "whole_doc_chunks": 1151, "embedded": 1151, "saving_vs_whole_doc": 0.0}
