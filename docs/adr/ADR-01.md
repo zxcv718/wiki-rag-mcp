@@ -15,3 +15,4 @@
 - **결정 이유**: 권한의 원천(위키)과 검색 인덱스를 분리하면, 검색 쪽에 문제가 생겨도 문서 본문의 최종 권한 판단은 위키가 유지합니다(ADR-07의 재확인과 연결). 자바 메인 서비스와 파이썬 AI 서버의 조합이 실무에서 흔하다는 점, 두 스택을 모두 증명하려는 목적도 있음을 숨기지 않습니다.
 - **감수한 비용**: 배포 단위 2개, 권한 조회 네트워크 호출. 호출 비용은 Redis 캐시로 줄입니다.
 - **재검토 조건**: 팀 언어가 자바뿐이고 로컬 모델이 필요 없다면 Spring AI 단일 서비스로 합칩니다.
+- **참고**: [Spring AI MCP](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html)로 Spring에서도 MCP 서버를 만들 수 있고, [Spring AI ONNX 임베딩](https://docs.spring.io/spring-ai/reference/api/embeddings/onnx.html)은 Python 도구로 ONNX 형식으로 바꾼 모델을 불러 씁니다. 임베딩 모델과 리랭커(cross-encoder)를 그대로 쓸 수 있는 쪽은 Python의 [Sentence Transformers](https://sbert.net/)입니다.

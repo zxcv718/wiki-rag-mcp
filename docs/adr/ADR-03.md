@@ -12,3 +12,4 @@
 - **결정 이유**: 이 서버의 가치는 검색 파이프라인의 세부 제어에 있고, 그 부분이 곧 면접에서 설명할 내용입니다(원칙 5).
 - **절충**: 서버를 호출하는 데모 에이전트는 LangGraph로 만들 수 있습니다. 서버 설계와 독립적인 영역이라 원칙과 충돌하지 않습니다.
 - **재검토 조건**: 연동할 데이터 소스가 여러 종류로 늘면, 로더 계층에 한해 라이브러리를 도입합니다.
+- **참고**: [Anthropic, Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) (LLM API를 직접 쓰는 것부터 시작하고, 프레임워크를 쓴다면 내부 동작을 이해하라고 권고)

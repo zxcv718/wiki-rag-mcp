@@ -12,3 +12,4 @@
 
 - **결정 이유**: 지연 예산과 인덱싱 지연 같은 핵심 지표가 여러 서비스에 걸쳐 있어, 서비스 경계를 넘는 추적이 필수입니다.
 - **수집 지표**: 단계별 검색 지연, 인덱싱 지연, 캐시 적중률, DLQ 적재량, 임베딩 호출 수.
+- **참고**: [OpenTelemetry: 컨텍스트 전파](https://opentelemetry.io/docs/concepts/context-propagation/) (서비스와 프로세스 사이로 추적 정보를 넘기는 방식), [W3C Trace Context](https://www.w3.org/TR/trace-context/) (전파에 쓰는 표준 HTTP 헤더). 위키(Spring)와 인덱서·MCP 서버(Python)를 한 추적으로 잇는 근거입니다.
