@@ -1,7 +1,11 @@
-"""색인 파이프라인을 가짜 인코더로 확인한다. 진짜 모델은 `wiki-rag-index`로 따로 돌린다."""
+"""색인 파이프라인과, 색인된 권한 필드로 거르는 list_recent_changes를 가짜 인코더로 확인한다.
+
+진짜 모델은 `wiki-rag-index`로 따로 돌린다.
+"""
 
 import hashlib
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -71,3 +75,33 @@ def test_reindex_removes_chunks_of_deleted_sections(store, tmp_path):
     doc.write_text(doc.read_text(encoding="utf-8").split("## 재발 방지")[0], encoding="utf-8")
     index_all(FileWikiSource(wiki), store, FakeEncoder(), words)
     assert count(store, doc_id="eng-001") == before - 1
+
+
+@pytest.mark.parametrize("user", ["bob", "dana", "erin", "hana", "kim"])
+def test_recent_changes_tool_matches_the_wiki_permission_rule(store, user):
+    """list_recent_changes(인덱스 필터)와 위키의 본문 재확인 규칙(allows)이 같은 문서를 보여야 한다."""
+    import anyio
+    from mcp import Client
+
+    from wiki_rag_mcp.config import Settings
+    from wiki_rag_mcp.search.filters import allows
+    from wiki_rag_mcp.server.app import Services, build_server
+
+    source = FileWikiSource(FIXTURE)
+    index_all(source, store, FakeEncoder(), words)
+    since = datetime(2026, 1, 1, tzinfo=UTC)
+    principals = [f"user:{user}", *source.groups_of(user)]
+    expected = sorted((d for d in source.documents() if d.updated_at >= since
+                       and allows(principals, d.space_principals, d.restricted_principals)),
+                      key=lambda d: d.updated_at, reverse=True)
+    services = Services(Settings(wiki_dir=FIXTURE, user=user), source, store, None)
+
+    async def call():
+        async with Client(build_server(services)) as client:
+            return await client.call_tool("list_recent_changes", {"since": "2026-01-01"})
+
+    result = anyio.run(call)
+    assert not result.is_error, result.content
+    got = [r["doc_id"] for r in result.structured_content["results"]]
+    assert got == [d.doc_id for d in expected]
+    assert "misc-001" not in got  # 권한 필드가 빈 문서

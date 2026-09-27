@@ -46,6 +46,15 @@ def permission_filter(principals: Iterable[str]) -> list[dict]:
     ]
 
 
+def allows(principals: Iterable[str], space_principals: Iterable[str], restricted_principals: Iterable[str]) -> bool:
+    """permission_filter와 같은 규칙을 검색 엔진 밖에서 판단한다. 본문을 줄 때 위키가 다시 확인하는 데 쓴다.
+
+    두 규칙이 어긋나면 검색에는 나오는데 본문은 못 보는(또는 그 반대) 문서가 생기므로, 같은 테스트로 함께 검증한다.
+    """
+    allowed = set(principal_set(principals))
+    return bool(allowed & set(space_principals)) and bool(allowed & set(restricted_principals))
+
+
 def search_filter(principals: Iterable[str], *, space: str | None = None,
                   updated_after: datetime | None = None) -> dict:
     """권한 조건에 도구 입력의 선택 조건(스페이스, 수정일)을 더한 필터."""
