@@ -1,0 +1,1920 @@
+# 골든셋 출처 (7장 골든셋 구성). tools/goldset select가 만든다. 손으로 고치지 않는다.
+# 문항마다 유형, 질문자, 출처 문서와 핵심 사실을 적는다. 질문 작성자와 블라인드 라벨러에게는 이 파일을 주지 않는다.
+- id: q001
+  type: recency
+  asker: yuna
+  doc_id: hr-005
+  fact: null
+  must_include: null
+  change: 2026년 9월부터 솔포인트 분기 지급액이 12만 포인트에서 15만 포인트로 늘었다.
+- id: q002
+  type: fact
+  asker: yuna
+  doc_id: it-008
+  fact: 전 직원이 자주 쓰는 표준 소프트웨어 12종은 회사 포털에서 셀프서비스로 설치할 수 있다.
+  must_include: 12종
+- id: q003
+  type: abbreviation
+  asker: gaeun
+  doc_id: co-008
+  fact: 솔북은 매장 예약 관리 앱이며 솔페이와 결제가 연동된다.
+  must_include: 솔북
+  term: 솔북
+- id: q004
+  type: procedure
+  asker: jiho
+  doc_id: eng-032
+  fact: RFC 본문에는 배경, 제안, 대안, 롤백 계획, 보안 영향의 5개 필수 항목이 있어야 한다.
+  must_include: 5개 필수 항목
+- id: q005
+  type: fact
+  asker: sujin
+  doc_id: eng-005
+  fact: 병행 검증 결과 보고는 매주 목요일 16시에 데이터팀과 페이코어가 함께 리뷰한다.
+  must_include: 목요일 16시
+- id: q006
+  type: permission
+  asker: hyunwoo
+  doc_id: lead-005
+  fact: 예외 배포 건은 모두 배포 직후 모아 대시보드에서 오류율과 지연시간을 1시간 동안 확인했다.
+  must_include: 1시간 동안
+- id: q007
+  type: procedure
+  asker: yuna
+  doc_id: hri-003
+  fact: 채용 보류 후보자가 재검토 동의를 남긴 경우 인사팀은 동의일로부터 1년 동안 자료를 유지할 수 있다.
+  must_include: 1년
+- id: q008
+  type: fact
+  asker: jiho
+  doc_id: eng-021
+  fact: 건당 수수료는 결제 금액의 0.3%다
+  must_include: 0.3%
+- id: q009
+  type: fact
+  asker: gaeun
+  doc_id: hr-019
+  fact: 긴급 장애 대응으로 사전 승인이 어려운 경우 종료 후 1영업일 안에 소급 신청할 수 있다.
+  must_include: 1영업일
+- id: q010
+  type: fact
+  asker: doyoon
+  doc_id: cs-008
+  fact: SP-E1001 문의에서는 같은 카드로 반복 승인하지 말고 다른 결제 수단 확인을 권한다.
+  must_include: SP-E1001
+- id: q011
+  type: recency
+  asker: minjun
+  doc_id: data-009
+  fact: null
+  must_include: null
+  change: 2026년 9월에 누리 실행 로그의 보존 기간을 90일에서 180일로 늘렸다.
+- id: q012
+  type: permission
+  asker: yuna
+  doc_id: hri-003
+  fact: 불합격 후보자의 이력서와 면접 기록은 전형 종료 후 180일 동안만 보관하고 기간 만료 다음 주 수요일에 일괄 파기한다.
+  must_include: 180일
+- id: q013
+  type: abbreviation
+  asker: sujin
+  doc_id: infra-009
+  fact: 파도 프로젝트 전환 후보 서비스 목록은 플랫폼·SRE팀이 분기마다 갱신한다.
+  must_include: 분기마다 갱신
+  term: 파도 프로젝트
+- id: q014
+  type: fact
+  asker: dahye
+  doc_id: lead-007
+  fact: leadership 스페이스의 팀장 회의록에는 결정, 보류, 확인 필요의 3개 상태 중 하나를 모든 안건에 반드시 붙인다.
+  must_include: 3개 상태
+- id: q015
+  type: procedure
+  asker: dahye
+  doc_id: cs-006
+  fact: 수신 대상이 500개 가맹점을 넘는 메일은 제품기획팀 리더 승인 후 고객지원팀이 최종 문구를 확정한다.
+  must_include: 500개
+- id: q016
+  type: contradiction
+  asker: doyoon
+  doc_id: hr-002
+  fact: 재택근무는 주 3회까지 쓸 수 있다
+  must_include: 주 3회
+  topic: 재택근무 가능 횟수
+- id: q017
+  type: fact
+  asker: gaeun
+  doc_id: hr-015
+  fact: 추천 보상은 추천 입사자가 수습 3개월을 마친 다음 달 급여에 합산 지급한다.
+  must_include: 3개월
+- id: q018
+  type: abbreviation
+  asker: taeyang
+  doc_id: eng-018
+  fact: 코드 프리즈는 각 분기 마지막 주 월요일 10시부터 금요일 18시까지 적용되는 배포 동결 기간이다.
+  must_include: 월요일 10시
+  term: 코드 프리즈
+- id: q019
+  type: procedure
+  asker: jiho
+  doc_id: eng-001
+  fact: 누리 운영 문의의 1차 DRI는 데이터팀 정산 파이프라인 담당자이며 장애 전파는 고객지원팀보다 먼저 플랫폼·SRE팀에 한다.
+  must_include: 데이터팀
+- id: q020
+  type: abbreviation
+  asker: hyunwoo
+  doc_id: sec-003
+  fact: 접근 재인증 누락 계정 목록은 정보보안팀이 감사 기록으로 3년 동안 보관한다.
+  must_include: 3년 동안
+  term: 접근 재인증
+- id: q021
+  type: fact
+  asker: junpark
+  doc_id: co-010
+  fact: 기념품은 행사 당일 현장 출석 확인을 마친 사람에게 1인 1개만 배포한다.
+  must_include: 1인 1개
+- id: q022
+  type: abbreviation
+  asker: taeyang
+  doc_id: infra-012
+  fact: 금고의 운영 경로 중 결제 인증서와 DB 접속 비밀값은 플랫폼·SRE팀 2명 승인 없이는 읽기 권한을 부여할 수 없다.
+  must_include: 2명 승인
+  term: 금고
+- id: q023
+  type: no_answer
+  asker: seoyeon
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 헬스장·운동 시설
+- id: q024
+  type: fact
+  asker: minjun
+  doc_id: hr-024
+  fact: 수당은 근태 시스템의 온콜 기록으로 매달 자동 지급한다
+  must_include: 온콜 기록
+- id: q025
+  type: procedure
+  asker: sujin
+  doc_id: eng-023
+  fact: 변경 SQL은 운영 반영 2영업일 전에 운영 DB 관리자에게 전달해야 한다.
+  must_include: 2영업일
+- id: q026
+  type: abbreviation
+  asker: yuna
+  doc_id: hri-006
+  fact: 캘리브레이션 참석 대상은 팀장 이상 관리자 전체와 인사팀 지정 진행자 1명이다.
+  must_include: 팀장 이상
+  term: 캘리브레이션
+- id: q027
+  type: procedure
+  asker: doyoon
+  doc_id: cs-005
+  fact: 고객지원팀은 L2 에스컬레이션을 올린 뒤 10분 안에 가맹점에게 접수 완료와 다음 안내 예정 시각을 회신해야 한다.
+  must_include: 10분
+- id: q028
+  type: procedure
+  asker: jiho
+  doc_id: eng-015
+  fact: 하늘 운영 권한은 페이코어와 플랫폼·SRE팀 소속 정규직에게만 주고 외부 협력사는 읽기 권한만 부여한다.
+  must_include: 읽기 권한
+- id: q029
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 스톡옵션 부여와 행사
+- id: q030
+  type: recency
+  asker: dahye
+  doc_id: lead-004
+  fact: null
+  must_include: null
+  change: 2026년 9월에 팀별 솔데이 발표 시간이 7분에서 5분으로 줄었고 질의응답 2분은 그대로 유지되도록 바뀌었다.
+- id: q031
+  type: abbreviation
+  asker: doyoon
+  doc_id: cs-005
+  fact: L2 에스컬레이션은 고객지원팀 상담원이 20분 안에 원인이나 우회 방법을 안내하지 못한 문의를 담당 스쿼드로 넘기는 단계다.
+  must_include: 20분
+  term: L2 에스컬레이션
+- id: q032
+  type: fact
+  asker: sujin
+  doc_id: infra-001
+  fact: 운영 DB 복제 지연이 3초를 넘으면 고객 화면 문제 조사에는 원본 조회를 우선한다.
+  must_include: 3초
+- id: q033
+  type: permission
+  asker: hyunwoo
+  doc_id: sec-003
+  fact: 외부 협력사인 레드브릭소프트 인력의 권한은 접근 재인증 때마다 내부 DRI 1명이 계속 필요 사유를 함께 남겨야 한다.
+  must_include: 레드브릭소프트
+- id: q034
+  type: fact
+  asker: gaeun
+  doc_id: hr-017
+  fact: 승진 추천서는 팀장이 작성하고 직전 6개월의 역할 확장 사례를 포함해야 한다.
+  must_include: 6개월
+- id: q035
+  type: abbreviation
+  asker: doyoon
+  doc_id: prd-004
+  fact: BK-4010이 나면 나중에 잡힌 예약을 자동으로 취소한다
+  must_include: BK-4010
+  term: BK-4010
+- id: q036
+  type: fact
+  asker: minjun
+  doc_id: data-011
+  fact: 공용 조회 뷰는 settlement_daily_v, settlement_error_v, experiment_settlement_v의 3개를 표준으로 제공한다.
+  must_include: 3개
+- id: q037
+  type: recency
+  asker: yuna
+  doc_id: hri-009
+  fact: 페이코어처럼 채용 경쟁이 높은 스쿼드는 SLA를 넘긴 사례를 매달 1회 인사팀 주간 점검표에서 별도 집계한다.
+  must_include: 매달 1회
+- id: q038
+  type: abbreviation
+  asker: doyoon
+  doc_id: prd-011
+  fact: 회의의 주요 안건은 BK-4010 재현 조건과 고객 안내 문구 확정이었다.
+  must_include: BK-4010
+  term: BK-4010
+- id: q039
+  type: procedure
+  asker: gaeun
+  doc_id: it-001
+  fact: 다온은 전 직원에게 최소 1개의 기본 인증 기기와 1개의 예비 인증 기기 등록을 요구한다.
+  must_include: 예비 인증
+- id: q040
+  type: procedure
+  asker: yuna
+  doc_id: hri-005
+  fact: 채용 요청은 채용 시작 예정일 기준 최소 15영업일 전에 인사팀 스페이스인 hr-internal의 지정 양식으로 접수한다.
+  must_include: 15영업일
+- id: q041
+  type: procedure
+  asker: hyunwoo
+  doc_id: fin-014
+  fact: 외부 협력사인 레드브릭소프트 인력은 솔마켓 요청자가 될 수 없고 내부 담당 직원이 대신 신청해야 한다.
+  must_include: 레드브릭소프트
+- id: q042
+  type: abbreviation
+  asker: gaeun
+  doc_id: it-007
+  fact: 솔패스는 솔넷 VPN을 대체하는 제로트러스트 원격 접속 서비스이며 전 직원의 사내 웹 시스템 접속 기본 수단이다.
+  must_include: 솔넷 VPN
+  term: 솔넷 VPN
+- id: q043
+  type: fact
+  asker: taeyang
+  doc_id: infra-004
+  fact: 솔게이트 에러 코드는 PRJ-204와 GW-429처럼 원문 코드를 그대로 error_code 필드에 기록해야 한다.
+  must_include: GW-429
+- id: q044
+  type: fact
+  asker: hyunwoo
+  doc_id: sec-002
+  fact: 가맹점 민원 대응으로 고객지원팀이 임시 출력한 자료도 같은 규칙을 따르며 스캔본을 남겼다면 원본은 7일 안에 파기해야 한다.
+  must_include: 7일
+- id: q045
+  type: abbreviation
+  asker: junpark
+  doc_id: co-004
+  fact: 선정된 질문의 답변 요약은 솔데이 다음 영업일까지 전사 공지 스페이스에 올린다.
+  must_include: 답변 요약
+  term: 솔데이
+- id: q046
+  type: procedure
+  asker: taeyang
+  doc_id: infra-011
+  fact: 작업 전에 CAB 승인을 받는다
+  must_include: CAB
+- id: q047
+  type: procedure
+  asker: minjun
+  doc_id: data-002
+  fact: PII 등급은 1등급이 가장 민감하며 정산 데이터에서는 계좌번호 원문이 1등급으로 분류된다.
+  must_include: 1등급
+- id: q048
+  type: abbreviation
+  asker: jiho
+  doc_id: infra-013
+  fact: PIR 문서에는 타임라인, 탐지 경로, 고객 영향, 재발 방지 액션의 4개 섹션이 반드시 있어야 한다.
+  must_include: 4개 섹션
+  term: PIR
+- id: q049
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 식당과 식단
+- id: q050
+  type: fact
+  asker: yuna
+  doc_id: fin-010
+  fact: 일반 비품은 총액 30만원 미만이면 팀장 승인만으로 구매할 수 있고, 30만원 이상이면 재무팀 확인이 추가된다.
+  must_include: 30만원 미만
+- id: q051
+  type: abbreviation
+  asker: junpark
+  doc_id: co-008
+  fact: 솔페이는 중소 가맹점용 결제·정산 SaaS로 회사의 주력 제품이다.
+  must_include: 솔페이
+  term: 솔페이
+- id: q052
+  type: procedure
+  asker: gaeun
+  doc_id: it-010
+  fact: 솔넷 VPN은 2026년 6월 30일에 종료했다
+  must_include: 2026년 6월 30일
+- id: q053
+  type: procedure
+  asker: doyoon
+  doc_id: cs-014
+  fact: 외부 협력사인 레드브릭소프트 인력은 고객 응대 계정으로 직접 본인확인 업무를 수행할 수 없다.
+  must_include: 레드브릭소프트
+- id: q054
+  type: abbreviation
+  asker: seoyeon
+  doc_id: eng-006
+  fact: 누리 배치는 매일 03시 20분까지 완료되는 것을 정상 기준으로 본다.
+  must_include: 03시 20분
+  term: 누리
+- id: q055
+  type: fact
+  asker: doyoon
+  doc_id: cs-014
+  fact: 메일 문의에서는 등록된 관리자 이메일 주소와 가맹점 ID가 일치할 때만 주문 상세나 정산 예정 금액을 안내할 수 있다.
+  must_include: 관리자 이메일
+- id: q056
+  type: fact
+  asker: dahye
+  doc_id: cs-006
+  fact: 딥워크 데이에는 내부 검토 회의를 새로 잡지 않으므로 문구 수정 요청은 오전 11시 전까지 남겨야 같은 날 반영된다.
+  must_include: 오전 11시
+- id: q057
+  type: recency
+  asker: sujin
+  doc_id: eng-026
+  fact: null
+  must_include: null
+  change: 이번 달에 운영 릴리스 라벨 예시가 월 단위 표기에서 주차 표기 형식으로 바뀌었다.
+- id: q058
+  type: fact
+  asker: junpark
+  doc_id: co-007
+  fact: 행사 사진은 촬영 후 5영업일 안에 company 스페이스 공지로 게시한다.
+  must_include: 5영업일
+- id: q059
+  type: fact
+  asker: yuna
+  doc_id: hri-010
+  fact: 오퍼 승인 완료 후 후보자에게 발송하는 제안서 유효기간은 발송 시각부터 5일이다.
+  must_include: 5일
+- id: q060
+  type: abbreviation
+  asker: minjun
+  doc_id: fin-014
+  fact: 월 구독형 도구를 솔마켓으로 요청할 때는 최초 요청자가 종료 예정일 15일 전에 계속 사용 여부를 재확인해야 한다.
+  must_include: 15일 전
+  term: 솔마켓
+- id: q061
+  type: recency
+  asker: gaeun
+  doc_id: fin-002
+  fact: null
+  must_include: null
+  change: 경비 청구 마감을 다음 달 10일에서 다음 달 5일로 앞당겼다
+- id: q062
+  type: contradiction
+  asker: sujin
+  doc_id: eng-013
+  fact: 작업 브랜치는 main에서 따고 하루 1회 이상 main에 병합한다
+  must_include: 하루 1회 이상
+  topic: 기능 브랜치를 만드는 기준 브랜치
+- id: q063
+  type: fact
+  asker: gaeun
+  doc_id: hr-012
+  fact: 리프레시 휴가 사용 계획은 팀 OKR 마감 주간과 겹치는지 팀장이 먼저 확인한다.
+  must_include: OKR
+- id: q064
+  type: contradiction
+  asker: gaeun
+  doc_id: hr-021
+  fact: 2026년부터 미사용 연차는 다음 해로 이월하지 않는다
+  must_include: 이월하지 않는다
+  topic: 미사용 연차 이월
+- id: q065
+  type: procedure
+  asker: gaeun
+  doc_id: hr-001
+  fact: 정보보안 교육에는 다온 계정 보호와 솔패스 사용 수칙이 포함된다.
+  must_include: 솔패스
+- id: q066
+  type: fact
+  asker: gaeun
+  doc_id: hr-021
+  fact: 남은 연차는 1월 급여에 미사용 연차 수당으로 지급한다
+  must_include: 미사용 연차 수당
+- id: q067
+  type: no_answer
+  asker: dahye
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 헬스장·운동 시설
+- id: q068
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 기숙사·사택 지원
+- id: q069
+  type: recency
+  asker: doyoon
+  doc_id: cs-004
+  fact: null
+  must_include: null
+  change: 2026년 9월에 1차 장애 공지 발송 기준이 인지 후 20분에서 15분으로 단축되었다.
+- id: q070
+  type: recency
+  asker: dahye
+  doc_id: cs-011
+  fact: null
+  must_include: null
+  change: 전액 환불 기간을 결제 후 7일에서 14일로 늘렸다
+- id: q071
+  type: recency
+  asker: dahye
+  doc_id: prd-014
+  fact: null
+  must_include: null
+  change: 2026년 9월에 스타터 요금제의 월 기본료를 15000원에서 19000원으로 올리고 프로 상담 전환 기준을 최근 30일 승인 거래액 8000만원에서 1억원으로 바꿨다.
+- id: q072
+  type: no_answer
+  asker: sujin
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 직무 발명·특허 보상
+- id: q073
+  type: fact
+  asker: seoyeon
+  doc_id: infra-026
+  fact: 모아 트레이스 보존 기간은 운영 환경 기준 14일이며, 장애 분석용 장기 보존은 PIR 링크로 대체한다.
+  must_include: 14일
+- id: q074
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 식당과 식단
+- id: q075
+  type: procedure
+  asker: doyoon
+  doc_id: cs-013
+  fact: 제품기획팀은 매주 화요일 오전 11시에 지난주 VOC 신규 건수를 검토하고 상위 10건을 릴리스 후보로 표시한다.
+  must_include: 화요일 오전 11시
+- id: q076
+  type: no_answer
+  asker: doyoon
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 해외 법인과 해외 파견
+- id: q077
+  type: recency
+  asker: minjun
+  doc_id: fin-010
+  fact: null
+  must_include: null
+  change: 운영 변경이 수반되는 구매의 CAB 검토 기준이 300만원 이상에서 200만원 이상으로 낮아졌다.
+- id: q078
+  type: abbreviation
+  asker: taeyang
+  doc_id: infra-021
+  fact: 정기 CAB는 매주 목요일 16시에 열리며 참석자는 플랫폼·SRE팀, 정보보안팀, 제품기획팀에서 각 1명이다.
+  must_include: 목요일 16시
+  term: CAB
+- id: q079
+  type: abbreviation
+  asker: jiho
+  doc_id: infra-008
+  fact: NR-503는 누리 배치가 정상 마감 시각까지 끝나지 않았을 때 모아에서 뜨는 경보다.
+  must_include: 정상 마감 시각
+  term: 모아
+- id: q080
+  type: procedure
+  asker: seoyeon
+  doc_id: eng-008
+  fact: 분기 OKR 후보를 만들 때 VOC 20건 이상이 누적된 주제는 개선 아이템 검토 목록에 반드시 포함한다.
+  must_include: 20건
+- id: q081
+  type: fact
+  asker: doyoon
+  doc_id: fin-003
+  fact: 해외 서비스 구독처럼 원화 영수증이 없는 결제는 청구 시점 기준 환율이 아니라 카드 청구서에 찍힌 원화 청구 금액으로 정산한다.
+  must_include: 원화 청구 금액
+- id: q082
+  type: procedure
+  asker: dahye
+  doc_id: cs-007
+  fact: SP-E2003 문의는 상담원이 확인 즉시 데이터팀에 L2 에스컬레이션을 등록한다.
+  must_include: SP-E2003
+- id: q083
+  type: recency
+  asker: jiho
+  doc_id: eng-017
+  fact: null
+  must_include: null
+  change: 이번 달에 솔게이트의 가맹점별 기본 호출 제한이 1분당 600건에서 1분당 800건으로 상향되었다.
+- id: q084
+  type: fact
+  asker: yuna
+  doc_id: hr-020
+  fact: 수습기간은 입사일로부터 3개월이며 특별한 사유가 없으면 같은 기간 안에 전환 여부를 결정한다.
+  must_include: 3개월
+- id: q085
+  type: permission
+  asker: yuna
+  doc_id: hri-006
+  fact: 캘리브레이션은 팀장들이 모여 평가 등급을 조정하는 회의이며 반기 평가 마감 후 7영업일 안에 시작한다.
+  must_include: 캘리브레이션
+- id: q086
+  type: abbreviation
+  asker: seoyeon
+  doc_id: infra-004
+  fact: 등대 프로젝트 적용 서비스는 모아에서 로그 수집 누락률이 0.1% 이하일 때만 완료로 판정한다.
+  must_include: 0.1%
+  term: 등대 프로젝트
+- id: q087
+  type: procedure
+  asker: minjun
+  doc_id: it-011
+  fact: 다온 계정 잠금 사유는 잠금 알림 메일에 비밀번호 오입력과 의심 로그인 차단 중 하나로 표시된다.
+  must_include: 잠금 알림 메일
+- id: q088
+  type: fact
+  asker: seoyeon
+  doc_id: infra-012
+  fact: 외부 협력사인 레드브릭소프트 인력은 금고에서 운영 비밀값 조회 권한을 받을 수 없다.
+  must_include: 레드브릭소프트
+- id: q089
+  type: procedure
+  asker: gaeun
+  doc_id: it-013
+  fact: 사내 프린터 드라이버 패키지는 Windows용 2종과 macOS용 1종으로 배포된다.
+  must_include: Windows용 2종
+- id: q090
+  type: recency
+  asker: seoyeon
+  doc_id: prd-012
+  fact: 다지점 관리는 동일 사업자번호 기준으로 2개 지점 이상일 때만 신청할 수 있다.
+  must_include: 2개 지점
+- id: q091
+  type: procedure
+  asker: dahye
+  doc_id: cs-009
+  fact: 답변 끝에는 상담원 이름을 적는다
+  must_include: 상담원 이름
+- id: q092
+  type: fact
+  asker: yuna
+  doc_id: hri-001
+  fact: 평가표의 최종 의견은 적합, 보류, 부적합 가운데 하나로만 선택하며 자유 서술란은 300자 이상 작성해야 한다.
+  must_include: 300자
+- id: q093
+  type: recency
+  asker: yuna
+  doc_id: fin-004
+  fact: null
+  must_include: null
+  change: 일비를 하루 3만 원에서 4만 원으로, 서울 숙박비 상한을 10만 원에서 12만 원으로 올렸다
+- id: q094
+  type: fact
+  asker: hyunwoo
+  doc_id: lead-008
+  fact: 정산 데이터 접근 통제 리스크는 접근 재인증 누락 건수를 매달 0건으로 유지하는 목표로 정보보안팀이 추적한다.
+  must_include: 0건
+- id: q095
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 주차 등록과 주차비 지원
+- id: q096
+  type: procedure
+  asker: yuna
+  doc_id: hri-004
+  fact: 징계 사안이 접수되면 인사팀은 2영업일 안에 조사 착수 여부를 결정하고 접수 번호를 부여한다.
+  must_include: 2영업일
+- id: q097
+  type: permission
+  asker: hyunwoo
+  doc_id: lead-007
+  fact: 결정사항마다 DRI 1명과 확인 기한 1개를 적고, 기한이 없는 항목은 미완료로 본다.
+  must_include: DRI 1명
+- id: q098
+  type: abbreviation
+  asker: dahye
+  doc_id: lead-001
+  fact: 팀장 OKR 점검 회의는 매달 둘째 주 화요일 오후 2시에 60분 동안 진행한다.
+  must_include: 둘째 주 화요일
+  term: OKR
+- id: q099
+  type: recency
+  asker: junpark
+  doc_id: ptn-001
+  fact: null
+  must_include: null
+  change: 2026년 9월에 협력 개발자의 전사 회의 참여 기준을 매월 참석 권장에서 분기 마지막 솔데이 1회 참석으로 변경했다.
+- id: q100
+  type: procedure
+  asker: minjun
+  doc_id: data-003
+  fact: 조회 기록은 모아로 보낸다
+  must_include: 모아
+- id: q101
+  type: fact
+  asker: hyunwoo
+  doc_id: sec-007
+  fact: 2026-07 감사 기준으로 모아 관리자 권한 보유자는 11명이며 정보보안팀 3명, 플랫폼·SRE팀 6명, 데이터팀 2명이다.
+  must_include: 11명
+- id: q102
+  type: fact
+  asker: minjun
+  doc_id: data-005
+  fact: 재인증 사유에는 조회 목적과 사용하는 테이블 이름을 함께 적는다.
+  must_include: 테이블 이름
+- id: q103
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 동호회 지원금
+- id: q104
+  type: permission
+  asker: sujin
+  doc_id: sec-007
+  fact: 레드브릭소프트 소속 계정은 모아 관리자 권한을 가질 수 없으며 감사 시 조회 전용 권한 보유 여부만 확인한다.
+  must_include: 조회 전용
+- id: q105
+  type: permission
+  asker: taeyang
+  doc_id: infra-007
+  fact: 교체는 DBA 두 명이 함께 한다
+  must_include: DBA 두 명
+- id: q106
+  type: contradiction
+  asker: seoyeon
+  doc_id: prd-002
+  fact: 솔북 무료 체험 기간은 30일이다
+  must_include: 30일
+  topic: 솔북 무료 체험 기간
+- id: q107
+  type: fact
+  asker: minjun
+  doc_id: data-004
+  fact: 수집 단계는 매일 00시 20분에 시작하며 솔게이트 승인 데이터와 취소 데이터를 함께 읽는다.
+  must_include: 00시 20분
+- id: q108
+  type: abbreviation
+  asker: junpark
+  doc_id: ptn-002
+  fact: 레드브릭소프트 소속 협력 개발자는 시작일 2영업일 전까지 다온 계정 신청서를 제출해야 하며, 신청자는 내부 협업 담당자 한 명을 DRI로 적는다.
+  must_include: 레드브릭소프트
+  term: 레드브릭소프트
+- id: q109
+  type: permission
+  asker: doyoon
+  doc_id: cs-002
+  fact: 보상 여부는 고객지원 매니저가 정한다
+  must_include: 고객지원 매니저
+- id: q110
+  type: no_answer
+  asker: minjun
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 퇴직연금 운용
+- id: q111
+  type: permission
+  asker: sujin
+  doc_id: sec-002
+  fact: 출력물 표지에는 문서 소유 팀과 출력 시각을 적어야 하며 출력 후 48시간 안에 회수 여부를 확인한다.
+  must_include: 48시간
+- id: q112
+  type: procedure
+  asker: sujin
+  doc_id: eng-007
+  fact: 애플리케이션 로그 레벨은 운영 환경에서 INFO 이상만 남기고 DEBUG는 스테이징에서만 켠다.
+  must_include: INFO 이상
+- id: q113
+  type: recency
+  asker: yuna
+  doc_id: hri-009
+  fact: null
+  must_include: null
+  change: 이번 달에 개발본부 포지션의 면접 피드백 제출 기한을 72시간에서 48시간으로 줄였다.
+- id: q114
+  type: fact
+  asker: junpark
+  doc_id: ptn-001
+  fact: 협력 개발자는 솔데이에 분기마다 1회만 참석하며, 참석 대상은 진행 중인 프로젝트의 DRI와 사전 합의한 사람으로 한정한다.
+  must_include: 1회
+- id: q115
+  type: fact
+  asker: sujin
+  doc_id: eng-023
+  fact: 정산 원장 합계 검증에서 기존 결과와 신규 결과 차이가 1원이라도 나면 배포를 중단한다.
+  must_include: 1원
+- id: q116
+  type: fact
+  asker: yuna
+  doc_id: hri-005
+  fact: 외부 협력사인 레드브릭소프트 인력 요청은 전 직원 채용 절차와 분리해 관리하며 이 문서의 채용 승인 대상에 포함하지 않는다.
+  must_include: 레드브릭소프트
+- id: q117
+  type: fact
+  asker: hyunwoo
+  doc_id: hr-023
+  fact: 팀장 평가는 자기평가 마감 후 7영업일 안에 완료한다.
+  must_include: 7영업일
+- id: q118
+  type: recency
+  asker: taeyang
+  doc_id: infra-010
+  fact: null
+  must_include: null
+  change: 2026년 9월에 핫픽스 접수 양식을 5개 항목에서 6개 항목으로 늘리고 모아 지표 확인 첨부를 의무화했다.
+- id: q119
+  type: abbreviation
+  asker: sujin
+  doc_id: infra-010
+  fact: 핫픽스 창구 접수에는 영향 서비스, 복구 목표 시각, 하늘 롤백 방법을 포함한 6개 항목을 써야 한다.
+  must_include: 6개 항목
+  term: 하늘
+- id: q120
+  type: fact
+  asker: seoyeon
+  doc_id: infra-016
+  fact: BK-4010은 같은 매장과 같은 예약 슬롯에서 10분 안에 중복 예약 레코드가 2건 이상 생기면 의심한다.
+  must_include: BK-4010
+- id: q121
+  type: procedure
+  asker: taeyang
+  doc_id: eng-019
+  fact: 개발본부는 영업일 기준 접수 후 2시간 안에 L2 에스컬레이션의 담당 DRI를 지정해야 한다.
+  must_include: 2시간
+- id: q122
+  type: fact
+  asker: jiho
+  doc_id: eng-015
+  fact: 하늘은 카나리 배포와 롤백을 지원하는 사내 배포 도구이며 개발본부 서비스의 운영 배포에 기본으로 사용한다.
+  must_include: 하늘
+- id: q123
+  type: fact
+  asker: minjun
+  doc_id: hr-013
+  fact: 병가는 연간 최대 30일까지 신청할 수 있으며 최초 3일은 진단서 없이도 사용할 수 있다.
+  must_include: 30일
+- id: q124
+  type: procedure
+  asker: hyunwoo
+  doc_id: sec-001
+  fact: 완료 예정일을 두 번 넘긴 항목은 경영진·팀장 보고 대상으로 전환되며 세 번째 지연부터는 팀 OKR 리스크에 포함한다.
+  must_include: 세 번째
+- id: q125
+  type: abbreviation
+  asker: seoyeon
+  doc_id: eng-014
+  fact: SP-E1001은 카드 승인 재시도 횟수를 넘긴 에러이며 같은 주문에 대한 자동 재시도는 최대 3회까지만 허용한다.
+  must_include: SP-E1001
+  term: SP-E1001
+- id: q126
+  type: fact
+  asker: dahye
+  doc_id: cs-009
+  fact: 첫 응답은 문의 접수 후 1시간 안에 보낸다
+  must_include: 1시간 안에
+- id: q127
+  type: recency
+  asker: hyunwoo
+  doc_id: sec-005
+  fact: null
+  must_include: null
+  change: 이번 달 변경으로 관리자 감사 로그 보존 기간을 270일에서 365일로 늘리고 실패 로그인 점검 대상을 상위 10개 계정에서 20개 계정으로 확대했다.
+- id: q128
+  type: fact
+  asker: sujin
+  doc_id: eng-007
+  fact: 등대 프로젝트 참여 서비스는 모아 대시보드 이름을 서비스명-환경 형식으로 통일한다.
+  must_include: 등대 프로젝트
+- id: q129
+  type: procedure
+  asker: gaeun
+  doc_id: it-014
+  fact: 알림이 오지 않으면 다온 세션 만료 여부를 먼저 확인하고 만료된 경우 다시 로그인하면 대부분 즉시 복구된다.
+  must_include: 다온 세션
+- id: q130
+  type: no_answer
+  asker: taeyang
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 직무 발명·특허 보상
+- id: q131
+  type: fact
+  asker: minjun
+  doc_id: data-008
+  fact: 정산 원장의 기본 파티션 키는 biz_date다.
+  must_include: 파티션 키
+- id: q132
+  type: fact
+  asker: jiho
+  doc_id: infra-013
+  fact: S2 이상 장애의 PIR은 서비스 복구 후 3영업일 안에 열어야 한다.
+  must_include: 3영업일
+- id: q133
+  type: procedure
+  asker: seoyeon
+  doc_id: infra-016
+  fact: BK-4010이 하루 5건을 넘기면 다음 영업일 안에 PIR 일정을 잡는다.
+  must_include: 5건
+- id: q134
+  type: permission
+  asker: hyunwoo
+  doc_id: lead-008
+  fact: 누리 마감 지연과 연계된 운영 리스크는 NR-503 경보 월간 발생 횟수를 다음 분기부터 팀장 회의에 고정 보고하기로 했다.
+  must_include: NR-503
+- id: q135
+  type: fact
+  asker: jiho
+  doc_id: infra-009
+  fact: 파도 프로젝트 전환 후 첫 7일은 플랫폼·SRE팀이 일일 점검 로그를 남긴다.
+  must_include: 7일
+- id: q136
+  type: abbreviation
+  asker: seoyeon
+  doc_id: eng-005
+  fact: 은하수 프로젝트 전환 검증은 원장 비교, 수수료 비교, 지급 파일 비교의 3개 축으로 수행한다.
+  must_include: 3개 축
+  term: 은하수 프로젝트
+- id: q137
+  type: abbreviation
+  asker: jiho
+  doc_id: eng-016
+  fact: 도입 요청은 RFC로 올린다
+  must_include: RFC
+  term: RFC
+- id: q138
+  type: fact
+  asker: minjun
+  doc_id: fin-012
+  fact: 매출 인식 자료는 누리의 정산 원장에서 뽑는다
+  must_include: 정산 원장
+- id: q139
+  type: no_answer
+  asker: taeyang
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 솔북 웹 브라우저 버전
+- id: q140
+  type: fact
+  asker: taeyang
+  doc_id: infra-015
+  fact: 플랫폼팀 DB 관리자는 인프라 장애 복구 목적의 운영 DB 권한을 요청할 수 있고 데이터팀 DB 관리자는 정산 검증 목적 권한만 요청할 수 있다.
+  must_include: 데이터팀
+- id: q141
+  type: abbreviation
+  asker: seoyeon
+  doc_id: it-003
+  fact: 솔패스 전환이 끝난 장비에서 솔넷 VPN 프로세스가 탐지되면 정보보안팀이 자동으로 제거 티켓을 발행한다.
+  must_include: 자동으로
+  term: 솔패스
+- id: q142
+  type: procedure
+  asker: yuna
+  doc_id: fin-001
+  fact: 반복 오사용이 반기 기준 2회 누적되면 재무팀이 해당 직원의 법인카드 사용 권한을 중지하고 팀장 확인 후 재발급 여부를 결정한다.
+  must_include: 2회
+- id: q143
+  type: fact
+  asker: seoyeon
+  doc_id: data-012
+  fact: 신규 권한 요청의 표준 처리 시간은 영업일 기준 2일이다.
+  must_include: 2일
+- id: q144
+  type: fact
+  asker: seoyeon
+  doc_id: eng-003
+  fact: 금고는 비밀값을 보관하는 비밀 관리 시스템이며 운영 자격 증명은 파일 저장소나 메신저로 공유할 수 없다.
+  must_include: 금고
+- id: q145
+  type: contradiction
+  asker: dahye
+  doc_id: cs-011
+  fact: 결제 후 14일 이내면 전액 환불한다
+  must_include: 14일 이내
+  topic: 전액 환불 가능 기간
+- id: q146
+  type: fact
+  asker: hyunwoo
+  doc_id: lead-006
+  fact: 참석이 필요한 경우 내부 DRI인 팀장이 회의 시작 1영업일 전까지 참석 목적과 공유 범위를 회의록 상단에 적어야 한다.
+  must_include: 1영업일 전
+- id: q147
+  type: procedure
+  asker: taeyang
+  doc_id: eng-011
+  fact: 리뷰 요청을 받으면 1영업일 안에 첫 응답을 한다
+  must_include: 1영업일
+- id: q148
+  type: contradiction
+  asker: doyoon
+  doc_id: fin-002
+  fact: 경비는 사용한 달의 다음 달 5일까지 청구한다
+  must_include: 다음 달 5일
+  topic: 경비 청구 마감일
+- id: q149
+  type: fact
+  asker: gaeun
+  doc_id: fin-005
+  fact: 주류가 포함된 영수증은 제품기획팀의 공식 행사나 고객지원팀의 VOC 간담회처럼 업무 목적이 명시된 경우에만 인정된다.
+  must_include: VOC
+- id: q150
+  type: abbreviation
+  asker: doyoon
+  doc_id: cs-012
+  fact: 제품기획팀에는 매달 첫 영업일 오후 3시에 솔페이와 솔북의 CSAT 하위 사유 상위 5개를 묶어 전달한다.
+  must_include: 오후 3시
+  term: CSAT
+- id: q151
+  type: abbreviation
+  asker: jiho
+  doc_id: eng-004
+  fact: GW-429 대응 시 고객지원팀 안내 문구에는 시스템 장애라는 표현 대신 호출 제한 적용이라고 적는다.
+  must_include: 호출 제한 적용
+  term: GW-429
+- id: q152
+  type: permission
+  asker: taeyang
+  doc_id: infra-023
+  fact: 목표 복구 시간은 1시간이다
+  must_include: 1시간
+- id: q153
+  type: abbreviation
+  asker: jiho
+  doc_id: hr-012
+  fact: 리프레시 휴가는 근속 3년마다 5영업일의 유급 휴가로 부여한다.
+  must_include: 3년마다
+  term: 리프레시 휴가
+- id: q154
+  type: procedure
+  asker: taeyang
+  doc_id: eng-003
+  fact: 금고 경로 이름에는 사람 이름이나 개인 계정을 넣지 않는다.
+  must_include: 사람 이름
+- id: q155
+  type: fact
+  asker: seoyeon
+  doc_id: infra-018
+  fact: S1이면 30분마다 상황을 공유한다
+  must_include: 30분마다
+- id: q156
+  type: procedure
+  asker: sujin
+  doc_id: sec-008
+  fact: 외부 신고 여부는 24시간 안에 판단한다
+  must_include: 24시간
+- id: q157
+  type: fact
+  asker: dahye
+  doc_id: sec-004
+  fact: 2026-06 마지막 점검에서 솔게이트 연동 인증서 18개를 확인했고 그중 30일 이내 만료 예정은 2개였다.
+  must_include: 18개
+- id: q158
+  type: fact
+  asker: sujin
+  doc_id: eng-019
+  fact: 결제 실패 문의에 PRJ-204나 SP-E1001이 보이면 고객지원팀 템플릿 대신 원인 코드와 재시도 가능 여부를 함께 회신한다.
+  must_include: SP-E1001
+- id: q159
+  type: no_answer
+  asker: yuna
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 안식년 제도
+- id: q160
+  type: fact
+  asker: taeyang
+  doc_id: eng-029
+  fact: 등대 프로젝트는 모든 서비스의 로그·지표 형식을 맞추는 관측성 표준화 프로젝트다.
+  must_include: 등대 프로젝트
+- id: q161
+  type: procedure
+  asker: doyoon
+  doc_id: cs-002
+  fact: 장애 1시간마다 월 이용료의 10%를 감면한다
+  must_include: 10%를 감면
+- id: q162
+  type: permission
+  asker: minjun
+  doc_id: data-003
+  fact: 접근 권한은 분기마다 접근 재인증을 받는다
+  must_include: 접근 재인증
+- id: q163
+  type: procedure
+  asker: sujin
+  doc_id: eng-013
+  fact: 미완성 기능은 기능 플래그로 숨긴다
+  must_include: 기능 플래그
+- id: q164
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 안식년 제도
+- id: q165
+  type: abbreviation
+  asker: gaeun
+  doc_id: it-001
+  fact: 경영진·팀장은 다온의 복구 코드 8개를 발급받아 회사 승인 저장소가 아닌 개인 오프라인 매체에 보관해야 한다.
+  must_include: 8개
+  term: 다온
+- id: q166
+  type: procedure
+  asker: minjun
+  doc_id: it-009
+  fact: 모아 접속도 함께 실패하면 네트워크 이슈 가능성이 높아 IT 헬프데스크가 아니라 플랫폼·SRE팀 온듀티로 바로 전달한다.
+  must_include: 모아
+- id: q167
+  type: permission
+  asker: yuna
+  doc_id: hri-008
+  fact: 교육은 채용 윤리, 질문 금지 항목, 평가표 작성 실습의 3개 세션으로 구성된다.
+  must_include: 3개 세션
+- id: q168
+  type: fact
+  asker: taeyang
+  doc_id: prd-008
+  fact: 예약금 결제 실패 시 재시도 버튼 노출 시간을 15분으로 통일했다.
+  must_include: 15분
+- id: q169
+  type: permission
+  asker: dahye
+  doc_id: lead-001
+  fact: OKR은 분기 목표와 핵심 결과 지표를 뜻하며, 모든 팀장은 분기 시작 후 10영업일 안에 leadership 스페이스에 팀 OKR 요약을 등록해야 한다.
+  must_include: 10영업일
+- id: q170
+  type: abbreviation
+  asker: doyoon
+  doc_id: hr-014
+  fact: 연차는 반차와 반반차로 나누어 사용할 수 있으며 반반차는 2시간 단위 휴가로 기록한다.
+  must_include: 2시간
+  term: 반반차
+- id: q171
+  type: fact
+  asker: hyunwoo
+  doc_id: hr-022
+  fact: 부모상과 배우자 부모상은 각각 5일의 유급 휴가를 적용한다.
+  must_include: 부모상
+- id: q172
+  type: contradiction
+  asker: hyunwoo
+  doc_id: fin-004
+  fact: 국내 출장 일비는 하루 4만 원이다
+  must_include: 하루 4만 원
+  topic: 국내 출장 일비
+- id: q173
+  type: abbreviation
+  asker: doyoon
+  doc_id: prd-014
+  fact: 그로스 스쿼드는 가입 전환과 요금제를 맡는 스쿼드이며 요금제 문구 변경안의 DRI를 지정한다.
+  must_include: 그로스 스쿼드
+  term: 그로스 스쿼드
+- id: q174
+  type: abbreviation
+  asker: seoyeon
+  doc_id: eng-027
+  fact: 재인증 대상 목록은 분기 종료 5영업일 전에 플랫폼·SRE팀이 배포하고 각 조직 DRI가 사실 여부를 확인한다.
+  must_include: 5영업일
+  term: DRI
+- id: q175
+  type: fact
+  asker: sujin
+  doc_id: infra-002
+  fact: 하늘에서 카나리 단계 중 PRJ-204 비율이 0.8%를 넘기면 DRI가 즉시 롤백을 실행해야 한다.
+  must_include: 0.8%
+- id: q176
+  type: no_answer
+  asker: hyunwoo
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 벤처 제도
+- id: q177
+  type: abbreviation
+  asker: jiho
+  doc_id: eng-008
+  fact: 결제 관련 VOC는 페이코어가, 예약 관련 VOC는 솔북 담당 스쿼드가 각각 주간 검토를 맡는다.
+  must_include: 페이코어
+  term: 페이코어
+- id: q178
+  type: fact
+  asker: junpark
+  doc_id: ptn-003
+  fact: 권한 요청이 승인된 뒤 실제 반영까지의 목표 시간은 영업일 기준 1시간이며, 지연되면 플랫폼·SRE팀에 문의한다.
+  must_include: 1시간
+- id: q179
+  type: procedure
+  asker: jiho
+  doc_id: eng-026
+  fact: 이번 달 변경으로 운영 릴리스 라벨 예시가 기존 월 단위 표기에서 주차 표기인 solpay-w39 형식으로 바뀌었다.
+  must_include: 주차 표기
+- id: q180
+  type: fact
+  asker: seoyeon
+  doc_id: eng-001
+  fact: 누리 배치 재실행은 DRI 승인 뒤 가맹점 단위로만 한다.
+  must_include: 가맹점 단위로만
+- id: q181
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 어린이집
+- id: q182
+  type: procedure
+  asker: junpark
+  doc_id: ptn-004
+  fact: PII 등급 1등급 또는 2등급 데이터가 있는 화면을 테스트해야 하는 경우에는 마스킹된 샘플만 사용할 수 있고 원본 다운로드는 금지된다.
+  must_include: PII 등급
+- id: q183
+  type: procedure
+  asker: gaeun
+  doc_id: fin-013
+  fact: 딥워크 데이에 개인 일정으로 늦게 퇴근한 경우는 청구 대상이 아니며 업무 지시나 장애 대응 기록이 있어야 한다.
+  must_include: 딥워크 데이
+- id: q184
+  type: procedure
+  asker: doyoon
+  doc_id: cs-012
+  fact: CSAT는 문의 처리 후 받는 고객 만족도 점수로 5점 만점이며, 고객지원팀은 종료된 문의마다 1회만 발송한다.
+  must_include: 5점 만점
+- id: q185
+  type: procedure
+  asker: minjun
+  doc_id: data-010
+  fact: SP-E2003 확인 때는 솔게이트 승인·취소 합계와 정산 원장 settlement_amount를 비교한다.
+  must_include: 승인·취소 합계
+- id: q186
+  type: fact
+  asker: hyunwoo
+  doc_id: it-011
+  fact: 90일 동안 다온 로그인 기록이 없으면 휴면 상태로 전환되어 본인 확인 후에만 복구할 수 있다.
+  must_include: 90일
+- id: q187
+  type: abbreviation
+  asker: gaeun
+  doc_id: co-001
+  fact: 딥워크 데이는 매주 수요일이며 오전 10시부터 오후 5시까지 정기 회의를 잡지 않는다.
+  must_include: 딥워크 데이
+  term: 딥워크 데이
+- id: q188
+  type: permission
+  asker: hyunwoo
+  doc_id: fin-011
+  fact: 승인 내역은 월말에 재무팀이 카드 사용 내역과 전수 대사한다
+  must_include: 전수 대사
+- id: q189
+  type: procedure
+  asker: hyunwoo
+  doc_id: hr-007
+  fact: 평가 면담은 1인당 30분 이상 한다
+  must_include: 30분 이상
+- id: q190
+  type: abbreviation
+  asker: seoyeon
+  doc_id: eng-004
+  fact: PRJ-204는 솔게이트가 PG사 응답을 기다리다 시간 초과된 에러이며 에러 로그에 응답이 늦은 PG사 이름을 함께 남긴다.
+  must_include: PRJ-204
+  term: PRJ-204
+- id: q191
+  type: contradiction
+  asker: taeyang
+  doc_id: it-010
+  fact: 사외에서 사내 시스템에 접속할 때는 솔패스 앱을 쓴다
+  must_include: 솔패스 앱
+  topic: 사외 원격 접속 방법
+- id: q192
+  type: permission
+  asker: yuna
+  doc_id: hri-007
+  fact: 검토안은 10월 이사회에 올린다
+  must_include: 10월 이사회
+- id: q193
+  type: fact
+  asker: gaeun
+  doc_id: hr-006
+  fact: 하루 기본 근무시간은 휴게시간을 제외하고 8시간으로 계산한다.
+  must_include: 8시간
+- id: q194
+  type: no_answer
+  asker: gaeun
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 반려동물 동반 출근
+- id: q195
+  type: fact
+  asker: dahye
+  doc_id: cs-001
+  fact: 메일 문의에는 접수 번호를 붙여 회신하고 같은 건의 추가 메일은 같은 접수 번호로 묶는다.
+  must_include: 접수 번호
+- id: q196
+  type: contradiction
+  asker: jiho
+  doc_id: eng-030
+  fact: API v1 지원 종료일을 2026년 12월 31일로 연기했다
+  must_include: 2026년 12월 31일
+  topic: 솔페이 API v1 지원 종료일
+- id: q197
+  type: permission
+  asker: dahye
+  doc_id: hr-007
+  fact: 하향 평가를 주려면 면담 전에 인사팀과 사전 협의한다
+  must_include: 사전 협의
+- id: q198
+  type: fact
+  asker: taeyang
+  doc_id: infra-022
+  fact: 매월 첫 영업일에 전월 기록을 검토한다
+  must_include: 첫 영업일
+- id: q199
+  type: fact
+  asker: doyoon
+  doc_id: fin-009
+  fact: 같은 출장 건에서 숙박비 예외 요청이 2박을 넘으면 재무팀이 아니라 경영진·팀장 승인으로 상향된다.
+  must_include: 2박
+- id: q200
+  type: procedure
+  asker: seoyeon
+  doc_id: infra-017
+  fact: 정산 원장 적재 대상 건수가 전일 대비 25% 이상 증가하면 데이터팀에 사전 확인을 요청해야 한다.
+  must_include: 25%
+- id: q201
+  type: fact
+  asker: doyoon
+  doc_id: prd-007
+  fact: 코드 프리즈 기간에 포함되는 배포는 핫픽스 창구 승인 여부를 체크리스트에 반드시 남긴다.
+  must_include: 핫픽스 창구
+- id: q202
+  type: recency
+  asker: jiho
+  doc_id: infra-014
+  fact: null
+  must_include: null
+  change: 2026년 9월에 온콜 인수인계 템플릿에 다음 점검 시각 항목을 추가하고 게시 시점을 교대 15분 전에서 30분 전으로 앞당겼다.
+- id: q203
+  type: abbreviation
+  asker: minjun
+  doc_id: data-002
+  fact: PII 등급 3등급인 상호명은 데이터 스페이스의 기본 조회 권한으로 열람할 수 있다.
+  must_include: 3등급
+  term: PII 등급
+- id: q204
+  type: abbreviation
+  asker: doyoon
+  doc_id: cs-013
+  fact: VOC는 고객의 소리로서 가맹점의 불만·제안 기록을 뜻하며, 단순 문의가 아니라 제품 개선이나 반복 이슈 추적에 쓰는 항목이다.
+  must_include: VOC
+  term: VOC
+- id: q205
+  type: fact
+  asker: minjun
+  doc_id: fin-008
+  fact: PII 등급 1 데이터에 접근할 수 있는 도구는 무료 체험판이라도 정보보안팀의 보안성 검토 없이는 사용할 수 없다.
+  must_include: PII 등급 1
+- id: q206
+  type: permission
+  asker: sujin
+  doc_id: sec-008
+  fact: 1시간 안에 CISO에게 보고한다
+  must_include: CISO
+- id: q207
+  type: permission
+  asker: yuna
+  doc_id: hri-004
+  fact: 조사 대상자에게는 사실관계 통지서를 보낸 뒤 최소 48시간의 소명 준비 시간을 준다.
+  must_include: 48시간
+- id: q208
+  type: procedure
+  asker: gaeun
+  doc_id: hr-019
+  fact: 평일 시간외근무는 시작 전까지 근태 시스템에서 사전 승인을 받아야 한다.
+  must_include: 사전 승인
+- id: q209
+  type: contradiction
+  asker: jiho
+  doc_id: eng-011
+  fact: PR은 리뷰어 2명이 승인해야 병합할 수 있다
+  must_include: 리뷰어 2명
+  topic: PR 병합에 필요한 승인 인원
+- id: q210
+  type: permission
+  asker: dahye
+  doc_id: prd-013
+  fact: 2027년 상반기에 솔북 다국어 지원을 낸다
+  must_include: 다국어 지원
+- id: q211
+  type: fact
+  asker: hyunwoo
+  doc_id: lead-004
+  fact: 팀장 발표 자료에는 제품기획팀이 솔페이와 솔북 릴리스 영향 여부를 한 줄로 덧붙인다.
+  must_include: 릴리스 영향 여부
+- id: q212
+  type: procedure
+  asker: dahye
+  doc_id: cs-008
+  fact: GW-429 문의에서는 같은 결제를 연속으로 누르지 말라고 안내한다.
+  must_include: GW-429
+- id: q213
+  type: fact
+  asker: yuna
+  doc_id: it-013
+  fact: 회의실 PC에 개인 계정으로 로그인하는 것은 금지되며 발표 자료는 게스트 전송 폴더를 통해서만 옮긴다.
+  must_include: 게스트 전송
+- id: q214
+  type: fact
+  asker: dahye
+  doc_id: lead-005
+  fact: 이번 회의에서는 지난 코드 프리즈 기간에 핫픽스 창구로 들어온 요청 4건 중 2건이 배포되고 2건이 다음 분기로 넘어간 결과를 검토했다.
+  must_include: 4건 중 2건
+- id: q215
+  type: procedure
+  asker: gaeun
+  doc_id: hr-011
+  fact: 캘리브레이션에서 조정된 등급 자체만을 이유로 한 재심 요청은 접수하지 않는다.
+  must_include: 캘리브레이션
+- id: q216
+  type: abbreviation
+  asker: minjun
+  doc_id: hr-005
+  fact: 솔포인트는 제휴 복지몰의 도서, 자기계발 강의, 건강검진 항목에 사용할 수 있다.
+  must_include: 제휴 복지몰
+  term: 솔포인트
+- id: q217
+  type: recency
+  asker: taeyang
+  doc_id: hr-018
+  fact: null
+  must_include: null
+  change: 2026년 9월부터 가족돌봄 휴직 시 인수인계 계획서 제출 기준이 14일 이상에서 30일 이상 신청으로 완화되었다.
+- id: q218
+  type: recency
+  asker: hyunwoo
+  doc_id: lead-002
+  fact: null
+  must_include: null
+  change: 개발본부 인건비 계획을 반영했다
+- id: q219
+  type: abbreviation
+  asker: sujin
+  doc_id: infra-017
+  fact: 누리 마감 전에는 NR-503 관련 미해결 경보가 0건인지 모아에서 확인해야 한다.
+  must_include: 0건
+  term: NR-503
+- id: q220
+  type: fact
+  asker: gaeun
+  doc_id: it-009
+  fact: 고객지원팀의 L2 에스컬레이션 대응 중 발생한 솔넷 VPN 장애는 티켓 우선순위를 P2로 등록한다.
+  must_include: P2
+- id: q221
+  type: fact
+  asker: yuna
+  doc_id: hr-004
+  fact: 육아 관련 제도 상담은 인사팀이 접수하고 급여 반영 사항은 재무팀과 함께 확인한다.
+  must_include: 재무팀
+- id: q222
+  type: fact
+  asker: seoyeon
+  doc_id: eng-028
+  fact: 연동 API의 idempotency-key 보존 시간은 24시간이며 같은 키의 중복 승인 요청은 첫 결과를 재사용한다.
+  must_include: 24시간
+- id: q223
+  type: fact
+  asker: taeyang
+  doc_id: infra-023
+  fact: 복구 훈련은 분기마다 한 번 한다
+  must_include: 분기마다 한 번
+- id: q224
+  type: permission
+  asker: sujin
+  doc_id: infra-022
+  fact: 운영 서버 접근 기록은 1년 보관한다
+  must_include: 1년 보관
+- id: q225
+  type: fact
+  asker: jiho
+  doc_id: infra-019
+  fact: 고객 영향은 결제 시도 18,240건 중 913건 실패였으며 대부분 1회 재시도로 복구되지 않았다.
+  must_include: 913건
+- id: q226
+  type: fact
+  asker: junpark
+  doc_id: co-005
+  fact: 성수역 4번 출구에서 걸어서 7분 걸린다
+  must_include: 성수역 4번 출구
+- id: q227
+  type: fact
+  asker: taeyang
+  doc_id: data-010
+  fact: SP-E2003 확인 요청은 데이터 스페이스의 요청 양식으로 받는다.
+  must_include: 요청 양식
+- id: q228
+  type: procedure
+  asker: junpark
+  doc_id: ptn-002
+  fact: 계정 발급 요청이 승인되면 정보보안팀은 보안 서약 제출 여부를 확인한 뒤 영업일 기준 4시간 안에 다온 계정을 생성한다.
+  must_include: 4시간
+- id: q229
+  type: permission
+  asker: dahye
+  doc_id: sec-001
+  fact: 모든 시정조치는 점검 결과 확정 후 2영업일 안에 등록하고 담당 DRI와 완료 예정일을 함께 적어야 한다.
+  must_include: 2영업일
+- id: q230
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 어린이집
+- id: q231
+  type: contradiction
+  asker: minjun
+  doc_id: it-004
+  fact: 비밀번호 정기 변경은 요구하지 않는다
+  must_include: 정기 변경
+  topic: 비밀번호 정기 변경
+- id: q232
+  type: recency
+  asker: doyoon
+  doc_id: prd-004
+  fact: null
+  must_include: null
+  change: 9월 배포 항목을 정리했다
+- id: q233
+  type: procedure
+  asker: minjun
+  doc_id: data-005
+  fact: DB 관리자 권한의 재인증은 일반 조회 권한과 달리 정보보안팀 확인을 추가로 받아야 한다.
+  must_include: 정보보안팀
+- id: q234
+  type: procedure
+  asker: taeyang
+  doc_id: infra-007
+  fact: 운영 DB 관리자 계정 비밀번호는 60일마다 바꾼다
+  must_include: 60일마다
+- id: q235
+  type: fact
+  asker: jiho
+  doc_id: eng-020
+  fact: 페이코어는 개발본부의 결제 스쿼드 이름이며 솔페이 승인, 취소, 매입 연동을 주로 담당한다.
+  must_include: 페이코어
+- id: q236
+  type: contradiction
+  asker: junpark
+  doc_id: co-005
+  fact: 본사는 서울 성동구 성수동 새솔타워 8층이다
+  must_include: 새솔타워 8층
+  topic: 본사 위치
+- id: q237
+  type: recency
+  asker: gaeun
+  doc_id: it-003
+  fact: null
+  must_include: null
+  change: 솔넷 VPN 클라이언트 제거 기한이 솔패스 등록 후 30일 이내에서 14일 이내로 바뀌었다.
+- id: q238
+  type: procedure
+  asker: gaeun
+  doc_id: hr-023
+  fact: 자기평가서는 시작일로부터 5영업일 안에 제출해야 한다.
+  must_include: 5영업일
+- id: q239
+  type: permission
+  asker: hyunwoo
+  doc_id: lead-002
+  fact: 팀별 예산 요청은 10월 17일까지 받는다
+  must_include: 10월 17일
+- id: q240
+  type: no_answer
+  asker: yuna
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 해외 법인과 해외 파견
+- id: q241
+  type: no_answer
+  asker: doyoon
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 솔북 웹 브라우저 버전
+- id: q242
+  type: abbreviation
+  asker: minjun
+  doc_id: data-008
+  fact: 정산 원장은 누리가 매일 전일 데이터를 기준으로 갱신하며 한 행은 가맹점 1곳의 하루 정산 결과다.
+  must_include: 하루 정산 결과
+  term: 정산 원장
+- id: q243
+  type: fact
+  asker: hyunwoo
+  doc_id: fin-011
+  fact: 한도 예외 승인은 분기당 2회까지다
+  must_include: 분기당 2회
+- id: q244
+  type: abbreviation
+  asker: minjun
+  doc_id: data-007
+  fact: 별빛은 A/B 실험 플랫폼이며 실험 결과를 정산 데이터와 연결할 때 experiment_id를 공통 키로 사용한다.
+  must_include: experiment_id
+  term: 별빛
+- id: q245
+  type: procedure
+  asker: jiho
+  doc_id: infra-020
+  fact: 우회 라우팅 적용 전에는 하늘에서 대상 가맹점 20곳만 먼저 변경해 10분간 결과를 본다.
+  must_include: 20곳
+- id: q246
+  type: abbreviation
+  asker: taeyang
+  doc_id: eng-014
+  fact: SP-E2003은 누리 정산 금액과 결제 원장이 맞지 않는 에러이며 발생 즉시 데이터팀에 알린다.
+  must_include: SP-E2003
+  term: SP-E2003
+- id: q247
+  type: permission
+  asker: sujin
+  doc_id: eng-025
+  fact: 카드 정보 암호화 키는 1년마다 순환한다
+  must_include: 1년마다
+- id: q248
+  type: no_answer
+  asker: jiho
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 반려동물 동반 출근
+- id: q249
+  type: recency
+  asker: sujin
+  doc_id: data-011
+  fact: null
+  must_include: null
+  change: 2026년 9월에 settlement_error_v에 NR-503 관련 점검용 컬럼 2개를 추가했다.
+- id: q250
+  type: procedure
+  asker: minjun
+  doc_id: data-007
+  fact: 실험 종료 후 3영업일 안에 데이터팀이 기준 지표 검증 메모를 남겨야 한다.
+  must_include: 3영업일
+- id: q251
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 스톡옵션 부여와 행사
+- id: q252
+  type: procedure
+  asker: dahye
+  doc_id: fin-012
+  fact: 감사 대응 기간은 3월 첫째 주부터 2주다
+  must_include: 3월 첫째 주
+- id: q253
+  type: fact
+  asker: jiho
+  doc_id: infra-024
+  fact: 2026-06 한 달 동안 발생한 모아 경보 312건을 검토한 결과 실제 조치가 필요했던 비율은 18%였다.
+  must_include: 312건
+- id: q254
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 동호회 지원금
+- id: q255
+  type: fact
+  asker: dahye
+  doc_id: prd-015
+  fact: 이번 릴리스에서 영수증 재발송 기능을 관리자 화면에 추가했다.
+  must_include: 영수증 재발송
+- id: q256
+  type: procedure
+  asker: sujin
+  doc_id: eng-020
+  fact: 외부 협력사인 레드브릭소프트 파견 개발자는 운영 배포 승인자가 될 수 없고 페어 작업으로만 첫 배포를 진행한다.
+  must_include: 레드브릭소프트
+- id: q257
+  type: permission
+  asker: jiho
+  doc_id: eng-024
+  fact: SP-E2003이 뜨면 먼저 정산 원장의 환불 건을 확인한다
+  must_include: SP-E2003
+- id: q258
+  type: abbreviation
+  asker: taeyang
+  doc_id: infra-008
+  fact: NR-503가 30분 이상 지속되면 고객지원팀에 공지 초안을 전달하고 L2 에스컬레이션 전용 방을 연다.
+  must_include: 30분
+  term: NR-503
+- id: q259
+  type: no_answer
+  asker: doyoon
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 퇴직연금 운용
+- id: q260
+  type: abbreviation
+  asker: jiho
+  doc_id: eng-017
+  fact: 이번 달 변경으로 솔게이트의 가맹점별 기본 호출 제한이 1분당 600건에서 1분당 800건으로 상향되었다.
+  must_include: 상향
+  term: 솔게이트
+- id: q261
+  type: fact
+  asker: junpark
+  doc_id: co-003
+  fact: 실시간 질문 접수는 다온으로 로그인한 뒤 행사 페이지에서 1인당 최대 3건까지 등록할 수 있다.
+  must_include: 3건
+- id: q262
+  type: fact
+  asker: minjun
+  doc_id: hr-018
+  fact: 가족돌봄 휴가는 법정 범위 안에서 사용하며 사내 신청서는 시작일 전 영업일까지 제출해야 한다.
+  must_include: 전 영업일
+- id: q263
+  type: procedure
+  asker: hyunwoo
+  doc_id: sec-010
+  fact: 계정 소유자가 개발본부 소속이면 해당 스쿼드 팀장과 DRI에게 동시에 알리고 운영 접근 권한이 있으면 접근 재인증 상태를 즉시 재검토한다.
+  must_include: 접근 재인증
+- id: q264
+  type: recency
+  asker: taeyang
+  doc_id: prd-012
+  fact: null
+  must_include: null
+  change: 2026년 9월에 문자 추가 발송 100건 가격을 3000원에서 4000원으로 올리고 다지점 관리 신청 가능 기준을 3개 지점 이상에서 2개 지점 이상으로 완화했다.
+- id: q265
+  type: recency
+  asker: seoyeon
+  doc_id: infra-015
+  fact: null
+  must_include: null
+  change: 2026년 9월에 DB 관리자 긴급 권한 기본 발급 시간을 1시간에서 2시간으로 늘리고 반납 후 보고 기한을 1영업일에서 12시간 안으로 바꿨다.
+- id: q266
+  type: procedure
+  asker: minjun
+  doc_id: data-012
+  fact: 정산 데이터 조회 권한은 데이터팀과 개발본부 정규직 및 계약직만 신청할 수 있으며 외부 협력사는 직접 신청할 수 없다.
+  must_include: 외부 협력사
+- id: q267
+  type: no_answer
+  asker: dahye
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 벤처 제도
+- id: q268
+  type: contradiction
+  asker: taeyang
+  doc_id: hr-024
+  fact: 주말·공휴일 온콜 수당은 하루 8만 원이다
+  must_include: 하루 8만 원
+  topic: 주말 온콜 수당
+- id: q269
+  type: fact
+  asker: doyoon
+  doc_id: prd-016
+  fact: 제품기획팀은 매달 첫 영업일에 전월 취소 사유 비율을 VOC와 함께 검토한다.
+  must_include: 첫 영업일
+- id: q270
+  type: procedure
+  asker: seoyeon
+  doc_id: eng-016
+  fact: 승인까지 5영업일이 걸린다
+  must_include: 5영업일
+- id: q271
+  type: fact
+  asker: junpark
+  doc_id: co-012
+  fact: 직원 동행 없이 회의실 구역 밖으로 이동하려면 경영진·팀장 또는 초청 부서 팀장의 사전 승인이 필요하다.
+  must_include: 사전 승인
+- id: q272
+  type: permission
+  asker: sujin
+  doc_id: sec-009
+  fact: 예외 접근 세션은 화면 기록을 남겨야 하고 종료 후 4시간 안에 작업 로그와 열람한 경로 목록을 제출해야 한다.
+  must_include: 4시간
+- id: q273
+  type: permission
+  asker: dahye
+  doc_id: lead-006
+  fact: 레드브릭소프트 소속 협력 개발자는 leadership 스페이스 문서를 직접 열람할 수 없고, 필요한 내용은 내부 팀장이 별도 요약으로 전달한다.
+  must_include: 레드브릭소프트
+- id: q274
+  type: contradiction
+  asker: yuna
+  doc_id: it-012
+  fact: 신규 입사자에게 맥북 프로 14를 지급한다
+  must_include: 맥북 프로 14
+  topic: 신규 입사자 노트북 기종
+- id: q275
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 통근 버스
+- id: q276
+  type: permission
+  asker: yuna
+  doc_id: hri-001
+  fact: 면접관은 평가표를 채용 시스템에만 작성하고 메일이나 메신저로 따로 공유하지 않는다.
+  must_include: 채용 시스템
+- id: q277
+  type: recency
+  asker: seoyeon
+  doc_id: eng-006
+  fact: null
+  must_include: null
+  change: 이번 달에 누리 배치 정상 마감 기준이 03시 40분에서 03시 20분으로 앞당겨졌다.
+- id: q278
+  type: recency
+  asker: hyunwoo
+  doc_id: co-009
+  fact: null
+  must_include: null
+  change: 휴무일 공지의 최소 사전 게시 기준을 5영업일 전에서 10영업일 전으로 변경했다.
+- id: q279
+  type: recency
+  asker: dahye
+  doc_id: cs-001
+  fact: null
+  must_include: null
+  change: 2026년 9월에 결제 실패 자동안내 문구가 하나의 통합 재시도 안내에서 PRJ-204는 3분, GW-429는 10분으로 구분되도록 바뀌었다.
+- id: q280
+  type: fact
+  asker: dahye
+  doc_id: prd-010
+  fact: PRJ-204가 발생하면 결제 화면에는 최대 20초 안에 결과를 다시 확인하라는 문구를 보여 준다.
+  must_include: 20초
+- id: q281
+  type: fact
+  asker: yuna
+  doc_id: it-014
+  fact: 모바일과 데스크톱에서 모두 알림이 끊긴 상태가 20분 넘게 지속되면 IT 헬프데스크 티켓을 생성한다.
+  must_include: 20분
+- id: q282
+  type: no_answer
+  asker: gaeun
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 기숙사·사택 지원
+- id: q283
+  type: fact
+  asker: gaeun
+  doc_id: fin-013
+  fact: 오후 11시 이후 퇴근하거나 오전 6시 이전 출근한 경우에만 택시비를 청구할 수 있다.
+  must_include: 오후 11시
+- id: q284
+  type: recency
+  asker: hyunwoo
+  doc_id: hr-002
+  fact: null
+  must_include: null
+  change: 재택근무 가능 횟수를 주 2회에서 주 3회로 늘리고, 신청 기한을 당일 오전 9시로 바꿨다
+- id: q285
+  type: permission
+  asker: taeyang
+  doc_id: infra-011
+  fact: 작업은 새벽 2시~5시에 한다
+  must_include: 새벽 2시~5시
+- id: q286
+  type: fact
+  asker: doyoon
+  doc_id: hr-014
+  fact: 코드 프리즈 기간에 페이코어와 그로스 스쿼드 구성원이 연차를 쓰려면 DRI 지정 여부를 승인 전에 확인해야 한다.
+  must_include: DRI
+- id: q287
+  type: no_answer
+  asker: junpark
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 사내 주차 등록과 주차비 지원
+- id: q288
+  type: fact
+  asker: jiho
+  doc_id: eng-010
+  fact: 솔게이트의 표준 요청 경로는 API 서버, 승인 오케스트레이터, 카드사·PG사 어댑터의 3단계다.
+  must_include: 3단계
+- id: q289
+  type: permission
+  asker: dahye
+  doc_id: lead-003
+  fact: 제품기획팀이 솔페이와 솔북 공통 릴리스 예산을 전용할 때는 영향받는 제품명을 둘 다 명시해야 한다.
+  must_include: 솔페이와 솔북
+- id: q290
+  type: abbreviation
+  asker: seoyeon
+  doc_id: infra-019
+  fact: PIR 액션으로 모아에 SP-E1001 전용 패널을 추가하고 핫픽스 창구 승인 템플릿에 재시도 설정 확인란을 넣었다.
+  must_include: 전용 패널
+  term: 핫픽스 창구
+- id: q291
+  type: procedure
+  asker: sujin
+  doc_id: eng-025
+  fact: 순환 작업은 보안팀과 페이코어 DRI가 함께 한다
+  must_include: 페이코어 DRI
+- id: q292
+  type: no_answer
+  asker: hyunwoo
+  doc_id: null
+  fact: null
+  must_include: null
+  topic: 통근 버스
+- id: q293
+  type: contradiction
+  asker: seoyeon
+  doc_id: infra-018
+  fact: S1은 결제 실패율 5% 이상이 5분 넘게 이어질 때다
+  must_include: 결제 실패율 5%
+  topic: S1 장애 기준
+- id: q294
+  type: fact
+  asker: dahye
+  doc_id: lead-003
+  fact: 한 번에 300만원 이상을 다른 예산 항목으로 전용하려면 소속 본부장과 재무팀장 승인을 모두 받아야 한다.
+  must_include: 300만원
+- id: q295
+  type: fact
+  asker: sujin
+  doc_id: prd-011
+  fact: 페이코어는 솔북-솔페이 예약금 결제 연동 구간의 응답 지연이 800밀리초를 넘으면 중복 클릭이 늘어난다고 보고했다.
+  must_include: 800밀리초
+- id: q296
+  type: procedure
+  asker: jiho
+  doc_id: eng-027
+  fact: 응답이 없는 권한은 분기 마지막 영업일 18시에 자동 회수한다.
+  must_include: 18시
+- id: q297
+  type: procedure
+  asker: doyoon
+  doc_id: cs-004
+  fact: 복구 후에는 30분 안에 최종 공지를 보내고, 후속 보상 검토가 필요한 경우 별도 안내 예정 문구를 포함한다.
+  must_include: 30분 안
+- id: q298
+  type: recency
+  asker: sujin
+  doc_id: prd-002
+  fact: null
+  must_include: null
+  change: 무료 체험 기간을 14일에서 30일로 늘리고 예약 건수 제한을 없앴다
+- id: q299
+  type: fact
+  asker: taeyang
+  doc_id: data-001
+  fact: 지표 확정 시각은 매일 오전 9시이며 그 이전 수치는 잠정값으로 본다.
+  must_include: 오전 9시
+- id: q300
+  type: procedure
+  asker: seoyeon
+  doc_id: eng-018
+  fact: 코드 프리즈 일정은 분기 시작 첫 주에 개발 스페이스 공지로 미리 알린다.
+  must_include: 분기 시작 첫 주
