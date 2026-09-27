@@ -80,8 +80,8 @@ JSON 필드 이름은 snake_case, 시각은 ISO 8601(UTC, 예: `2026-09-27T03:00
 | `GET /internal/documents?after={doc_id}&limit={n}` | `{"documents": [DocumentState...], "next": "{doc_id}" 또는 null}`. 삭제되지 않은 문서만, doc_id 순. limit 기본 100, 최대 500 | 전체 색인 |
 | `GET /internal/documents/{doc_id}` | DocumentState. 삭제된 문서는 `{"doc_id": "...", "revision": 7, "deleted": true}`, 한 번도 없던 문서는 404 | 인덱서의 상태 재조회 (ADR-19) |
 | `GET /internal/revisions` | `{"documents": [{"doc_id": "...", "revision": 5, "deleted": false}]}`. 삭제된 문서 포함 | 야간 정합성 배치 |
-| `GET /internal/users/{user_id}/groups` | `{"user_id": "jiho", "groups": ["group:employees", "group:eng"]}`. 모르는 사용자는 404 | 검색 시 그룹 해석 (ADR-08, M4에서 연결) |
-| `GET /internal/users/{user_id}/documents/{doc_id}` | 사용자가 볼 수 있으면 DocumentState, 아니면 404. 없는 문서, 삭제된 문서, 권한 없는 문서, 모르는 사용자의 응답이 모두 같다 | `get_document`와 리소스의 권한 재확인 (ADR-07, M4에서 연결) |
+| `GET /internal/users/{user_id}/groups` | `{"user_id": "jiho", "groups": ["group:employees", "group:eng"]}`. 모르는 사용자는 404 | 검색 시 그룹 해석 (ADR-08). 검색 서버는 Redis에 60초 캐시하고, 404는 캐시하지 않고 오류로 돌려준다 |
+| `GET /internal/users/{user_id}/documents/{doc_id}` | 사용자가 볼 수 있으면 DocumentState, 아니면 404. 없는 문서, 삭제된 문서, 권한 없는 문서, 모르는 사용자의 응답이 모두 같다 | `get_document`와 리소스의 권한 재확인 (ADR-07). 그룹 캐시를 거치지 않는다 |
 
 ### 관리자 API (`/admin/**`, 관리자 토큰)
 
@@ -135,7 +135,7 @@ JSON 필드 이름은 snake_case, 시각은 ISO 8601(UTC, 예: `2026-09-27T03:00
 | 스트림 | 필드 | 설명 |
 |---|---|---|
 | `wiki:events:{p}` | `doc_id`, `revision`, `type`(`CONTENT_CHANGED`, `ACL_CHANGED`, `DELETED`), `outbox_id`, `created_at` | 문서 이벤트. `p = CRC32(doc_id의 UTF-8 바이트) mod WIKI_EVENT_PARTITIONS` |
-| `wiki:membership` | `user_id`, `type`(`MEMBERSHIP_CHANGED`), `outbox_id`, `created_at` | 그룹 캐시 무효화용 (M4에서 소비) |
+| `wiki:membership` | `user_id`, `type`(`MEMBERSHIP_CHANGED`), `outbox_id`, `created_at` | 그룹 캐시 무효화용. 인덱서 워커가 문서 이벤트보다 먼저 읽어 검색 서버의 그룹 캐시를 무효화하고, 처리한 이벤트는 `XACKDEL ... ACKED`로 지운다 |
 
 - 이벤트 형식은 ADR-09의 `(doc_id, version, type)`이고, version 자리에 revision을 담습니다(ADR-19). 필드 이름은 헷갈리지 않게 `revision`으로 씁니다.
 - `created_at`은 아웃박스 행을 쓴 시각입니다. 인덱싱 지연(5장 "측정 지표")을 여기서부터 잽니다.

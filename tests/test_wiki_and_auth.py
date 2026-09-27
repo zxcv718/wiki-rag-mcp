@@ -5,7 +5,7 @@ import pytest
 from wiki_rag_mcp.auth.principals import principals_for
 from wiki_rag_mcp.models import Classification
 from wiki_rag_mcp.wiki.files import FileWikiSource
-from wiki_rag_mcp.wiki.source import GroupLookupError
+from wiki_rag_mcp.wiki.source import GroupLookupError, UnknownUserError
 
 FIXTURE = Path(__file__).parent / "fixtures" / "wiki"
 
@@ -47,14 +47,24 @@ def test_principals_include_user_and_groups(source):
     assert principals_for("user:kim", source) == ["user:kim", "group:partner"]
 
 
-def test_unknown_user_has_no_groups(source):
-    assert principals_for("stranger", source) == ["user:stranger"]
+def test_unknown_user_is_an_error_not_a_user_without_groups(source):
+    """그룹 없는 사용자로 보면 WIKI_USER 오타가 "문서가 없다"로 보인다 (M4)."""
+    with pytest.raises(UnknownUserError):
+        principals_for("stranger", source)
 
 
-@pytest.mark.parametrize("bad", ["", "user:", "bob smith", "../etc"])
+@pytest.mark.parametrize("bad", ["", "user:", "bob smith", "../etc", "..", "bob\n", "a" * 65])
 def test_rejects_malformed_user(source, bad):
     with pytest.raises(ValueError):
         principals_for(bad, source)
+
+
+def test_document_for_resolves_groups_itself(source):
+    """본문 재확인은 사용자 id만 받고 그룹과 두 층 권한을 위키 쪽에서 판단한다 (ADR-07, ADR-21)."""
+    assert source.document_for("infra-002", "dana").doc_id == "infra-002"
+    assert source.document_for("infra-002", "bob") is None  # 스페이스 안이지만 제한 밖
+    assert source.document_for("infra-002", "erin") is None  # 제한 대상이지만 스페이스 밖
+    assert source.document_for("infra-002", "stranger") is None  # 모르는 사용자도 없는 문서와 같다
 
 
 class BrokenSource:

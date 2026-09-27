@@ -1,7 +1,8 @@
 """MCP 서버. 답변을 만들지 않고 권한에 맞는 근거만 돌려준다 (ADR-04, ADR-05).
 
-M1은 stdio로만 돈다. 사용자는 실행 환경의 WIKI_USER로, 클라이언트 신뢰 등급은 WIKI_CLIENT_TIER로 정한다(ADR-06).
-표준 출력은 MCP 메시지 전용이라 로그를 찍지 않는다.
+stdio로 돈다. 사용자는 실행 환경의 WIKI_USER로, 클라이언트 신뢰 등급은 WIKI_CLIENT_TIER로 정한다(ADR-06).
+그룹과 본문은 위키 API에서 읽고(WIKI_SOURCE=wiki), 그룹은 Redis에 캐시한다(ADR-08). 평가·테스트용 파일 위키는
+WIKI_SOURCE=file로 쓴다. 표준 출력은 MCP 메시지 전용이라 로그를 찍지 않는다.
 """
 
 import json
@@ -12,7 +13,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ResourceError, ResourceNotFoundError, ToolError
 from mcp.types import ToolAnnotations
 
-from wiki_rag_mcp.auth.principals import principals_for
+from wiki_rag_mcp.auth.principals import principals_for, user_id_of
 from wiki_rag_mcp.auth.tiers import ClientTier
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.models import valid_doc_id
@@ -24,7 +25,7 @@ from wiki_rag_mcp.server.responses import (
     recent_changes_response,
     search_response,
 )
-from wiki_rag_mcp.wiki.source import GroupLookupError, WikiSource, WikiUnavailableError
+from wiki_rag_mcp.wiki.source import GroupLookupError, GroupSource, UnknownUserError, WikiSource, WikiUnavailableError
 
 MAX_TOP_K = 10
 MAX_QUERY_CHARS = 500
@@ -70,19 +71,29 @@ class DocumentNotFound(Exception):
 
 
 class Services:
-    """도구가 쓰는 의존성. 테스트에서 바꿔 끼울 수 있게 한곳에 모은다."""
+    """도구가 쓰는 의존성. 테스트에서 바꿔 끼울 수 있게 한곳에 모은다.
 
-    def __init__(self, settings: Settings, source: WikiSource, store: SearchStore | None, embedder: Any):
+    groups는 검색 필터에 쓸 그룹을 해석한다(보통 위키 앞의 Redis 캐시). 본문 재확인은 캐시를 거치지 않고
+    source(위키)가 그룹까지 직접 판단한다.
+    """
+
+    def __init__(self, settings: Settings, source: WikiSource, store: SearchStore | None, embedder: Any,
+                 groups: GroupSource | None = None):
         self.settings = settings
         self.source = source
         self.store = store
         self.embedder = embedder
+        self.groups = groups or source
 
     def principals(self) -> list[str]:
         if not self.settings.user:
             raise RequestFailed("사용자가 설정되지 않았습니다. MCP 서버 실행 환경에 WIKI_USER를 지정하세요.")
         try:
-            return principals_for(self.settings.user, self.source)
+            return principals_for(self.settings.user, self.groups)
+        except ValueError as e:
+            raise RequestFailed("WIKI_USER의 형식이 잘못됐습니다. 위키 사용자 id를 지정하세요.") from e
+        except UnknownUserError as e:
+            raise RequestFailed("위키에 없는 사용자입니다. MCP 서버 실행 환경의 WIKI_USER를 확인하세요.") from e
         except GroupLookupError as e:
             # 권한을 덜 반영한 결과를 주지 않고 요청 전체를 실패시킨다 (ADR-08)
             raise RequestFailed("권한 정보를 확인할 수 없어 처리하지 않았습니다. 잠시 뒤 다시 시도하세요.") from e
@@ -93,12 +104,12 @@ class Services:
 
     def document(self, doc_id: str, section: str | None = None) -> dict[str, Any]:
         # 권한 정보를 문서보다 먼저 확인한다. 위키 장애 중에 doc_id에 따라 "없음"과 "오류"가 갈리면
-        # 문서의 존재가 드러나기 때문이다 (ADR-08)
-        principals = self.principals()
+        # 문서의 존재가 드러나기 때문이다 (ADR-08). 권한 판단 자체는 위키가 다시 한다
+        self.principals()
         if not valid_doc_id(doc_id):
             raise DocumentNotFound(NOT_FOUND)
         try:
-            doc = self.source.document_for(doc_id, principals)
+            doc = self.source.document_for(doc_id, user_id_of(self.settings.user or ""))
         except WikiUnavailableError as e:
             raise RequestFailed("위키에서 문서를 읽을 수 없습니다. 잠시 뒤 다시 시도하세요.") from e
         if doc is None:
@@ -178,14 +189,26 @@ def build_server(services: Services) -> MCPServer:
     return server
 
 
-def main() -> None:
+def open_services(settings: Settings) -> Services:
     from wiki_rag_mcp.indexing.embedder import Embedder
     from wiki_rag_mcp.search.backend import open_store
-    from wiki_rag_mcp.wiki.files import FileWikiSource
 
-    settings = Settings.from_env()
-    services = Services(settings, FileWikiSource(settings.wiki_dir), open_store(settings), Embedder())
-    build_server(services).run("stdio")
+    if settings.wiki_source == "file":
+        from wiki_rag_mcp.wiki.files import FileWikiSource
+
+        source: WikiSource = FileWikiSource(settings.wiki_dir)
+        groups: GroupSource = source  # 파일은 로컬에서 바로 읽어 캐시할 이유가 없다
+    else:
+        from wiki_rag_mcp.auth.groups import GroupCache, open_client
+        from wiki_rag_mcp.wiki.http import HttpWikiSource
+
+        source = HttpWikiSource(settings.wiki_api_url, settings.wiki_service_token)
+        groups = GroupCache(source, open_client(settings))
+    return Services(settings, source, open_store(settings), Embedder(), groups)
+
+
+def main() -> None:
+    build_server(open_services(Settings.from_env())).run("stdio")
 
 
 if __name__ == "__main__":

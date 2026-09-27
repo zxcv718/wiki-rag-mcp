@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 import pytest
 import redis
 
-from wiki_rag_mcp.config import Settings
+from tests.services import redis_client
 from wiki_rag_mcp.indexing.events import Event, event_fields, partition
 from wiki_rag_mcp.indexing.incremental import Applied
 from wiki_rag_mcp.indexing.worker import StreamWorker
@@ -21,11 +21,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def client():
-    c = redis.Redis.from_url(Settings().redis_url, decode_responses=True)
-    try:
-        c.ping()
-    except redis.ConnectionError:
-        pytest.skip("로컬 Redis가 떠 있지 않다 (docker compose up -d redis)")
+    c = redis_client()
     yield c
     c.close()
 
@@ -163,6 +159,131 @@ def test_run_stops_and_logs_latency(client, prefix, caplog):
     publish(client, prefix)
     worker.run(stop, block_ms=100)
     assert "latency_ms=" in caplog.text
+
+
+def membership_worker(client, prefix, handler, invalidated, **kwargs):
+    worker = StreamWorker(client, handler, [0], prefix=prefix, membership=invalidated.append,
+                          membership_stream=f"{prefix}:membership", sleep=lambda _: None, **kwargs)
+    worker.ensure_groups()
+    return worker
+
+
+def test_membership_events_invalidate_before_document_events(client, prefix):
+    """임베딩할 문서 이벤트가 몰려도 그룹에서 빠진 사람의 권한이 늦게 줄지 않게 멤버십을 먼저 처리한다 (ADR-08)."""
+    order: list[str] = []
+    invalidated: list[str] = []
+
+    def handler(event):
+        order.append(f"doc:{event.doc_id}")
+        return Applied(event.doc_id, "indexed", event.revision)
+
+    worker = membership_worker(client, prefix, handler, invalidated)
+    publish(client, prefix, doc_id="db")
+    client.xadd(f"{prefix}:membership", {"user_id": "jiho", "type": "MEMBERSHIP_CHANGED", "outbox_id": "9",
+                                         "created_at": "2026-09-28T00:00:00Z"})
+    worker.membership = lambda user_id: (invalidated.append(user_id), order.append(f"member:{user_id}"))
+    assert worker.poll(block_ms=100) == 2
+    assert order == ["member:jiho", "doc:db"]
+    assert client.xlen(f"{prefix}:membership") == 0  # 확인과 함께 지워 스트림이 쌓이지 않는다
+
+
+@pytest.mark.parametrize("fields", [{"user_id": "../x", "type": "MEMBERSHIP_CHANGED"},
+                                    {"user_id": "jiho", "type": "SOMETHING_ELSE"}, {"type": "MEMBERSHIP_CHANGED"}])
+def test_malformed_membership_event_is_dropped(client, prefix, fields, caplog):
+    invalidated: list[str] = []
+    worker = membership_worker(client, prefix, Handler(), invalidated)
+    client.xadd(f"{prefix}:membership", fields)
+    worker.poll(block_ms=100)
+    assert invalidated == [] and client.xlen(f"{prefix}:membership") == 0
+    assert "잘못된 멤버십 이벤트" in caplog.text
+
+
+class DropsOnce:
+    """처음 한 번의 확인(XACKDEL)에서 연결이 끊기거나 응답이 없는 Redis. 나머지는 진짜 Redis로 보낸다."""
+
+    def __init__(self, client, error=redis.ConnectionError):
+        self.client = client
+        self.error = error
+        self.dropped = False
+
+    def xackdel(self, *args, **kwargs):
+        if not self.dropped:
+            self.dropped = True
+            raise self.error("연결 끊김 (테스트)")
+        return self.client.xackdel(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+@pytest.mark.parametrize("error", [redis.ConnectionError, redis.TimeoutError])
+def test_events_read_before_a_connection_drop_are_processed_after_reconnect(client, prefix, error):
+    """한 번에 읽은 이벤트 중 뒤쪽은 연결이 끊기면 처리되지 못한 채 남는다. 새 이벤트만 읽어서는 다시 오지 않으므로
+    연결이 돌아오면 남은 이벤트를 다시 가져와 처리한다. 응답 없는 Redis를 소켓 타임아웃으로 끊는 경우(TimeoutError,
+    ConnectionError의 하위 클래스가 아님)도 같다."""
+    import threading
+
+    for revision in (1, 2, 3):
+        publish(client, prefix, doc_id=f"doc-{revision}", revision=revision)
+    stop = threading.Event()
+    done: set[str] = set()
+
+    def handler(event):
+        done.add(event.doc_id)
+        if done == {"doc-1", "doc-2", "doc-3"}:
+            stop.set()
+        return Applied(event.doc_id, "indexed", event.revision)
+
+    worker = StreamWorker(DropsOnce(client, error), handler, [0], prefix=prefix, sleep=lambda _: None)
+    guard = threading.Timer(5.0, stop.set)  # 복구하지 못하면 영영 끝나지 않으므로 5초 뒤 멈추고 실패로 본다
+    guard.start()
+    worker.run(stop, block_ms=100)
+    guard.cancel()
+    assert done == {"doc-1", "doc-2", "doc-3"}
+    assert pending(client, prefix) == 0
+
+
+def test_membership_arriving_mid_batch_goes_before_the_next_document(client, prefix):
+    """문서 묶음을 처리하는 도중에 들어온 멤버십 이벤트도 남은 문서 이벤트보다 먼저 처리한다."""
+    order: list[str] = []
+
+    def handler(event):
+        order.append(f"doc:{event.doc_id}")
+        if event.doc_id == "doc-1":  # 첫 문서를 임베딩하는 사이에 누군가 그룹에서 빠졌다
+            client.xadd(f"{prefix}:membership", {"user_id": "jiho", "type": "MEMBERSHIP_CHANGED"})
+        return Applied(event.doc_id, "indexed", event.revision)
+
+    worker = membership_worker(client, prefix, handler, [])
+    worker.membership = lambda user_id: order.append(f"member:{user_id}")
+    for n in (1, 2, 3):
+        publish(client, prefix, doc_id=f"doc-{n}", revision=n)
+    worker.poll(block_ms=100)
+    assert order == ["doc:doc-1", "member:jiho", "doc:doc-2", "doc:doc-3"]
+
+
+def test_group_removed_while_running_is_recreated(client, prefix):
+    """Redis가 데이터 없이 다시 뜨면 소비자 그룹이 사라진다. 워커는 죽지 않고 그룹을 다시 만들어 이어서 읽는다."""
+    import threading
+
+    stop = threading.Event()
+    seen: list[str] = []
+
+    def handler(event):
+        seen.append(event.doc_id)
+        if event.doc_id == "first":
+            client.xgroup_destroy(f"{prefix}:0", "indexer")
+            publish(client, prefix, doc_id="second")
+        else:
+            stop.set()
+        return Applied(event.doc_id, "indexed", event.revision)
+
+    worker = StreamWorker(client, handler, [0], prefix=prefix, sleep=lambda _: None)
+    publish(client, prefix, doc_id="first")
+    guard = threading.Timer(5.0, stop.set)
+    guard.start()
+    worker.run(stop, block_ms=100)
+    guard.cancel()
+    assert seen[-1] == "second"
 
 
 def test_partition_matches_the_wiki_service():

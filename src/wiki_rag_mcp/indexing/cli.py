@@ -1,7 +1,8 @@
 """인덱싱 명령.
 
 - `wiki-rag-index`: 위키 전체를 임베딩해 검색 인덱스에 넣는다. 평가용 인덱스와 처음 색인할 때 쓴다.
-- `wiki-rag-worker`: 위키 이벤트를 받아 바뀐 문서만 반영한다 (ADR-09, ADR-19).
+- `wiki-rag-worker`: 위키 이벤트를 받아 바뀐 문서만 반영하고, 멤버십 이벤트로 그룹 캐시를 무효화한다
+  (ADR-08, ADR-09, ADR-19).
 - `wiki-rag-reconcile`: 야간 정합성 배치. 위키와 어긋난 문서의 이벤트를 다시 넣는다 (5장 "장애 대응").
 """
 
@@ -25,7 +26,10 @@ def _wiki(settings: Settings):
 def _redis(settings: Settings):
     import redis
 
-    return redis.Redis.from_url(settings.redis_url, decode_responses=True)
+    # 워커는 XREADGROUP BLOCK 1초로 기다린다. Redis가 응답 없이 멈추면(연결이 반만 열린 채 남는 경우) 타임아웃이
+    # 없을 때 영영 기다려, 권한 회수가 워커를 재시작할 때까지 반영되지 않는다
+    return redis.Redis.from_url(settings.redis_url, decode_responses=True, socket_timeout=10,
+                                socket_connect_timeout=5, socket_keepalive=True, health_check_interval=30)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -53,6 +57,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def worker_main(argv: list[str] | None = None) -> None:
+    from wiki_rag_mcp.auth.groups import invalidate
     from wiki_rag_mcp.indexing.embedder import Embedder, TokenCounter
     from wiki_rag_mcp.indexing.incremental import apply_event
     from wiki_rag_mcp.indexing.worker import StreamWorker
@@ -73,7 +78,9 @@ def worker_main(argv: list[str] | None = None) -> None:
     source, store = _wiki(settings), open_store(settings)
     store.ensure_index()
     embedder, count = Embedder(), TokenCounter()
-    worker = StreamWorker(_redis(settings), lambda e: apply_event(e, source, store, embedder, count), partitions)
+    client = _redis(settings)
+    worker = StreamWorker(client, lambda e: apply_event(e, source, store, embedder, count), partitions,
+                          membership=lambda user_id: invalidate(client, user_id))
 
     stop = threading.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):

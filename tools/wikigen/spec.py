@@ -72,6 +72,31 @@ class Spec:
         return ", ".join(out) or "아무도 없음"
 
 
+@dataclass(frozen=True)
+class Planned:
+    """생성 기록에 적힌 문서 하나의 권한과 등급. 권한 테스트셋의 정답이 여기서 나온다."""
+
+    space_principals: tuple[str, ...]
+    restricted_principals: tuple[str, ...]
+    classification: str
+
+
+def ledger(spec: Spec, wiki_dir: Path) -> dict[str, Planned]:
+    """생성 기록(manifest.yaml)과 스키마에서 문서마다 의도한 권한과 등급을 읽는다.
+
+    서버의 파일 위키 코드(FileWikiSource)나 위키 서비스를 거치지 않는다. 문서를 읽는 쪽에 버그가 있으면 색인과
+    정답에 똑같이 퍼져 테스트가 잡지 못하므로, 정답은 문서가 아니라 문서를 만든 계획에서 따로 계산한다.
+    """
+    manifest = yaml.safe_load((Path(wiki_dir) / "manifest.yaml").read_text(encoding="utf-8"))
+    result = {}
+    for doc in manifest["documents"]:
+        space = spec.spaces[doc["space"]]
+        levels = (doc.get("classification"), space.get("classification"))
+        result[doc["doc_id"]] = Planned(tuple(space["principals"]), tuple(doc["restricted"]),
+                                        "confidential" if "confidential" in levels else "general")
+    return result
+
+
 def load_spec(schema_path: Path, plants_path: Path) -> Spec:
     schema = yaml.safe_load(Path(schema_path).read_text(encoding="utf-8"))
     plants = yaml.safe_load(Path(plants_path).read_text(encoding="utf-8"))

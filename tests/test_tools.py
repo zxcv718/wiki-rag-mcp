@@ -16,7 +16,7 @@ from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.server.app import Services, build_server
 from wiki_rag_mcp.server.responses import CONFIDENTIAL_NOTE, NOT_FOUND
 from wiki_rag_mcp.wiki.files import FileWikiSource
-from wiki_rag_mcp.wiki.source import GroupLookupError
+from wiki_rag_mcp.wiki.source import GroupLookupError, WikiUnavailableError
 
 FIXTURE = Path(__file__).parent / "fixtures" / "wiki"
 
@@ -31,9 +31,23 @@ class BrokenGroups(FileWikiSource):
         raise GroupLookupError("위키 응답 없음")
 
 
-def run(user: str | None, action, *, tier: str = "external", source_cls=FileWikiSource):
+class BrokenDocuments(FileWikiSource):
+    """그룹은 캐시에서 읽혔는데 본문을 가져올 때 위키가 죽은 경우."""
+
+    def document_for(self, doc_id, user_id):
+        raise WikiUnavailableError("위키 응답 없음")
+
+
+class StaleGroups:
+    """캐시에 남은 옛 멤버십. dana가 dba에서 빠졌지만 캐시는 아직 모른다."""
+
+    def groups_of(self, user_id):
+        return ["group:employees", "group:eng", "group:dba"]
+
+
+def run(user: str | None, action, *, tier: str = "external", source_cls=FileWikiSource, groups=None):
     services = Services(Settings(wiki_dir=FIXTURE, user=user, client_tier=tier), source_cls(FIXTURE), None,
-                        NoEmbedder())
+                        NoEmbedder(), groups)
 
     async def go():
         async with Client(build_server(services)) as client:
@@ -126,3 +140,56 @@ def test_section_selection_and_unknown_section():
 
 def test_missing_user_is_an_error():
     assert "WIKI_USER" in error_text(get(None, "hr-003"))
+
+
+@pytest.mark.parametrize("user", ["stranger", "..", "bob smith"])
+def test_unknown_or_malformed_user_is_an_error_not_an_empty_wiki(user):
+    assert "WIKI_USER" in error_text(get(user, "hr-003"))
+    assert "WIKI_USER" in error_text(get(user, "no-such-doc"))
+
+
+def test_document_fetch_failure_gives_the_same_error_for_any_doc_id():
+    """그룹은 읽혔는데 본문을 못 가져오는 경우도 doc_id와 관계없이 같은 오류다 (4장 "검증 방법")."""
+    existing = get("dana", "infra-002", source_cls=BrokenDocuments)
+    missing = get("dana", "no-such-doc", source_cls=BrokenDocuments)
+    assert error_text(existing) == error_text(missing) != NOT_FOUND
+    a = read("dana", "infra-002", source_cls=BrokenDocuments)
+    b = read("dana", "no-such-doc", source_cls=BrokenDocuments)
+    assert (a.error.code, a.error.message) == (b.error.code, b.error.message)
+
+
+def test_body_recheck_does_not_trust_the_group_cache():
+    """캐시된 그룹이 낡아도 본문은 위키가 지금 멤버십으로 다시 판단한다 (ADR-07 본문 재확인)."""
+
+    class WikiWithoutDba(FileWikiSource):
+        def __init__(self, root):
+            super().__init__(root)
+            self.users = {**self.users, "dana": ["employees", "eng"]}
+
+    assert error_text(get("dana", "infra-002", source_cls=WikiWithoutDba, groups=StaleGroups())) == NOT_FOUND
+
+
+def test_server_startup_wires_the_wiki_api_behind_the_group_cache(monkeypatch):
+    """실행 설정(.mcp.json)이 쓰는 경로. 그룹은 위키 앞의 캐시로, 본문 재확인은 위키로 간다."""
+    import wiki_rag_mcp.indexing.embedder as embedder
+    import wiki_rag_mcp.search.backend as backend
+    from wiki_rag_mcp.auth.groups import GroupCache
+    from wiki_rag_mcp.server.app import open_services
+    from wiki_rag_mcp.wiki.http import HttpWikiSource
+
+    monkeypatch.setattr(embedder, "Embedder", NoEmbedder)
+    monkeypatch.setattr(backend, "open_store", lambda settings: None)
+    services = open_services(Settings(user="jiho"))
+    assert isinstance(services.source, HttpWikiSource)
+    assert isinstance(services.groups, GroupCache) and services.groups.source is services.source
+
+    files = open_services(Settings(user="bob", wiki_source="file", wiki_dir=FIXTURE))
+    assert isinstance(files.source, FileWikiSource) and files.groups is files.source
+
+
+def test_settings_reject_unknown_source_and_dev_token_on_a_remote_wiki():
+    with pytest.raises(ValueError):
+        Settings(wiki_source="wki")
+    with pytest.raises(ValueError):
+        Settings(wiki_api_url="https://wiki.internal.example")
+    assert Settings(wiki_api_url="https://wiki.internal.example", wiki_service_token="real-secret")

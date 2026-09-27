@@ -8,9 +8,10 @@ import zlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from wiki_rag_mcp.models import valid_doc_id
+from wiki_rag_mcp.models import valid_doc_id, valid_user_id
 
 STREAM_PREFIX = "wiki:events"
+MEMBERSHIP_STREAM = "wiki:membership"  # 그룹 캐시 무효화용 (ADR-08)
 GROUP = "indexer"
 DOC_EVENT_TYPES = frozenset({"CONTENT_CHANGED", "ACL_CHANGED", "DELETED", "RECONCILE"})
 
@@ -55,3 +56,13 @@ def event_fields(event: Event) -> dict[str, str]:
     created = event.created_at or datetime.now(UTC)
     return {"doc_id": event.doc_id, "revision": str(event.revision), "type": event.type,
             "created_at": created.isoformat()}
+
+
+def parse_membership(fields: dict[str, str]) -> str:
+    """멤버십 이벤트에서 사용자 id를 읽는다. 형식이 틀리면 ValueError."""
+    if fields.get("type") != "MEMBERSHIP_CHANGED":
+        raise ValueError(f"모르는 멤버십 이벤트 종류: {fields.get('type')!r}")
+    user_id = fields.get("user_id", "")
+    if not valid_user_id(user_id):
+        raise ValueError(f"잘못된 user_id: {user_id!r}")
+    return user_id

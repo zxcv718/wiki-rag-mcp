@@ -5,13 +5,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-# 위키 서비스와 같은 doc_id 형식(wiki-service/README.md). doc_id는 위키 API의 URL 경로에 들어가므로, 점으로만 된
-# id(".", "..")는 경로 이동으로 해석되지 않게 막는다. fullmatch로 써야 끝의 줄바꿈까지 거부한다
-DOC_ID = re.compile(r"(?!\.+\Z)[A-Za-z0-9._-]{1,64}")
+# 위키 서비스와 같은 id 형식(wiki-service/README.md). 문서·사용자 id는 위키 API의 URL 경로에 들어가므로, 점으로만
+# 된 id(".", "..")는 경로 이동으로 해석되지 않게 막는다. fullmatch로 써야 끝의 줄바꿈까지 거부한다
+WIKI_ID = re.compile(r"(?!\.+\Z)[A-Za-z0-9._-]{1,64}")
 
 
 def valid_doc_id(doc_id: str) -> bool:
-    return DOC_ID.fullmatch(doc_id) is not None
+    return WIKI_ID.fullmatch(doc_id) is not None
+
+
+def valid_user_id(user_id: str) -> bool:
+    return WIKI_ID.fullmatch(user_id) is not None
 
 
 class Classification(StrEnum):
