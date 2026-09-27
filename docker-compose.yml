@@ -1,6 +1,7 @@
 # 로컬 개발용 구성. 인증을 단순하게 둔 대신 포트는 127.0.0.1에만 연다.
+# 다른 프로젝트와 겹치지 않게 기본 포트(5432, 6379, 8080)를 비워 둔다.
 services:
-  # 검색 인덱스 (ADR-02 "단순화할 때"). 위키 DB와 분리한 데이터베이스다 (ADR-01)
+  # 검색 인덱스 (ADR-22). 위키 DB와 분리한 데이터베이스다 (ADR-01)
   postgres:
     image: pgvector/pgvector:0.8.6-pg18
     environment:
@@ -8,7 +9,7 @@ services:
       POSTGRES_PASSWORD: wiki  # 로컬 개발용. 127.0.0.1에만 열려 있다
       POSTGRES_DB: wiki_search
     ports:
-      - "127.0.0.1:5433:5432"  # 5432는 다른 PostgreSQL과 겹치지 않게 비워 둔다
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -17,5 +18,60 @@ services:
       timeout: 5s
       retries: 30
 
+  # 위키 DB: 문서·권한·아웃박스의 원천 (ADR-01, ADR-09)
+  wiki-db:
+    image: postgres:18.6
+    environment:
+      POSTGRES_USER: wiki
+      POSTGRES_PASSWORD: wiki  # 로컬 개발용
+      POSTGRES_DB: wiki
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - wiki-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wiki -d wiki"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # 인덱싱 이벤트(Redis Streams)와 캐시 (ADR-09). XACKDEL을 쓰려면 8.2 이상이어야 한다.
+  # 발행이 끝난 이벤트는 아웃박스에서 다시 나가지 않으므로, Redis가 재시작돼도 스트림이 남도록 AOF를 켠다.
+  # everysec이라 마지막 1초 안팎은 잃을 수 있고, 이 틈은 야간 정합성 배치가 메운다 (5장 "장애 대응")
+  redis:
+    image: redis:8.8-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # 위키 서비스 (Spring Boot). 문서를 고치면 아웃박스를 거쳐 wiki:events:{p}로 이벤트를 낸다
+  wiki:
+    build: ./wiki-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://wiki-db:5432/wiki
+      SPRING_DATASOURCE_USERNAME: wiki
+      SPRING_DATASOURCE_PASSWORD: wiki
+      SPRING_DATA_REDIS_URL: redis://redis:6379
+      # 로컬 개발용 토큰. 운영에서는 비밀 저장소에서 넣는다
+      WIKI_SERVICE_TOKEN: ${WIKI_SERVICE_TOKEN:-local-service-token}
+      WIKI_ADMIN_TOKEN: ${WIKI_ADMIN_TOKEN:-local-admin-token}
+      WIKI_EVENT_PARTITIONS: "4"
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      wiki-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres-data:
+  wiki-db-data:
+  redis-data:
