@@ -11,11 +11,11 @@
 
 **M1 완료**: Python MCP 서버(도구 3개와 문서 리소스), stdio 연동, 가상 위키 200문서(`data/wiki`), 권한·등급 테스트셋.
 
-**M2 (2주)**: 골든셋 300문항, 평가 스크립트, ADR-02·11·12·13 판정 실험
+**M2 완료**: 골든셋 300문항, 평가 스크립트, ADR-02·11·12·13 판정 실험
 
 - 골든셋은 `data/golden/`, 태그 `golden-v1`로 고정했습니다. 판정 계획과 결과는 `experiments/m2-judgement/README.md`에 있고, 평가는 `wiki-rag-eval`로 돌립니다.
 - 판정 결과: 맥락 헤더 유지, 하이브리드 보류로 검색 저장소를 PostgreSQL + pgvector로 단순화(ADR-22), 리랭커는 지연 예산 초과로 도입하지 않음, 상용 임베딩(gemini-embedding-001)은 기각해 로컬 bge-m3 유지. 판정 코드와 결과는 태그 `m2-judgement`에 있습니다.
-- 검색 저장소는 PostgreSQL + pgvector입니다(`search/pg_store.py`, `SEARCH_BACKEND=postgres` 기본). 로컬 DB는 `docker compose up -d postgres`로 띄우고 127.0.0.1:5433에 엽니다. OpenSearch 코드와 컨테이너는 상용 임베딩 비교가 끝나면 지웁니다(pgvector HNSW가 2,000차원까지만 지원해, 3,072차원 비교는 기준선과 같은 OpenSearch에서 합니다).
+- 검색 저장소는 PostgreSQL + pgvector입니다(`search/pg_store.py`). 로컬 DB는 `docker compose up -d postgres`로 띄우고 127.0.0.1:5433에 엽니다(5432는 다른 프로젝트와 겹치지 않게 비워 둠). OpenSearch와 하이브리드·Gemini 비교 코드는 판정 뒤 지웠고, 재현은 태그 `m2-judgement`로 합니다.
 - 권한 필터는 두 필드를 배열 겹침(`&&`)으로 WHERE 절에 겁니다. HNSW가 필터를 스캔 뒤에 적용하므로 검색마다 `hnsw.iterative_scan = strict_order`를 켜고, 결과 수 테스트로 k개가 나오는지 확인합니다(4장 "벡터 검색의 필터 적용 방식").
 - 판정 뒤 새로 드러난 과제(최근 문서 우선, 경량 리랭커)는 판정 기준을 먼저 적은 뒤 별도 실험으로 다룹니다. 결과를 본 뒤 바로 설정을 바꾸지 않습니다.
 

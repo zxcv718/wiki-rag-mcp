@@ -17,25 +17,5 @@ services:
       timeout: 5s
       retries: 30
 
-  # M2 판정 전의 검색 저장소. pgvector로 옮긴 뒤 같은 골든셋으로 비교할 때까지만 둔다
-  opensearch:
-    build: docker/opensearch
-    image: wiki-rag-mcp/opensearch:3.8.0-nori
-    environment:
-      discovery.type: single-node
-      DISABLE_SECURITY_PLUGIN: "true"
-      DISABLE_INSTALL_DEMO_CONFIG: "true"
-      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
-    ports:
-      - "127.0.0.1:9200:9200"
-    volumes:
-      - opensearch-data:/usr/share/opensearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
 volumes:
   postgres-data:
-  opensearch-data:

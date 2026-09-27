@@ -1,10 +1,9 @@
-"""평가 지표, ADR-20 판정, RRF의 정의를 고정한다. 판정 기준은 결과를 보기 전에 정해 두는 것이라 테스트로 묶는다."""
+"""평가 지표와 ADR-20 판정의 정의를 고정한다. 판정 기준은 결과를 보기 전에 정해 두는 것이라 테스트로 묶는다."""
 
 import pytest
 
 from wiki_rag_mcp.evaluation.judge import compare, verdict
 from wiki_rag_mcp.evaluation.metrics import mrr_at, ndcg_at, recall_at
-from wiki_rag_mcp.search.fusion import rrf
 
 
 def test_recall_counts_any_relevant_doc_in_top5_results():
@@ -39,8 +38,3 @@ def test_verdict_rules_follow_adr20():
     noisy = compare([1.0, 0.0] * 135, [1.0, 0.0] * 130 + [1.0, 1.0] * 5)
     assert verdict(noisy, 0.02) == "보류"
 
-
-def test_rrf_rewards_items_found_by_both_lists():
-    fused = rrf([["a", "b", "c"], ["c", "d"]], k=60)
-    assert fused[0][0] == "c"
-    assert [i for i, _ in fused] == ["c", "a", "b", "d"]  # b와 d는 동점, 순위가 같아 앞 목록의 b가 먼저

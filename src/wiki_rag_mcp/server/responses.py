@@ -1,4 +1,4 @@
-"""도구 응답을 만드는 규칙. 서버와 떼어 두어 모델이나 OpenSearch 없이 테스트한다 (3장, 9장, ADR-17)."""
+"""도구 응답을 만드는 규칙. 서버와 떼어 두어 모델이나 검색 저장소 없이 테스트한다 (3장, 9장, ADR-17)."""
 
 from datetime import datetime, timedelta
 from typing import Any
