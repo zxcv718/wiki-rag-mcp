@@ -1,9 +1,11 @@
 """`wiki-rag-eval`: 판정 실험용 인덱스를 만들고, 구성별로 골든셋을 돌리고, ADR-20 규칙으로 판정한다.
+CI 회귀 검사(7장)도 여기서 돌린다.
 
     wiki-rag-eval index noheader        # 맥락 헤더를 뺀 비교용 인덱스
     wiki-rag-eval run baseline          # 구성 하나를 골든셋 전체로 돌린다
     wiki-rag-eval report                # 돌린 구성들의 지표와 지연
     wiki-rag-eval judge baseline vector-rerank --metric mrr@10 --threshold 0.05
+    wiki-rag-eval regress               # CI 회귀 검사. 실패하면 종료 코드 1
 """
 
 import argparse
@@ -15,6 +17,7 @@ from wiki_rag_mcp.evaluation.run import CONFIGS, INDEXES
 
 GOLDEN = Path("data/golden/golden.jsonl")
 RUNS = Path("experiments/m2-judgement/runs")
+BASELINE = Path("data/golden/baseline.json")
 
 
 def _index(name: str) -> None:
@@ -48,6 +51,11 @@ def main(argv: list[str] | None = None) -> None:
     judge_p.add_argument("candidate")
     judge_p.add_argument("--metric", default="recall@5", choices=["recall@5", "mrr@10", "ndcg@10"])
     judge_p.add_argument("--threshold", type=float, required=True)
+    regress_p = sub.add_parser("regress")
+    regress_p.add_argument("--golden", type=Path, default=GOLDEN)
+    regress_p.add_argument("--baseline", type=Path, default=BASELINE)
+    regress_p.add_argument("--cache", type=Path, default=Path(".cache/ci-embeddings.npz"))
+    regress_p.add_argument("--out", type=Path, default=Path(".cache/ci-run"))
     args = parser.parse_args(argv)
 
     if args.command == "index":
@@ -79,6 +87,11 @@ def main(argv: list[str] | None = None) -> None:
             rerank = f"{s['rerank_p95_ms']:.0f}" if s["rerank_p95_ms"] else "-"
             print(f"| {path.stem} | {s['recall@5']:.3f} | {s['mrr@10']:.3f} | {s['ndcg@10']:.3f} | "
                   f"{s['p50_ms']:.0f} | {s['p95_ms']:.0f} | {rerank} |")
+    elif args.command == "regress":
+        from wiki_rag_mcp.evaluation.regression import check
+
+        if not check(args.golden, args.baseline, args.cache, args.out):
+            raise SystemExit(1)
     else:
         from wiki_rag_mcp.evaluation.judge import verdict
         from wiki_rag_mcp.evaluation.report import load_run, paired

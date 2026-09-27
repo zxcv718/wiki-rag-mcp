@@ -36,6 +36,18 @@ wikigen = [
     "openai>=3.19.2",
 ]
 
+# 리눅스에서는 CPU 전용 torch를 받는다. GitHub 러너에는 GPU가 없고, PyPI의 리눅스 torch는 CUDA 패키지를
+# 함께 받아 수 GB가 된다. macOS는 그대로 PyPI에서 받는다 (https://docs.astral.sh/uv/guides/integration/pytorch/)
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
