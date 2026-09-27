@@ -9,7 +9,11 @@ from typing import Protocol
 from wiki_rag_mcp.models import Document
 
 
-class GroupLookupError(RuntimeError):
+class WikiUnavailableError(RuntimeError):
+    """위키에서 문서나 권한 정보를 읽지 못했다. 일부만 반영한 결과를 주지 않고 요청 전체를 실패시킨다."""
+
+
+class GroupLookupError(WikiUnavailableError):
     """그룹 멤버십을 읽지 못했다. 사용자 id만으로 검색하지 않고 요청 전체를 실패시킨다 (ADR-08)."""
 
 
@@ -19,7 +23,14 @@ class WikiSource(Protocol):
         ...
 
     def document(self, doc_id: str) -> Document | None:
-        """본문 조회. 없는 문서면 None."""
+        """권한을 따지지 않는 조회 (색인·관리용). 없는 문서면 None."""
+        ...
+
+    def document_for(self, doc_id: str, principals: list[str]) -> Document | None:
+        """사용자에게 줄 문서. 권한은 위키가 두 층 모두 따져 판단한다 (ADR-07 본문 재확인, ADR-21).
+
+        없는 문서와 볼 수 없는 문서를 구분하지 않고 둘 다 None이다. 위키를 읽지 못하면 WikiUnavailableError.
+        """
         ...
 
     def groups_of(self, user_id: str) -> list[str]:
