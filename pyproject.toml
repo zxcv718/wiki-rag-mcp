@@ -1,0 +1,48 @@
+[project]
+name = "wiki-rag-mcp"
+version = "0.1.0"
+description = "사용자 권한에 맞게 사내 위키를 검색해 근거를 돌려주는 MCP 서버"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=2.2.0",
+    "numpy>=2.5.3",
+    "opensearch-py>=3.2.0",
+    "pyyaml>=6.0.3",
+    "sentence-transformers>=6.1.0",
+    "torch>=2.14.0",
+]
+
+[project.scripts]
+wiki-rag-mcp = "wiki_rag_mcp.server.app:main"
+wiki-rag-index = "wiki_rag_mcp.indexing.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]
+wikigen = [
+    "openai>=3.19.2",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+# 실험 스크립트는 폴더 안 모듈을 직접 import하므로 import 정렬에서 우리 코드로 본다
+src = ["src", "experiments/embedding-model"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: 로컬 OpenSearch(docker compose)가 떠 있어야 하는 테스트"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["src"]
