@@ -1,0 +1,16 @@
+# 테스트용 가상 위키 스키마. 실제 평가용 200문서는 data/wiki에 생성 기록과 함께 만든다.
+company: 새솔소프트 (가상 회사)
+wiki_url: https://wiki.saesol.example
+spaces:
+  company: {title: 전사 공지, principals: [all], classification: general}
+  hr-policy: {title: 인사 제도, principals: [group:employees], classification: general}
+  engineering: {title: 개발, principals: [group:eng], classification: general}
+  infra: {title: 인프라, principals: [group:infra, group:eng], classification: general}
+  hr-internal: {title: 인사팀, principals: [group:hr], classification: confidential}
+  empty-perm: {title: 권한 미설정, principals: [], classification: general}
+users:
+  bob: [employees, eng]
+  dana: [employees, eng, dba]
+  erin: [employees, dba]      # DBA지만 개발팀이 아니다. 인프라 스페이스 멤버가 아님 (ADR-21 반대 방향)
+  hana: [employees, hr]
+  kim: [partner]              # 외부 협력사. 전사 공지만 본다
