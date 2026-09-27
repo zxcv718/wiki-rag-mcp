@@ -31,12 +31,12 @@ def _embedder(kind: str):
 def _index(name: str) -> None:
     from wiki_rag_mcp.indexing.embedder import TokenCounter
     from wiki_rag_mcp.indexing.indexer import index_all
-    from wiki_rag_mcp.search.store import OpenSearchStore
+    from wiki_rag_mcp.search.backend import open_store
     from wiki_rag_mcp.wiki.files import FileWikiSource
 
     spec = INDEXES[name]
     settings = Settings.from_env()
-    store = OpenSearchStore(OpenSearchStore.from_settings(settings).client, spec.alias)
+    store = open_store(settings, spec.alias)
     store.drop()
     if spec.embedder == "gemini":
         embedder = _embedder("gemini")
@@ -70,12 +70,14 @@ def main(argv: list[str] | None = None) -> None:
     if args.command == "index":
         _index(args.name)
     elif args.command == "run":
+        from dataclasses import replace
+
         from wiki_rag_mcp.evaluation.run import Runner, run
-        from wiki_rag_mcp.search.store import OpenSearchStore
+        from wiki_rag_mcp.search.backend import open_store
         from wiki_rag_mcp.wiki.files import FileWikiSource
 
-        settings = Settings.from_env()
         config = CONFIGS[args.name]
+        settings = replace(Settings.from_env(), search_backend=config.backend)
         golden = [json.loads(line) for line in args.golden.read_text(encoding="utf-8").splitlines()]
         embedder = _embedder(INDEXES[config.index].embedder)
         if hasattr(embedder, "encode_queries"):
@@ -85,7 +87,7 @@ def main(argv: list[str] | None = None) -> None:
             from wiki_rag_mcp.search.reranker import Reranker
 
             reranker = Reranker(device="cpu")
-        runner = Runner(config, OpenSearchStore.from_settings(settings).client, FileWikiSource(settings.wiki_dir),
+        runner = Runner(config, open_store(settings, INDEXES[config.index].alias), FileWikiSource(settings.wiki_dir),
                         embedder, reranker)
         print(f"결과: {run(args.name, runner, golden, args.out)}")
     elif args.command == "report":
@@ -105,7 +107,7 @@ def main(argv: list[str] | None = None) -> None:
         from wiki_rag_mcp.wiki.files import FileWikiSource
 
         settings = Settings.from_env()
-        store = OpenSearchStore.from_settings(settings)
+        store = OpenSearchStore.from_settings(settings)  # 형태소 분석(nori)은 OpenSearch에만 있다
 
         def analyze(text: str) -> set[str]:
             res = store.client.indices.analyze(index=store.alias, body={"analyzer": "korean", "text": text})

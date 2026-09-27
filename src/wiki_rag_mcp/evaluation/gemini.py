@@ -4,6 +4,7 @@
 임베딩한다. 기본 차원(3072)은 정규화되어 나오지만, 코사인 비교가 정확하도록 한 번 더 정규화한다.
 """
 
+import hashlib
 import json
 import os
 import time
@@ -14,8 +15,22 @@ from pathlib import Path
 import numpy as np
 
 URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents"
-BATCH = 50
-MAX_TRIES = 8
+BATCH = 20
+MAX_TRIES = 12
+PAUSE = 10  # 묶음 사이 대기(초). 무료 등급의 분당 한도를 넘지 않게 한다
+# API 응답을 디스크에 둔다. 다시 돌릴 때 무료 등급 한도를 쓰지 않고, 색인과 API 호출을 따로 할 수 있다
+CACHE = Path(".cache/gemini-embeddings.npz")
+
+
+def _retry_delay(detail: bytes) -> float | None:
+    """429 응답의 RetryInfo.retryDelay("37s")를 초로 바꾼다. 없으면 None."""
+    try:
+        for d in json.loads(detail)["error"].get("details", []):
+            if "retryDelay" in d:
+                return float(d["retryDelay"].rstrip("s")) + 2
+    except (ValueError, KeyError):
+        pass
+    return None
 
 
 def api_key(env_file: Path = Path(".env")) -> str:
@@ -35,9 +50,11 @@ class GeminiEmbedder:
     dtype = "float32"
     dim = 3072
 
-    def __init__(self, key: str | None = None):
+    def __init__(self, key: str | None = None, cache: Path = CACHE):
         self.key = key or api_key()
         self._queries: dict[str, np.ndarray] = {}
+        self.cache_path = cache
+        self._cache: dict[str, np.ndarray] = dict(np.load(cache)) if cache.exists() else {}
 
     def _post(self, body: dict) -> dict:
         request = urllib.request.Request(URL, data=json.dumps(body).encode(), method="POST",
@@ -47,19 +64,30 @@ class GeminiEmbedder:
                 with urllib.request.urlopen(request, timeout=120) as resp:
                     return json.loads(resp.read())
             except urllib.error.HTTPError as e:
-                # 무료 등급의 호출 한도(429)나 일시 오류는 기다렸다 다시 부른다
+                # 무료 등급의 호출 한도(429)나 일시 오류는 기다렸다 다시 부른다. API가 알려 준 대기 시간을 따른다
+                detail = e.read()
                 if e.code not in (429, 500, 503) or attempt == MAX_TRIES - 1:
-                    raise RuntimeError(f"Gemini API 오류 {e.code}: {e.read()[:300]!r}") from e
-                time.sleep(min(90, 5 * 2**attempt))
+                    raise RuntimeError(f"Gemini API 오류 {e.code}: {detail.decode(errors='replace')[:1500]}") from e
+                time.sleep(_retry_delay(detail) or min(90, 5 * 2**attempt))
         raise AssertionError("unreachable")
 
+    @staticmethod
+    def _key(text: str, task: str) -> str:
+        return hashlib.sha256(f"{task}\n{text}".encode()).hexdigest()
+
     def _embed(self, texts: list[str], task: str) -> np.ndarray:
-        vectors = []
-        for start in range(0, len(texts), BATCH):
+        missing = list(dict.fromkeys(t for t in texts if self._key(t, task) not in self._cache))
+        for start in range(0, len(missing), BATCH):
+            batch = missing[start : start + BATCH]
             body = {"requests": [{"model": "models/gemini-embedding-001", "content": {"parts": [{"text": t}]},
-                                  "taskType": task} for t in texts[start : start + BATCH]]}
-            vectors += [e["values"] for e in self._post(body)["embeddings"]]
-        array = np.array(vectors, dtype=np.float32)
+                                  "taskType": task} for t in batch]}
+            for text, e in zip(batch, self._post(body)["embeddings"], strict=True):
+                self._cache[self._key(text, task)] = np.asarray(e["values"], dtype=np.float32)
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+            np.savez(self.cache_path, **self._cache)
+            if start + BATCH < len(missing):
+                time.sleep(PAUSE)
+        array = np.stack([self._cache[self._key(t, task)] for t in texts])
         return array / np.linalg.norm(array, axis=1, keepdims=True)
 
     def encode_documents(self, texts: list[str]) -> np.ndarray:
