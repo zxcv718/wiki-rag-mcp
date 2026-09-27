@@ -42,8 +42,10 @@ def bench(name, device):
         lat.append((time.perf_counter() - t0) * 1000)
     lat.sort()
     rate = len(chunks) / elapsed
-    print(f"[{device}] 모델 로드 {load:.1f}s | 청크 {len(chunks)}개(평균 {tokens:.0f}토큰) {elapsed:.1f}s = {rate:.1f}개/s, "
-          f"3,000개 환산 {3000 / rate / 60:.1f}분 | 질문 1개 p50 {statistics.median(lat):.0f}ms p95 {lat[int(len(lat) * 0.95) - 1]:.0f}ms")
+    p50, p95 = statistics.median(lat), lat[int(len(lat) * 0.95) - 1]
+    print(f"[{device}] 모델 로드 {load:.1f}s | 청크 {len(chunks)}개(평균 {tokens:.0f}토큰) "
+          f"{elapsed:.1f}s = {rate:.1f}개/s, 3,000개 환산 {3000 / rate / 60:.1f}분 | "
+          f"질문 1개 p50 {p50:.0f}ms p95 {p95:.0f}ms")
     return model
 
 
@@ -67,7 +69,8 @@ def main(name):
     gc.collect()
     torch.mps.empty_cache()
     bench(name, "cpu")
-    print(f"최대 메모리(RSS) {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024**3:.1f}GB")  # macOS는 바이트 단위
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024**3  # macOS는 바이트 단위
+    print(f"최대 메모리(RSS) {peak:.1f}GB")
 
 
 if __name__ == "__main__":

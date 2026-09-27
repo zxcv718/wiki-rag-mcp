@@ -10,7 +10,7 @@
     uv run --with numpy python scripts/judge_sim.py
 """
 
-from functools import lru_cache
+from functools import cache
 
 import numpy as np
 
@@ -20,7 +20,7 @@ BOOT = 10_000     # 실험마다 부트스트랩 반복 횟수 (ADR-20)
 rng = np.random.default_rng(0)
 
 
-@lru_cache(maxsize=None)
+@cache
 def percentile_ci(n, wins, losses):
     """이긴 수와 진 수가 주어졌을 때 차이의 95% 퍼센타일 부트스트랩 구간."""
     p = [wins / n, losses / n, 1 - (wins + losses) / n]
@@ -35,7 +35,7 @@ def simulate(n, p_d, delta):
     wins = rng.binomial(discordant, q)
     losses = discordant - wins
     diff = (wins - losses) / n
-    ci = np.array([percentile_ci(n, int(w), int(l)) for w, l in zip(wins, losses)])
+    ci = np.array([percentile_ci(n, int(won), int(lost)) for won, lost in zip(wins, losses, strict=True)])
     adopt = (ci[:, 0] > 0) & (diff >= THRESHOLD)
     reject = ci[:, 1] < THRESHOLD
     return (diff >= THRESHOLD).mean(), adopt.mean(), reject.mean(), (ci[:, 1] - ci[:, 0]).mean() / 2

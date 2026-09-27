@@ -26,7 +26,8 @@ ADR_FILE = re.compile(r"^(ADR-\d+)\.md$")
 
 README_HEAD = """# 결정 기록 (ADR) 목록
 
-형식: 맥락, 선택지, 결정, 감수한 비용, 재검토 조건. 결정이 바뀌면 기존 파일을 지우지 않고 상태를 `대체됨`으로 바꾼 뒤 새 ADR을 추가합니다.
+형식: 맥락, 선택지, 결정, 감수한 비용, 재검토 조건. \
+결정이 바뀌면 기존 파일을 지우지 않고 상태를 `대체됨`으로 바꾼 뒤 새 ADR을 추가합니다.
 
 이 폴더의 파일은 `scripts/adr_sync.py`가 설계서(`docs/design.md`)에서 만듭니다. 고칠 때는 설계서를 고칩니다.
 
@@ -93,7 +94,8 @@ def build():
             if not STATUS_LINE.search(old):
                 errors.append(f"{adr_id}: 파일에 '- 상태:' 줄이 없음")
                 continue
-            files[path.name] = STATUS_LINE.sub(lambda _: f"- 상태: {row['status']}", old, count=1)
+            status_line = f"- 상태: {row['status']}"
+            files[path.name] = STATUS_LINE.sub(lambda _, line=status_line: line, old, count=1)
             continue
         if not sec:
             errors.append(f"{adr_id}: 결정 목록에는 있지만 설계서에 절이 없음")

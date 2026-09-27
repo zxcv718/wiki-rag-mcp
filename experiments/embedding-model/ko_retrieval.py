@@ -30,7 +30,10 @@ def load_data():
         return json.loads(CACHE.read_text(encoding="utf-8"))
     from datasets import load_dataset
     name = "mteb/Ko-StrategyQA"
-    first = lambda ds: ds[list(ds.keys())[0]]  # 세 구성 모두 dev 분할 하나뿐이다
+
+    def first(ds):
+        return ds[list(ds.keys())[0]]  # 세 구성 모두 dev 분할 하나뿐이다
+
     corpus = first(load_dataset(name, "corpus"))
     queries = first(load_dataset(name, "queries"))
     qrels = first(load_dataset(name, "qrels"))
