@@ -17,6 +17,23 @@
 - 가상 위키는 생성 스키마·생성 기록과 함께 만듭니다 (7장 "평가용 데이터"). 골든셋 300문항의 유형 비율(ADR-20)을 채울 만큼 약어, 개정 전후 문서, 제한 문서를 심습니다.
 - 검색 저장소(OpenSearch)를 다루는 코드는 한 모듈에 모읍니다. M2 판정에서 ADR-02가 보류나 기각으로 나오면 PostgreSQL + pgvector로 옮기기 때문입니다 (ADR-02 "단순화할 때", ADR-20).
 
+M1 진행 순서 (문서 10개로 끝까지 먼저 돌린 뒤 200문서로 넓힙니다):
+
+0. 뼈대: uv 프로젝트, ruff·pytest, docker compose(OpenSearch + analysis-nori 플러그인)
+1. 인덱스 매핑(엔진 lucene)과 권한 필터 함수, 단위 테스트
+2. 청크 분할기(섹션 기준, 표·코드 보존, 맥락 헤더, 섹션 해시), 단위 테스트
+3. 임베딩(bge-m3)과 색인
+4. `search_wiki`를 stdio MCP 서버로 붙여 Claude Code에서 호출 (1주차 목표)
+5. 가상 위키 200문서: 생성 스키마, `tools/wikigen/` 스크립트로 LLM API 생성, 생성 기록, 점검. 도메인은 일반 IT 회사
+6. `get_document`, `list_recent_changes`, `wiki://doc/{doc_id}` 리소스, 등급 정책, 응답 상한과 표시
+7. 200문서 전체 색인, 4장 권한·등급·결과 수 테스트
+
+M1 구현 원칙:
+
+- 위키 접근은 `WikiSource` 인터페이스로 감쌉니다. M1은 `data/wiki/`의 파일을 읽고, M3에서 Spring 위키 API로 바꿔 끼웁니다.
+- M1은 OAuth 없이 stdio로만 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 가상 위키 조직도에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다.
+- API 키는 `.env`에 두고 커밋하지 않습니다.
+
 로드맵: M1, M2(골든셋·평가·판정 실험), M3(Spring 위키·아웃박스·증분 인덱싱), M4(권한 pre-filter·CI), M5(HTTP·OAuth·부하·관측성), M6(README·데모) 순서로 진행합니다.
 
 ## 결정 원칙
