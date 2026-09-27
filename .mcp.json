@@ -4,8 +4,8 @@
       "command": "uv",
       "args": ["run", "--quiet", "wiki-rag-mcp"],
       "env": {
-        "WIKI_DIR": "tests/fixtures/wiki",
-        "WIKI_USER": "bob",
+        "WIKI_DIR": "data/wiki",
+        "WIKI_USER": "jiho",
         "TOKENIZERS_PARALLELISM": "false"
       }
     }
