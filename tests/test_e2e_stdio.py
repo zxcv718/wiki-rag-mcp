@@ -5,18 +5,16 @@
 
 import json
 import os
-import uuid
 from pathlib import Path
 
 import anyio
 import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from opensearchpy import OpenSearch
 
+from tests.pg import new_store
 from wiki_rag_mcp.indexing.embedder import Embedder, TokenCounter
 from wiki_rag_mcp.indexing.indexer import index_all
-from wiki_rag_mcp.search.store import OpenSearchStore
 from wiki_rag_mcp.wiki.files import FileWikiSource
 
 pytestmark = pytest.mark.integration
@@ -26,13 +24,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "wiki"
 
 @pytest.fixture(scope="module")
 def alias():
-    client = OpenSearch(hosts=["http://127.0.0.1:9200"], timeout=30)
-    try:
-        client.info()
-    except Exception:
-        pytest.skip("로컬 OpenSearch가 떠 있지 않다")
-    store = OpenSearchStore(client, f"test-e2e-{uuid.uuid4().hex[:8]}")
-    store.ensure_index()
+    store = new_store("e2e", 1024)
     index_all(FileWikiSource(FIXTURE), store, Embedder(), TokenCounter())
     yield store.alias
     store.drop()
@@ -40,6 +32,7 @@ def alias():
 
 def call(alias: str, user: str | None, tool: str, args: dict, tier: str = "external"):
     env = {**os.environ, "WIKI_DIR": str(FIXTURE), "WIKI_INDEX_ALIAS": alias, "WIKI_CLIENT_TIER": tier,
+           "SEARCH_BACKEND": "postgres",
            "TOKENIZERS_PARALLELISM": "false"}
     env.pop("WIKI_USER", None)
     if user:

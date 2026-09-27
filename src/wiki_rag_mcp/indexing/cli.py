@@ -6,7 +6,7 @@ from pathlib import Path
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.indexing.embedder import Embedder, TokenCounter
 from wiki_rag_mcp.indexing.indexer import index_all
-from wiki_rag_mcp.search.store import OpenSearchStore
+from wiki_rag_mcp.search.backend import open_store
 from wiki_rag_mcp.wiki.files import FileWikiSource
 
 
@@ -18,7 +18,7 @@ def main(argv: list[str] | None = None) -> None:
 
     settings = Settings.from_env()
     source = FileWikiSource(args.wiki_dir or settings.wiki_dir)
-    store = OpenSearchStore.from_settings(settings)
+    store = open_store(settings)
     if args.reset:
         store.drop()
     index_name = store.ensure_index()
