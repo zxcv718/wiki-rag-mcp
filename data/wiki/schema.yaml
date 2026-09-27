@@ -1,0 +1,224 @@
+# 가상 위키 생성 스키마 (7장 "평가용 데이터").
+# 모든 문서가 이 스키마를 따른다. 서버(FileWikiSource)는 wiki_url, spaces의 title·principals·classification,
+# users만 읽고, 나머지는 tools/wikigen이 문서를 계획하고 쓸 때 쓴다.
+# 심은 사례(개정 전후, 모순, 제한, 인젝션 등)는 tools/wikigen/plants.yaml에 있다.
+
+company: 새솔소프트
+wiki_url: https://wiki.saesol.example
+today: 2026-09-27  # 생성 기준일. 이 날짜 이후의 일은 문서에 쓰지 않는다
+seed: 20260927     # 문서 id, 날짜, 버전 배정용
+
+about: >-
+  새솔소프트는 2016년에 세운 직원 약 250명 규모의 IT 회사다. 중소 가맹점용 결제·정산 SaaS인 솔페이와
+  매장 예약 관리 앱인 솔북을 만든다. 개발본부는 스쿼드 단위로 일하고, 사내 도메인은 saesol.example을 쓴다.
+
+# 조직도. group은 권한 판단에 쓰는 그룹 id다 (principal은 group:{id})
+org:
+  - {team: 경영진·팀장, group: leads, about: 팀장 이상 관리자 전체}
+  - {team: 개발본부, group: eng, about: 결제 스쿼드 페이코어, 그로스 스쿼드, 솔북 스쿼드, QA를 포함한 개발 조직 전체}
+  - {team: 플랫폼·SRE팀, group: infra, about: 인프라, 배포, 관측성, 온콜 운영. 개발본부 소속}
+  - {team: DB 관리자, group: dba, about: 운영 DB를 관리하는 사람. 플랫폼팀과 데이터팀에 나뉘어 있다}
+  - {team: 데이터팀, group: data, about: 정산 데이터 파이프라인과 분석. 개발본부가 아니라 경영지원본부 소속}
+  - {team: 정보보안팀, group: security, about: 보안 정책, 접근 감사, 침해사고 대응}
+  - {team: 제품기획팀, group: product, about: 솔페이·솔북 기획과 릴리스 관리}
+  - {team: 고객지원팀, group: cs, about: 가맹점 문의 응대와 에스컬레이션}
+  - {team: 인사팀, group: hr, about: 채용, 평가, 보상, 근태}
+  - {team: 재무팀, group: finance, about: 경비, 법인카드, 예산, 회계 감사}
+  - {team: 전 직원, group: employees, about: 정규직과 계약직 전체. 협력사 인력은 포함하지 않는다}
+  - {team: 외부 협력사, group: partner, about: 레드브릭소프트에서 파견 온 협력 개발자}
+
+# 가상 사용자와 소속 그룹. 골든셋 문항과 권한 테스트셋의 질문자다.
+users:
+  jiho: [employees, eng]                    # 김지호, 페이코어 스쿼드 백엔드 개발자
+  seoyeon: [employees, eng, infra]          # 박서연, SRE. DBA가 아니다 (제한 문서의 스페이스 멤버이지만 제한 대상 아님)
+  taeyang: [employees, eng, infra, dba]     # 강태양, 플랫폼팀 DBA. 인프라 스페이스와 DBA 제한을 둘 다 만족
+  minjun: [employees, data, dba]            # 이민준, 데이터팀 DBA. 제한 대상이지만 인프라 스페이스 멤버가 아님 (ADR-21 반대 방향)
+  sujin: [employees, eng, security]         # 한수진, 보안 엔지니어
+  yuna: [employees, hr]                     # 정유나, 인사 담당
+  hyunwoo: [employees, finance, leads]      # 최현우, 재무팀장
+  dahye: [employees, product, leads]        # 윤다혜, 제품기획팀장
+  doyoon: [employees, cs]                   # 오도윤, 고객지원 매니저
+  gaeun: [employees]                        # 문가은, 입사 첫 주 신입 (전사·공통 스페이스만)
+  junpark: [partner]                        # 박준, 레드브릭소프트 협력 개발자 (전사 공지와 협력사 안내만)
+
+# 스페이스와 권한 매트릭스. principals가 스페이스 보기 권한(space_principals)이다.
+# docs는 스페이스의 문서 수(심은 사례 포함), prefix는 문서 id 앞부분이다.
+spaces:
+  company:
+    title: 전사 공지
+    principals: [all]
+    classification: general
+    prefix: co
+    docs: 12
+    about: 협력사를 포함해 누구나 보는 공지. 회사 소개, 사무실 안내, 전사 행사, 전사 회의 요약, 휴무일 공지
+    doc_types: [공지, 안내, 회의 요약]
+  hr-policy:
+    title: 인사 제도
+    principals: [group:employees]
+    classification: general
+    prefix: hr
+    docs: 24
+    about: 직원이 보는 인사 규정. 휴가, 근태, 재택근무, 복지, 평가 일정, 온보딩, 온콜 수당
+    doc_types: [규정, 절차 안내, FAQ]
+  finance:
+    title: 경비·구매
+    principals: [group:employees]
+    classification: general
+    prefix: fin
+    docs: 14
+    about: 직원이 보는 경비 청구, 법인카드, 출장비, 구매 요청 절차
+    doc_types: [규정, 절차 안내, FAQ]
+  it-help:
+    title: IT 헬프데스크
+    principals: [group:employees]
+    classification: general
+    prefix: it
+    docs: 14
+    about: 계정, 원격 접속, 노트북, 소프트웨어 설치, 인증 정책 안내
+    doc_types: [설치 가이드, 문제 해결, 정책]
+  engineering:
+    title: 개발
+    principals: [group:eng]
+    classification: general
+    prefix: eng
+    docs: 34
+    about: 개발본부 문서. 개발 프로세스, 코드 리뷰, 브랜치 전략, API 규약, 서비스 구조, 에러 코드, 설계 제안서(RFC), 스쿼드 회의록
+    doc_types: [개발 가이드, 설계 문서, API 명세, 에러 코드 설명, 회의록, 온보딩]
+  infra:
+    title: 플랫폼·SRE
+    principals: [group:infra, group:eng]
+    classification: general
+    prefix: infra
+    docs: 26
+    about: 런북, 장애 대응, 장애 회고, 배포, 모니터링, 온콜, 운영 DB
+    doc_types: [런북, 장애 회고, 운영 정책, 아키텍처 문서]
+  data:
+    title: 데이터
+    principals: [group:data, group:eng]
+    classification: general
+    prefix: data
+    docs: 12
+    about: 정산 데이터 파이프라인, 데이터 사전, 지표 정의, 조회 권한
+    doc_types: [데이터 사전, 파이프라인 문서, 조회 가이드]
+  security:
+    title: 정보보안
+    principals: [group:security, group:leads]
+    classification: confidential
+    prefix: sec
+    docs: 10
+    about: 보안팀과 팀장만 보는 보안 운영 문서. 접근 감사, 취약점 대응, 침해사고 대응, 점검 결과
+    doc_types: [보안 정책, 사고 대응 절차, 점검 결과]
+  product:
+    title: 제품 기획
+    principals: [group:product, group:eng, group:cs]
+    classification: general
+    prefix: prd
+    docs: 16
+    about: 솔페이·솔북 기능 명세, 릴리스 노트, 기획 회의록, 요금제
+    doc_types: [기능 명세, 릴리스 노트, 회의록]
+  cs:
+    title: 고객 지원
+    principals: [group:cs, group:product]
+    classification: general
+    prefix: cs
+    docs: 14
+    about: 가맹점 응대 매뉴얼, 자주 묻는 문의, 환불, 에스컬레이션 절차
+    doc_types: [응대 매뉴얼, FAQ, 절차 안내]
+  hr-internal:
+    title: 인사팀
+    principals: [group:hr]
+    classification: confidential
+    prefix: hri
+    docs: 10
+    about: 인사팀만 보는 문서. 채용 절차, 보상 기준, 평가 조정, 징계 절차
+    doc_types: [내부 기준, 절차 안내, 회의록]
+  leadership:
+    title: 팀장 공유
+    principals: [group:leads]
+    classification: confidential
+    prefix: lead
+    docs: 8
+    about: 팀장 이상만 보는 문서. 팀장 회의록, 조직 운영, 목표 관리, 예산
+    doc_types: [회의록, 운영 기준]
+  partner:
+    title: 협력사 안내
+    principals: [group:partner, group:eng]
+    classification: general
+    prefix: ptn
+    docs: 4
+    about: 협력사 개발자 온보딩, 저장소 접근, 보안 서약, 협업 방식
+    doc_types: [온보딩, 안내]
+  migration:
+    title: 구 위키 이관
+    principals: []   # 권한 설정이 빠진 채 이관된 스페이스. 아무도 볼 수 없어야 한다 (4장 "권한 모델")
+    classification: general
+    prefix: mig
+    docs: 2
+    about: 구 위키에서 옮겨 오다 권한 설정이 빠진 문서
+    doc_types: [안내]
+
+# 약어·고유명사 사전. 사전에 없는 사내 약어, 에러 코드, 프로젝트 이름은 만들지 않는다.
+# space는 그 용어를 설명하는 문서가 있어야 하는 스페이스다.
+# 판정 실험은 이 사전으로 동의어 확장을 하지 않는다 (ADR-20).
+glossary:
+  - {term: 솔페이, space: company, means: 중소 가맹점용 결제·정산 SaaS. 회사의 주력 제품}
+  - {term: 솔북, space: company, means: 매장 예약 관리 앱. 솔페이와 결제가 연동된다}
+  - {term: 솔데이, space: company, means: 매달 첫째 주 금요일 오후 4시에 여는 전사 회의}
+  - {term: 딥워크 데이, space: company, means: 매주 수요일. 정기 회의를 잡지 않는 날}
+  - {term: 솔포인트, space: hr-policy, means: 분기마다 지급하는 복지 포인트}
+  - {term: 리프레시 휴가, space: hr-policy, means: 근속 3년마다 주는 유급 휴가}
+  - {term: 반반차, space: hr-policy, means: 2시간 단위 휴가}
+  - {term: 솔마켓, space: finance, means: 사내 비품·소프트웨어 구매 요청 포털}
+  - {term: 다온, space: it-help, means: 사내 계정·SSO 시스템}
+  - {term: 솔패스, space: it-help, means: 제로트러스트 원격 접속 서비스. 솔넷 VPN을 대체}
+  - {term: 솔넷 VPN, space: it-help, means: 2026년 6월까지 쓰던 옛 VPN}
+  - {term: 솔게이트, space: engineering, means: 카드사·PG사와 연동하는 결제 게이트웨이 서비스. 약어 SGW}
+  - {term: 누리, space: engineering, means: 가맹점별 일 단위 정산 배치 시스템}
+  - {term: 페이코어, space: engineering, means: 결제 스쿼드 이름}
+  - {term: 그로스 스쿼드, space: product, means: 가입 전환과 요금제를 맡는 스쿼드}
+  - {term: DRI, space: engineering, means: 작업이나 장애의 직접 책임자 한 명}
+  - {term: RFC, space: engineering, means: 구조 변경 전에 쓰는 설계 제안서. 리뷰를 거쳐 승인}
+  - {term: 코드 프리즈, space: engineering, means: 분기 마지막 주의 배포 동결 기간}
+  - {term: PRJ-204, space: engineering, means: 솔게이트가 PG사 응답을 기다리다 시간 초과된 에러}
+  - {term: SP-E1001, space: engineering, means: 카드 승인 재시도 횟수를 넘긴 에러}
+  - {term: SP-E2003, space: engineering, means: 누리 정산 금액과 결제 원장이 맞지 않는 에러}
+  - {term: GW-429, space: engineering, means: 가맹점별 솔게이트 호출 한도를 넘긴 에러}
+  - {term: BK-4010, space: product, means: 솔북에서 같은 예약 슬롯이 두 번 잡힌 에러}
+  - {term: 은하수 프로젝트, space: engineering, means: 누리 정산 시스템 재구축 프로젝트}
+  - {term: 하늘, space: infra, means: 사내 배포 도구. 카나리 배포와 롤백을 지원}
+  - {term: 모아, space: infra, means: 로그·지표·트레이스를 모으는 사내 관측 플랫폼}
+  - {term: 금고, space: infra, means: 비밀값을 보관하는 비밀 관리 시스템 (Vault)}
+  - {term: NR-503, space: infra, means: 누리 배치가 제시간에 끝나지 않을 때 뜨는 경보}
+  - {term: CAB, space: infra, means: 운영 변경을 승인하는 변경 승인 위원회}
+  - {term: PIR, space: infra, means: 장애 사후 검토 회의와 그 문서}
+  - {term: 핫픽스 창구, space: infra, means: 코드 프리즈 중에도 긴급 배포를 받는 절차}
+  - {term: 파도 프로젝트, space: infra, means: 운영 서버를 쿠버네티스로 옮기는 프로젝트}
+  - {term: 등대 프로젝트, space: infra, means: 모든 서비스의 로그·지표 형식을 맞추는 관측성 표준화 프로젝트}
+  - {term: 별빛, space: data, means: A/B 실험 플랫폼}
+  - {term: PII 등급, space: data, means: 개인정보 민감도를 1~3등급으로 나눈 사내 기준. 1등급이 가장 민감}
+  - {term: 정산 원장, space: data, means: 누리가 만드는 가맹점별 정산 기준 테이블}
+  - {term: 접근 재인증, space: security, means: 분기마다 권한 보유자가 계속 필요한지 확인하는 절차}
+  - {term: VOC, space: cs, means: 고객의 소리. 가맹점 불만·제안 기록}
+  - {term: CSAT, space: cs, means: 문의 처리 후 받는 고객 만족도 점수 (5점 만점)}
+  - {term: L2 에스컬레이션, space: cs, means: 상담원이 풀지 못한 문의를 담당 스쿼드로 넘기는 단계}
+  - {term: 레드브릭소프트, space: partner, means: 개발 인력을 파견하는 협력사}
+  - {term: OKR, space: leadership, means: 분기 목표와 핵심 결과 지표}
+  - {term: 캘리브레이션, space: hr-internal, means: 팀장들이 모여 평가 등급을 조정하는 회의}
+
+# 위키에 없어야 하는 주제. 답 없음 문항(골든셋 30문항)의 재료다. keywords가 어느 문서에도 나오면 점검이 실패한다.
+absent_topics:
+  - {topic: 사내 주차 등록과 주차비 지원, keywords: [주차장, 주차 등록, 주차비]}
+  - {topic: 사내 어린이집, keywords: [어린이집]}
+  - {topic: 스톡옵션 부여와 행사, keywords: [스톡옵션]}
+  - {topic: 사내 동호회 지원금, keywords: [동호회]}
+  - {topic: 사내 식당과 식단, keywords: [구내식당, 사내 식당]}
+  - {topic: 통근 버스, keywords: [통근 버스, 셔틀버스]}
+  - {topic: 기숙사·사택 지원, keywords: [기숙사, 사택]}
+  - {topic: 해외 법인과 해외 파견, keywords: [해외 법인, 해외 파견]}
+  - {topic: 사내 헬스장·운동 시설, keywords: [헬스장, 피트니스]}
+  - {topic: 안식년 제도, keywords: [안식년]}
+  - {topic: 퇴직연금 운용, keywords: [퇴직연금]}
+  - {topic: 반려동물 동반 출근, keywords: [반려동물]}
+  - {topic: 직무 발명·특허 보상, keywords: [특허, 직무 발명]}
+  - {topic: 사내 벤처 제도, keywords: [사내 벤처]}
+  - {topic: 솔북 웹 브라우저 버전, keywords: [솔북 웹]}
