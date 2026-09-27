@@ -1,0 +1,6 @@
+mps/bfloat16: 문서 256개 35.9s
+mps/float32: 문서 256개 27.7s
+cpu/bfloat16: 질문 1개 p50 297ms
+cpu/float32: 질문 1개 p50 169ms
+bfloat16과 float32 벡터의 코사인 평균 1.0003
+토큰 수 (Ko-StrategyQA 문서 2,000개, 최대 512): bge-m3 평균 172, Qwen3 평균 216
