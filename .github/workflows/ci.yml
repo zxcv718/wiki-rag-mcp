@@ -26,7 +26,7 @@ jobs:
       TOKENIZERS_PARALLELISM: "false"
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0  # 이 액션은 주 버전 태그(v10)를 두지 않는다
         with:
           enable-cache: true
       - run: uv sync --locked
@@ -60,7 +60,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0  # 이 액션은 주 버전 태그(v10)를 두지 않는다
         with:
           enable-cache: true
       - run: uv sync --locked
