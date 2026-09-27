@@ -11,8 +11,11 @@ from opensearchpy import OpenSearch, helpers
 
 from wiki_rag_mcp.config import EMBEDDING_DIM, Settings
 from wiki_rag_mcp.search.filters import search_filter
+from wiki_rag_mcp.search.fusion import RRF_K, rrf
 
 _SOURCE_EXCLUDES = ["embedding"]
+# 하이브리드에서 BM25와 벡터 검색이 각각 가져오는 후보 수. 리랭커 후보(30개, 8장)보다 넉넉히 둔다
+HYBRID_DEPTH = 50
 
 
 def index_body(dim: int = EMBEDDING_DIM) -> dict[str, Any]:
@@ -106,20 +109,54 @@ class OpenSearchStore:
                                    "must_not": [{"ids": {"values": keep_ids}}]}}}
         self.client.delete_by_query(index=self.alias, body=body, refresh=refresh)
 
+    @staticmethod
+    def _knn_body(vector: list[float], k: int, filters: dict[str, Any]) -> dict[str, Any]:
+        # 권한 필터는 knn 절 안에 둔다. 바깥 bool이나 post_filter에 두면 post-filter가 된다 (4장)
+        return {"size": k, "_source": {"excludes": _SOURCE_EXCLUDES},
+                "query": {"knn": {"embedding": {"vector": vector, "k": k, "filter": filters}}}}
+
+    @staticmethod
+    def _bm25_body(query: str, k: int, filters: dict[str, Any]) -> dict[str, Any]:
+        # 일반 쿼리에서는 bool의 filter 절이 점수 계산 전에 적용된다. 제목과 본문을 같은 가중치로 본다
+        return {"size": k, "_source": {"excludes": _SOURCE_EXCLUDES},
+                "query": {"bool": {"must": [{"multi_match": {"query": query, "fields": ["title", "text"]}}],
+                                   "filter": filters["bool"]["filter"]}}}
+
+    @staticmethod
+    def _hits(res: dict[str, Any]) -> list[dict[str, Any]]:
+        return [{**h["_source"], "score": h["_score"]} for h in res["hits"]["hits"]]
+
     def knn_search(self, vector: list[float], principals: list[str], k: int, *, space: str | None = None,
                    updated_after: datetime | None = None) -> list[dict[str, Any]]:
         """권한 필터를 knn 절 안에 넣은 벡터 검색. 볼 수 있는 청크가 k개 이상이면 k개를 돌려준다."""
-        body = {
-            "size": k,
-            "_source": {"excludes": _SOURCE_EXCLUDES},
-            "query": {"knn": {"embedding": {
-                "vector": vector,
-                "k": k,
-                "filter": search_filter(principals, space=space, updated_after=updated_after),
-            }}},
-        }
-        res = self.client.search(index=self.alias, body=body)
-        return [{**h["_source"], "score": h["_score"]} for h in res["hits"]["hits"]]
+        filters = search_filter(principals, space=space, updated_after=updated_after)
+        return self._hits(self.client.search(index=self.alias, body=self._knn_body(vector, k, filters)))
+
+    def bm25_search(self, query: str, principals: list[str], k: int, *, space: str | None = None,
+                    updated_after: datetime | None = None) -> list[dict[str, Any]]:
+        """nori 형태소 분석을 거친 키워드 검색. 권한 필터는 벡터 검색과 같은 조건이다."""
+        filters = search_filter(principals, space=space, updated_after=updated_after)
+        return self._hits(self.client.search(index=self.alias, body=self._bm25_body(query, k, filters)))
+
+    def hybrid_search(self, vector: list[float], query: str, principals: list[str], k: int, *,
+                      space: str | None = None, updated_after: datetime | None = None,
+                      depth: int = HYBRID_DEPTH, rrf_k: int = RRF_K) -> list[dict[str, Any]]:
+        """BM25와 벡터 검색을 한 번의 요청(msearch)으로 보내고 청크 순위를 RRF로 합친다 (ADR-12).
+
+        두 검색 모두 권한 필터를 통과한 후보만 받으므로, 합친 결과에도 권한 밖 청크가 섞이지 않는다.
+        """
+        filters = search_filter(principals, space=space, updated_after=updated_after)
+        res = self.client.msearch(index=self.alias, body=[
+            {}, self._knn_body(vector, depth, filters),
+            {}, self._bm25_body(query, depth, filters),
+        ])
+        for r in res["responses"]:
+            if "error" in r:
+                raise RuntimeError(f"검색 실패: {r['error']}")
+        vec, kw = (self._hits(r) for r in res["responses"])
+        by_id = {h["chunk_id"]: h for h in [*kw, *vec]}
+        fused = rrf([[h["chunk_id"] for h in vec], [h["chunk_id"] for h in kw]], rrf_k)
+        return [{**by_id[cid], "score": score} for cid, score in fused[:k]]
 
     def recent_changes(self, principals: list[str], since: datetime, *, space: str | None = None,
                        size: int = 20) -> list[dict[str, Any]]:

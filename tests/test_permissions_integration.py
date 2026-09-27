@@ -153,3 +153,18 @@ def test_restricted_users_still_get_k_results(wiki):
                 {"terms": {"restricted_principals": sorted({*principals, "all"})}},
             ]}}})["count"]
             assert len(hits) == min(10, allowed_chunks), (user, title)
+
+
+def test_keyword_and_hybrid_search_do_not_leak(wiki):
+    """하이브리드 검색(ADR-12)도 두 검색 모두 권한 필터를 통과한 후보만 합치는지 본다. 채택되면 서버가 쓴다."""
+    spec, source, store = wiki
+    enc = FakeEncoder()
+    titles = [d.title for d in source.documents()]
+    for user in spec.users:
+        allowed = visible(spec, source, user)
+        principals = [f"user:{user}", *source.groups_of(user)]
+        for title in titles:
+            for hits in (store.bm25_search(title, principals, 10),
+                         store.hybrid_search(enc.encode_query(title), title, principals, 10)):
+                leaked = {h["doc_id"] for h in hits} - allowed
+                assert not leaked, (user, title, leaked)
