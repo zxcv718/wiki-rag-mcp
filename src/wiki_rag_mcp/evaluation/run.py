@@ -10,6 +10,7 @@
 import json
 import platform
 import subprocess
+import sys
 import time
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -17,7 +18,6 @@ from pathlib import Path
 from typing import Any
 
 from wiki_rag_mcp.search.reranker import CANDIDATES
-from wiki_rag_mcp.search.store import OpenSearchStore
 
 TOP = 10  # MRR@10, nDCG@10까지 보려면 10개가 필요하다
 WARMUP = 10
@@ -43,6 +43,7 @@ class Config:
     index: str
     mode: str  # "vector" 또는 "hybrid"
     rerank: bool = False
+    backend: str = "opensearch"  # "opensearch" 또는 "postgres"
 
 
 # 7장 실험 기록 표의 행. 리랭커와 상용 임베딩 행은 앞 판정 결과에 따라 vector 또는 hybrid 쪽을 쓴다
@@ -55,6 +56,8 @@ CONFIGS = {
     "hybrid-rerank": Config("main", "hybrid", rerank=True),
     "gemini-vector": Config("gemini", "vector"),
     "gemini-hybrid": Config("gemini", "hybrid"),
+    # ADR-02 "단순화할 때": pgvector로 옮긴 뒤 같은 골든셋으로 다시 재서 OpenSearch 벡터 검색(baseline)과 비교한다
+    "pg-vector": Config("main", "vector", backend="postgres"),
 }
 
 
@@ -78,11 +81,11 @@ def git_head() -> str:
 
 
 class Runner:
-    def __init__(self, config: Config, client, source, embedder, reranker=None):
+    def __init__(self, config: Config, store, source, embedder, reranker=None):
         if config.rerank and reranker is None:
             raise ValueError("리랭커 구성에는 reranker가 필요하다")
         self.config = config
-        self.store = OpenSearchStore(client, INDEXES[config.index].alias)
+        self.store = store
         self.source = source
         self.embedder = embedder
         self.reranker = reranker
@@ -117,6 +120,8 @@ def run(name: str, runner: Runner, golden: list[dict[str, Any]], out_dir: Path) 
     rows = []
     for n in range(passes):
         for i, q in enumerate(golden):
+            if i % 50 == 0:
+                print(f"  {n + 1}/{passes}회차 {i}/{len(golden)}문항", file=sys.stderr, flush=True)
             hits, timings = runner.search(q["question"], q["asker"])
             if n == 0:
                 rows.append({"id": q["id"], "type": q["type"], "relevant": q["relevant"],
@@ -128,6 +133,7 @@ def run(name: str, runner: Runner, golden: list[dict[str, Any]], out_dir: Path) 
     path = out_dir / f"{name}.jsonl"
     path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     meta = {"config": name, **asdict(runner.config), "index": asdict(INDEXES[runner.config.index]),
+            "store": type(runner.store).__name__,
             "embedder": getattr(runner.embedder, "model_name", ""),
             "embedder_revision": getattr(runner.embedder, "revision", ""),
             "reranker": getattr(runner.reranker, "model_name", None),
