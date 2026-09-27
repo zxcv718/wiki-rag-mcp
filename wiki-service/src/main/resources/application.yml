@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: wiki-service
+  # 로컬 개발용 기본값. docker compose는 SPRING_DATASOURCE_* 환경 변수로 덮어쓴다
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5434/wiki
+    username: wiki
+    password: wiki
+  jpa:
+    # 트랜잭션 밖에서 지연 로딩이 일어나지 않게 한다. 응답은 서비스의 트랜잭션 안에서 만든다
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate  # 스키마는 Flyway가 만든다. 엔티티와 어긋나면 뜨지 않게 검증만 한다
+    properties:
+      hibernate:
+        # 전체 색인 한 페이지(최대 500문서)의 제한 목록을 문서마다 따로 읽지 않게 묶어서 읽는다
+        default_batch_fetch_size: 100
+  data:
+    redis:
+      url: redis://127.0.0.1:6380
+      # 폴러는 DB 트랜잭션 안에서 XADD를 부른다. Redis 장애 때 트랜잭션을 오래 잡지 않게 짧게 둔다
+      timeout: 2s
+      connect-timeout: 2s
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    deserialization:
+      # 모르는 필드는 400으로 거절한다. 오타가 난 권한 필드(restrictions, restrictedPrincipals)를 조용히 무시하면
+      # 제한을 뺀 것으로 읽혀 제한 없는 문서가 만들어진다
+      fail-on-unknown-properties: true
+
+server:
+  port: 8081
+
+wiki:
+  # 비어 있으면 서비스가 뜨지 않는다 (WikiProperties)
+  service-token: ${WIKI_SERVICE_TOKEN:}
+  admin-token: ${WIKI_ADMIN_TOKEN:}
+  public-url: ${WIKI_PUBLIC_URL:https://wiki.saesol.example}
+  event-partitions: ${WIKI_EVENT_PARTITIONS:4}
+  outbox:
+    relay:
+      enabled: true
