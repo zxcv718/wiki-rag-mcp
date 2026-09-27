@@ -78,6 +78,26 @@
 - **임베딩 모델 파인튜닝**: 수천 문서 규모에서는 학습 데이터가 부족하고, 개선 효과를 신뢰성 있게 측정하기 어렵습니다.
 - **멀티테넌시**: 단일 조직을 가정합니다. 필요해지면 조직별 인덱스 분리로 확장할 수 있게 권한 필드를 설계합니다.
 
+### 비슷한 시스템과의 비교
+
+권한을 반영한 사내 문서 검색은 이미 여러 곳에서 만들었습니다. 기존 사례를 따른 부분과 이 설계에서 더한 부분을 나누기 위해, 공개 문서로 확인한 범위에서 비교합니다(출처는 11장).
+
+| 항목 | azure-search-openai-demo | Onyx | Amazon Bedrock Knowledge Base | Atlassian 원격 MCP 서버 | 이 설계 |
+|---|---|---|---|---|---|
+| 형태 | Microsoft 공식 RAG 샘플 앱 | 오픈소스 사내 검색·채팅 | AWS 관리형 서비스 | Atlassian 공식 MCP 서버 | MCP 서버 |
+| 답변 생성 | 앱이 Azure OpenAI로 생성 | 제품이 LLM으로 생성 | 근거만 주는 API와 답변까지 만드는 API를 모두 제공 | 도구 결과를 돌려주고, 답은 클라이언트 LLM이 씀 | 근거만 반환 (ADR-04) |
+| 권한으로 거르는 방식 | 검색 엔진 안에서 사용자·그룹 필드로 거름 | 문서 ACL로 거르고, 일부 소스는 검색 결과를 받은 뒤 다시 거름 | 검색 전에 거르고, 일부 커넥터는 돌려주기 전에 원본에 다시 확인 | 사용자의 기존 권한을 원본 시스템이 적용 | 검색 전에 거르고, 본문은 위키에 다시 확인 (ADR-07, ADR-21) |
+| 그룹 멤버십 | 질의할 때 Microsoft Graph로 해석 | 동기화해 둔 그룹을 질의할 때 읽음 | 수집 때 모아 둔 멤버십과 질의할 때 대조 | 원본 시스템이 판단 | 질의할 때 위키에서 조회 (ADR-08) |
+| 권한 평가에 실패하면 | Azure AI Search가 5xx를 돌려주고 일부만 거른 결과는 주지 않음 | 공개 문서에서 확인하지 못함 | 해당 문서를 돌려주지 않음 | 공개 문서에서 확인하지 못함 | 오류를 돌려줌 (ADR-08) |
+
+문서마다 권한을 두고 검색 결과를 권한으로 거르는 것, 그룹 멤버십을 청크에 넣지 않고 따로 해석하는 것, 권한 평가에 실패하면 결과를 주지 않는 것은 공개된 사례들과 같은 방향입니다. 이 설계에서 더한 것은 세 가지입니다.
+
+- 결과를 MCP 도구로 내보내 어느 MCP 클라이언트에서든 쓰게 하고, 서버는 답변을 만들지 않습니다(ADR-04, ADR-05).
+- 사용자 권한에 클라이언트 신뢰 등급을 더해, 같은 사용자라도 외부 LLM 클라이언트에는 기밀 문서의 본문을 주지 않습니다(ADR-17).
+- 검색 구성은 실험 전에 정한 기준과 신뢰구간으로 판정합니다(ADR-20).
+
+Atlassian 원격 MCP 서버는 같은 MCP 서버지만 작업 항목과 페이지를 만들고 고치는 도구가 있습니다. 이 설계는 위키 본문을 통한 인젝션이 쓰기로 이어지지 않도록 도구를 읽기 전용으로 둡니다(ADR-16).
+
 ## 2. 전체 아키텍처
 
 위키 본체는 Spring, 검색과 MCP는 Python으로 분리하고, 검색 저장소는 OpenSearch 하나로 둡니다. 쓰기 경로와 읽기 경로를 분리해 인덱싱 지연이 검색 응답에 영향을 주지 않게 합니다.
@@ -120,6 +140,7 @@ Redis 하나로 캐시와 메시징을 함께 처리하는 것은 원칙 2(구�
 - **결정 이유**: 권한의 원천(위키)과 검색 인덱스를 분리하면, 검색 쪽에 문제가 생겨도 문서 본문의 최종 권한 판단은 위키가 유지합니다(ADR-07의 재확인과 연결). 자바 메인 서비스와 파이썬 AI 서버의 조합이 실무에서 흔하다는 점, 두 스택을 모두 증명하려는 목적도 있음을 숨기지 않습니다.
 - **감수한 비용**: 배포 단위 2개, 권한 조회 네트워크 호출. 호출 비용은 Redis 캐시로 줄입니다.
 - **재검토 조건**: 팀 언어가 자바뿐이고 로컬 모델이 필요 없다면 Spring AI 단일 서비스로 합칩니다.
+- **참고**: [Spring AI MCP](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html)로 Spring에서도 MCP 서버를 만들 수 있고, [Spring AI ONNX 임베딩](https://docs.spring.io/spring-ai/reference/api/embeddings/onnx.html)은 Python 도구로 ONNX 형식으로 바꾼 모델을 불러 씁니다. 임베딩 모델과 리랭커(cross-encoder)를 그대로 쓸 수 있는 쪽은 Python의 [Sentence Transformers](https://sbert.net/)입니다.
 
 ### ADR-02. 검색 저장소로 OpenSearch 사용
 
@@ -147,6 +168,7 @@ Redis 하나로 캐시와 메시징을 함께 처리하는 것은 원칙 2(구�
 - **결정 이유**: 이 서버의 가치는 검색 파이프라인의 세부 제어에 있고, 그 부분이 곧 면접에서 설명할 내용입니다(원칙 5).
 - **절충**: 서버를 호출하는 데모 에이전트는 LangGraph로 만들 수 있습니다. 서버 설계와 독립적인 영역이라 원칙과 충돌하지 않습니다.
 - **재검토 조건**: 연동할 데이터 소스가 여러 종류로 늘면, 로더 계층에 한해 라이브러리를 도입합니다.
+- **참고**: [Anthropic, Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) (LLM API를 직접 쓰는 것부터 시작하고, 프레임워크를 쓴다면 내부 동작을 이해하라고 권고)
 
 ## 3. MCP 인터페이스 설계
 
@@ -179,6 +201,7 @@ Redis 하나로 캐시와 메시징을 함께 처리하는 것은 원칙 2(구�
 - **결정 이유**: MCP 클라이언트는 이미 LLM이므로 생성을 중복할 이유가 없습니다. 서버의 책임이 "무엇을 근거로 줬는가"로 좁혀져, 품질도 검색 지표만으로 평가할 수 있습니다.
 - **감수한 비용**: 서버 단독 시연이 밋밋해, 데모 에이전트로 보완합니다.
 - **재검토 조건**: 슬랙 봇처럼 MCP를 쓰지 않는 채널을 지원해야 하면, 답변 생성 API를 별도로 추가합니다.
+- **참고**: [Amazon Bedrock Retrieve API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html)는 근거만 돌려주고, [RetrieveAndGenerate API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_RetrieveAndGenerate.html)는 답변까지 만듭니다. 이 설계는 앞쪽만 제공합니다.
 
 ### ADR-05. 목적이 겹치지 않는 도구 3개
 
@@ -239,7 +262,7 @@ Redis 하나로 캐시와 메시징을 함께 처리하는 것은 원칙 2(구�
 
 - **남는 위험 (명시적 인정)**: 권한이 회수된 직후, 인덱스 반영 전까지 짧은 시간 동안 **스니펫**이 노출될 수 있습니다. 본문은 `get_document`의 재확인으로 차단되고, 이 틈은 ACL_CHANGED 이벤트로 줄여 목표 p95 30초 이내로 관리합니다.
 - **재검토 조건**: 권한 변경의 즉시 반영이 규정상 요구되는 환경이라면, 검색 결과의 스니펫도 위키 API로 재확인하고 늘어나는 지연을 감수합니다.
-- **참고**: [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo/blob/main/docs/login_and_acl.md)와 [Amazon Bedrock Knowledge Base](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-acl.html)는 검색 엔진 안에서 거릅니다. [Azure AI Search 벡터 필터](https://learn.microsoft.com/en-us/azure/search/vector-search-filters)는 postFilter가 결과를 놓칠 수 있다고 설명하고, [OWASP LLM08](https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/)은 권한을 반영하는 벡터 저장소와 데이터셋의 분리를 권고하는데, 이 설계는 인덱스를 나누지 않고 권한 필터로 분리합니다. 반대 사례로 [Onyx](https://github.com/onyx-dot-app/onyx/blob/main/backend/ee/onyx/external_permissions/post_query_censoring.py)는 일부 소스를 검색이 끝난 뒤에 거릅니다.
+- **참고**: [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo/blob/main/docs/login_and_acl.md)와 [Amazon Bedrock Knowledge Base](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-acl.html)는 검색 엔진 안에서 거릅니다. [Azure AI Search 벡터 필터](https://learn.microsoft.com/en-us/azure/search/vector-search-filters)는 postFilter가 결과를 놓칠 수 있다고 설명하고, [OWASP LLM08](https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/)은 권한을 반영하는 벡터 저장소와 데이터셋의 분리를 권고하는데, 이 설계는 인덱스를 나누지 않고 권한 필터로 분리합니다. Bedrock은 Confluence 같은 일부 커넥터에서 돌려줄 문서마다 원본에 권한을 다시 확인해 동기화 사이의 권한 변경을 잡는데, 이 ADR의 재검토 조건에 적은 방식입니다. 반대 사례로 [Onyx](https://github.com/onyx-dot-app/onyx/blob/main/backend/ee/onyx/external_permissions/post_query_censoring.py)는 일부 소스를 검색이 끝난 뒤에 거릅니다.
 
 ### ADR-08. 문서 권한은 인덱스에, 그룹 멤버십은 검색 시 해석
 
@@ -408,6 +431,7 @@ ADR-09의 "약점 보완"(중복은 (doc_id, version) 키로, 순서는 저장�
 
 - **결정 이유**: 위키 문서는 제목 구조가 뚜렷하고 수정은 대개 한 섹션 안에서 일어납니다. 분할 경계를 문서 구조에 고정해야 해시 비교가 의미를 가집니다.
 - **검증 방법**: 수정 시나리오별로 증분 방식과 전체 재색인의 임베딩 호출 수를 비교해 절감률을 기록합니다.
+- **참고**: [Azure AI Search: 청크 나누기](https://learn.microsoft.com/en-us/azure/search/vector-search-how-to-chunk-documents) (Markdown·HTML 제목으로 섹션 단위로 나누는 방법, 10~15% 겹침 예), [LlamaIndex ingestion pipeline](https://developers.llamaindex.ai/python/framework/module_guides/loading/ingestion_pipeline/) (문서 해시가 바뀐 문서만 다시 처리. 이 설계는 섹션 단위로 해시를 비교)
 
 ### ADR-18. 검색 대상은 위키 원문 문서로 한정 (LLM 종합 페이지 제외)
 
@@ -653,6 +677,7 @@ PR마다 **골든셋 전체**와 권한 테스트셋을 실행합니다. 검색 
 
 - **결정 이유**: 지연 예산과 인덱싱 지연 같은 핵심 지표가 여러 서비스에 걸쳐 있어, 서비스 경계를 넘는 추적이 필수입니다.
 - **수집 지표**: 단계별 검색 지연, 인덱싱 지연, 캐시 적중률, DLQ 적재량, 임베딩 호출 수.
+- **참고**: [OpenTelemetry: 컨텍스트 전파](https://opentelemetry.io/docs/concepts/context-propagation/) (서비스와 프로세스 사이로 추적 정보를 넘기는 방식), [W3C Trace Context](https://www.w3.org/TR/trace-context/) (전파에 쓰는 표준 HTTP 헤더). 위키(Spring)와 인덱서·MCP 서버(Python)를 한 추적으로 잇는 근거입니다.
 
 ## 9. 보안
 
@@ -785,6 +810,15 @@ PR마다 **골든셋 전체**와 권한 테스트셋을 실행합니다. 검색 
 | [MCP 명세: 리소스](https://modelcontextprotocol.io/specification/2026-07-28/server/resources) | URI 템플릿으로 리소스를 노출하는 방법 | 3장 |
 | [MCP 공식 Python SDK](https://github.com/modelcontextprotocol/python-sdk) | 서버 구현에 쓰는 SDK | 2장 |
 
+### 구현 방식
+
+| 자료 | 내용 | 관련 결정 |
+|---|---|---|
+| [Anthropic, Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) | LLM API를 직접 쓰는 것부터 시작하고, 프레임워크를 쓴다면 내부 동작을 이해하라고 권고합니다. | ADR-03 |
+| [Amazon Bedrock Retrieve API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html), [RetrieveAndGenerate API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_RetrieveAndGenerate.html) | 근거만 돌려주는 API와 답변까지 만드는 API를 나눠 둡니다. | ADR-04 |
+| [Spring AI MCP](https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html), [Spring AI ONNX 임베딩](https://docs.spring.io/spring-ai/reference/api/embeddings/onnx.html) | Spring으로도 MCP 서버를 만들 수 있고, 임베딩 모델은 Python 도구로 ONNX 형식으로 바꿔 불러 씁니다. | ADR-01 |
+| [Sentence Transformers](https://sbert.net/) | 임베딩 모델(bi-encoder)과 리랭커(cross-encoder)를 함께 제공하는 Python 라이브러리 | ADR-01, ADR-11, ADR-13 |
+
 ### 검색 기법
 
 | 자료 | 내용 | 관련 결정 |
@@ -793,6 +827,7 @@ PR마다 **골든셋 전체**와 권한 테스트셋을 실행합니다. 검색 
 | [OpenSearch: score ranker processor](https://docs.opensearch.org/latest/search-plugins/search-pipelines/score-ranker-processor/) | 검색 파이프라인에서 RRF를 지원합니다. | ADR-12 |
 | [nori 분석기](https://www.elastic.co/docs/reference/elasticsearch/plugins/analysis-nori) | 한국어 형태소 분석 | ADR-02 |
 | [pgvector](https://github.com/pgvector/pgvector) (약 2.3만 스타) | 근사 인덱스에서는 필터가 인덱스 스캔 뒤에 적용됩니다. 0.8.0부터 iterative scan으로 더 스캔하지만 `hnsw.max_scan_tuples`에서 멈춥니다. | ADR-02 |
+| [Azure AI Search: 청크 나누기](https://learn.microsoft.com/en-us/azure/search/vector-search-how-to-chunk-documents) | Markdown·HTML 제목으로 섹션 단위로 나누는 방법과, 10~15% 겹침 예 | ADR-10, 6장 청크 전략 |
 | [Azure Architecture Center: RAG 검색 단계](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval) | 하이브리드 검색과 RRF를 실험 대상으로 소개하고, 리랭커는 테스트 질의로 비교한 뒤 도입하라고 권고 | ADR-12, ADR-13 |
 
 ### 평가
@@ -810,9 +845,17 @@ PR마다 **골든셋 전체**와 권한 테스트셋을 실행합니다. 검색 
 | 자료 | 내용 | 관련 결정 |
 |---|---|---|
 | [Chris Richardson, Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html) | 아웃박스 패턴의 정의. 메시지가 중복될 수 있어 소비자가 멱등이어야 합니다. | ADR-09 |
+| [LlamaIndex ingestion pipeline](https://developers.llamaindex.ai/python/framework/module_guides/loading/ingestion_pipeline/) | 문서 id별 해시를 저장해 두고, 해시가 바뀐 문서만 다시 처리합니다. 이 설계는 섹션 단위로 비교합니다. | ADR-10 |
 | [Debezium Outbox Event Router](https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html) | 폴링 대신 CDC로 아웃박스를 발행하는 대안 | ADR-09 |
 | [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/) | 소비자 그룹, ACK, 처리 대기 목록 | ADR-09, ADR-19 |
 | [Martin Fowler, What do you mean by "Event-Driven"?](https://martinfowler.com/articles/201701-event-driven.html) | 이벤트 알림과 이벤트에 상태를 싣는 방식을 구분합니다. ADR-19는 이벤트 알림 방식입니다. | ADR-19 |
+
+### 관측성
+
+| 자료 | 내용 | 관련 결정 |
+|---|---|---|
+| [OpenTelemetry: 컨텍스트 전파](https://opentelemetry.io/docs/concepts/context-propagation/) | 서비스와 프로세스 사이로 추적 정보를 넘기는 방식 | ADR-15 |
+| [W3C Trace Context](https://www.w3.org/TR/trace-context/) | 추적 정보를 전파하는 표준 HTTP 헤더 | ADR-15 |
 
 ### 보안
 

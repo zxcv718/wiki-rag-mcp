@@ -12,3 +12,4 @@
 
 - **결정 이유**: 위키 문서는 제목 구조가 뚜렷하고 수정은 대개 한 섹션 안에서 일어납니다. 분할 경계를 문서 구조에 고정해야 해시 비교가 의미를 가집니다.
 - **검증 방법**: 수정 시나리오별로 증분 방식과 전체 재색인의 임베딩 호출 수를 비교해 절감률을 기록합니다.
+- **참고**: [Azure AI Search: 청크 나누기](https://learn.microsoft.com/en-us/azure/search/vector-search-how-to-chunk-documents) (Markdown·HTML 제목으로 섹션 단위로 나누는 방법, 10~15% 겹침 예), [LlamaIndex ingestion pipeline](https://developers.llamaindex.ai/python/framework/module_guides/loading/ingestion_pipeline/) (문서 해시가 바뀐 문서만 다시 처리. 이 설계는 섹션 단위로 해시를 비교)
