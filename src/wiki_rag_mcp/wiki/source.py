@@ -6,6 +6,7 @@
 - DocumentSource: 전체 색인에 필요한 연산
 - IndexSource: 이벤트로 증분 색인할 때 더 필요한 연산 (ADR-19의 상태 재조회, 야간 정합성 배치)
 - WikiSource: 검색 서버가 요청마다 쓰는 연산 (그룹 해석, 본문 재확인)
+- GroupSource: 그룹 해석만. 검색 서버는 위키 앞에 그룹 캐시(auth/groups.py)를 두고 이 연산만 캐시한다
 """
 
 from dataclasses import dataclass
@@ -20,6 +21,11 @@ class WikiUnavailableError(RuntimeError):
 
 class GroupLookupError(WikiUnavailableError):
     """그룹 멤버십을 읽지 못했다. 사용자 id만으로 검색하지 않고 요청 전체를 실패시킨다 (ADR-08)."""
+
+
+class UnknownUserError(LookupError):
+    """위키에 없는 사용자다. 그룹 없는 사용자로 보고 검색하면 사용자 id 오타가 "문서가 없다"로 보이므로
+    오류로 돌려준다. 장애가 아니라서 GroupLookupError와 나눈다."""
 
 
 @dataclass(frozen=True)
@@ -68,6 +74,12 @@ class IndexSource(DocumentSource, Protocol):
         ...
 
 
+class GroupSource(Protocol):
+    def groups_of(self, user_id: str) -> list[str]:
+        """사용자의 그룹 principal 목록. 위키에 없는 사용자면 UnknownUserError, 읽지 못하면 GroupLookupError."""
+        ...
+
+
 class WikiSource(Protocol):
     def documents(self) -> list[Document]:
         """색인할 전체 문서."""
@@ -77,15 +89,17 @@ class WikiSource(Protocol):
         """권한을 따지지 않는 조회 (색인·관리용). 없는 문서면 None."""
         ...
 
-    def document_for(self, doc_id: str, principals: list[str]) -> Document | None:
-        """사용자에게 줄 문서. 권한은 위키가 두 층 모두 따져 판단한다 (ADR-07 본문 재확인, ADR-21).
+    def document_for(self, doc_id: str, user_id: str) -> Document | None:
+        """사용자에게 줄 문서. 그룹 해석과 두 층 권한 판단을 모두 위키가 한다 (ADR-07 본문 재확인, ADR-21).
 
-        없는 문서와 볼 수 없는 문서를 구분하지 않고 둘 다 None이다. 위키를 읽지 못하면 WikiUnavailableError.
+        검색 서버의 그룹 캐시를 거치지 않으므로, 캐시가 조금 낡았어도 본문은 위키의 지금 권한으로 거른다.
+        없는 문서, 볼 수 없는 문서, 모르는 사용자를 구분하지 않고 모두 None이다. 위키를 읽지 못하면
+        WikiUnavailableError.
         """
         ...
 
     def groups_of(self, user_id: str) -> list[str]:
-        """사용자의 그룹 principal 목록. 읽지 못하면 GroupLookupError."""
+        """사용자의 그룹 principal 목록. 위키에 없는 사용자면 UnknownUserError, 읽지 못하면 GroupLookupError."""
         ...
 
     def space_title(self, space: str) -> str:

@@ -7,7 +7,15 @@
   스트림의 뒤 이벤트는 기다린다. 무한 재시도가 뒤 이벤트를 영영 막지 않게 하려고 횟수를 제한한다.
 - DLQ는 10분마다 원래 스트림에 다시 넣는다. 처리가 멱등이라 여러 번 들어가도 결과가 같고, 권한 회수가 야간
   배치까지 밀리지 않는다. 같은 이벤트가 계속 실패하면 알림 로그를 남긴다.
-- 시작할 때, 이전 소비자가 읽고 확인하지 못한 채 죽어 남은 이벤트를 가져와 먼저 처리한다.
+- 시작할 때와 Redis 연결이 끊겼다 돌아왔을 때, 읽고 확인하지 못한 채 남은 이벤트를 가져와 먼저 처리한다.
+  연결이 끊기면 한 번에 읽은 이벤트 중 뒤쪽은 처리하지 못한 채 남는데, 새 이벤트만 읽어서는 다시 오지 않는다.
+- 멤버십 이벤트(`wiki:membership`)도 같은 호출로 읽어 그룹 캐시를 무효화한다(ADR-08). 한 번에 읽은 묶음에서
+  먼저 처리하고, 문서 이벤트를 하나 처리하기 전마다 멤버십 스트림을 기다리지 않고 한 번 더 읽는다. 임베딩이
+  몰려도 그룹에서 빠진 사람의 검색 권한이 문서 묶음을 다 처리할 때까지 밀리지 않게 하기 위해서다. 한 문서
+  이벤트의 재시도(최대 3.5초) 동안은 기다린다. 무효화는 여러 번 해도 결과가 같아서, 워커가 여럿이면 같은
+  소비자 그룹으로 나눠 받는다. 워커가 멈춰도 캐시 TTL(60초)이 지나면 반영된다.
+- Redis가 응답 없이 멈추면(연결이 반만 열린 채 남는 경우) 소켓 타임아웃으로 끊고 연결 끊김과 같이 복구한다.
+  클라이언트는 cli.py가 타임아웃과 keepalive를 넣어 만든다.
 """
 
 import logging
@@ -19,7 +27,16 @@ from typing import Any
 
 import redis
 
-from wiki_rag_mcp.indexing.events import GROUP, STREAM_PREFIX, Event, dlq_name, parse_event, stream_name
+from wiki_rag_mcp.indexing.events import (
+    GROUP,
+    MEMBERSHIP_STREAM,
+    STREAM_PREFIX,
+    Event,
+    dlq_name,
+    parse_event,
+    parse_membership,
+    stream_name,
+)
 from wiki_rag_mcp.indexing.incremental import Applied
 
 log = logging.getLogger("wiki_rag_mcp.indexing.worker")
@@ -33,15 +50,20 @@ _DLQ_ONLY_FIELDS = ("error", "failed_at")
 
 class StreamWorker:
     def __init__(self, client: redis.Redis, handle: Callable[[Event], Applied], partitions: Iterable[int], *,
+                 membership: Callable[[str], None] | None = None, membership_stream: str = MEMBERSHIP_STREAM,
                  prefix: str = STREAM_PREFIX, group: str = GROUP, consumer: str | None = None,
-                 retries: int = RETRIES, backoff: float = BACKOFF_SECONDS,
+                 start_id: str = "0", retries: int = RETRIES, backoff: float = BACKOFF_SECONDS,
                  requeue_every: float = REQUEUE_EVERY_SECONDS, alert_after: int = ALERT_AFTER,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
         parts = sorted(set(partitions))
         self.client = client
         self.handle = handle
+        self.membership = membership
+        self.membership_stream = membership_stream if membership else None
         self.streams = {stream_name(p, prefix): dlq_name(p, prefix) for p in parts}
         self.group = group
+        # 소비자 그룹을 만들 때(또는 Redis가 데이터 없이 다시 떠 다시 만들 때) 읽기 시작할 위치
+        self.start_id = start_id
         # 재시작해도 같은 이름을 쓰게 파티션으로 이름을 만든다
         self.consumer = consumer or "indexer-" + "-".join(map(str, parts))
         self.retries, self.backoff = retries, backoff
@@ -49,11 +71,15 @@ class StreamWorker:
         self.sleep, self.clock = sleep, clock
         self._next_requeue = clock() + requeue_every
 
+    def _all_streams(self) -> list[str]:
+        # 멤버십을 앞에 둔다. 한 번에 읽은 결과도 이 순서로 처리한다
+        return [s for s in (self.membership_stream, *self.streams) if s]
+
     def ensure_groups(self) -> None:
-        # id 0으로 만들어, 워커가 처음 뜨기 전에 발행된 이벤트도 읽는다
-        for stream in self.streams:
+        # 기본은 id 0으로 만들어, 워커가 처음 뜨기 전에 발행된 이벤트도 읽는다
+        for stream in self._all_streams():
             try:
-                self.client.xgroup_create(stream, self.group, id="0", mkstream=True)
+                self.client.xgroup_create(stream, self.group, id=self.start_id, mkstream=True)
             except redis.ResponseError as e:
                 if "BUSYGROUP" not in str(e):
                     raise
@@ -61,10 +87,11 @@ class StreamWorker:
     def recover_pending(self) -> int:
         """확인되지 않은 채 남은 이벤트를 이 소비자로 가져와 처리한다.
 
-        스트림마다 소비자가 하나뿐이라, 남아 있는 것은 모두 이전 소비자가 처리하다 멈춘 이벤트다.
+        문서 스트림은 소비자가 하나뿐이라, 남아 있는 것은 모두 처리하다 멈춘 이벤트다. 멤버십 스트림은 워커끼리
+        나눠 받아서 다른 워커가 처리 중인 이벤트를 가져올 수도 있는데, 무효화를 한 번 더 할 뿐이다.
         """
         handled = 0
-        for stream in self.streams:
+        for stream in self._all_streams():
             start = "0-0"
             while True:
                 start, claimed, *_ = self.client.xautoclaim(stream, self.group, self.consumer, min_idle_time=0,
@@ -77,17 +104,32 @@ class StreamWorker:
         return handled
 
     def poll(self, block_ms: int = 1000) -> int:
-        replies = self.client.xreadgroup(self.group, self.consumer, dict.fromkeys(self.streams, ">"), count=10,
-                                         block=block_ms)
-        items = replies.items() if isinstance(replies, dict) else (replies or [])
+        replies = self.client.xreadgroup(self.group, self.consumer, dict.fromkeys(self._all_streams(), ">"),
+                                         count=10, block=block_ms)
+        items = dict(replies.items() if isinstance(replies, dict) else (replies or []))
         handled = 0
-        for stream, entries in items:
-            for entry_id, fields in entries:
+        for stream in self._all_streams():
+            for entry_id, fields in items.get(stream, []):
+                if stream != self.membership_stream:
+                    handled += self._drain_membership()
                 self.process(stream, entry_id, fields)
                 handled += 1
         return handled
 
+    def _drain_membership(self) -> int:
+        """그사이 들어온 멤버십 이벤트를 기다리지 않고 읽어 처리한다."""
+        if self.membership_stream is None:
+            return 0
+        replies = self.client.xreadgroup(self.group, self.consumer, {self.membership_stream: ">"}, count=100)
+        items = dict(replies.items() if isinstance(replies, dict) else (replies or []))
+        entries = items.get(self.membership_stream, [])
+        for entry_id, fields in entries:
+            self._process_membership(entry_id, fields)
+        return len(entries)
+
     def process(self, stream: str, entry_id: str, fields: dict[str, str]) -> bool:
+        if stream == self.membership_stream:
+            return self._process_membership(entry_id, fields)
         try:
             event = parse_event(fields)
         except (KeyError, ValueError) as e:
@@ -109,6 +151,23 @@ class StreamWorker:
             return True
         self._to_dlq(stream, entry_id, fields, repr(error))
         return False
+
+    def _process_membership(self, entry_id: str, fields: dict[str, str]) -> bool:
+        """그룹 캐시를 무효화한다. Redis 오류는 그대로 올려, 연결이 돌아온 뒤 복구에서 다시 처리하게 한다.
+
+        형식이 틀린 이벤트는 다시 넣어도 고칠 수 없어 기록만 하고 지운다. 그 사용자의 캐시는 TTL로 바뀐다.
+        """
+        assert self.membership is not None and self.membership_stream is not None
+        try:
+            user_id = parse_membership(fields)
+        except ValueError as e:
+            log.error("잘못된 멤버십 이벤트를 버린다: %s fields=%s", e, fields)
+            self.client.xackdel(self.membership_stream, self.group, entry_id, ref_policy="ACKED")
+            return False
+        self.membership(user_id)
+        self.client.xackdel(self.membership_stream, self.group, entry_id, ref_policy="ACKED")
+        log.info("그룹 캐시 무효화 user_id=%s", user_id)
+        return True
 
     def _to_dlq(self, stream: str, entry_id: str, fields: dict[str, str], message: str) -> None:
         count = int(fields.get("dlq_count", "0")) + 1
@@ -146,10 +205,13 @@ class StreamWorker:
 
     def run(self, stop: threading.Event | None = None, block_ms: int = 1000) -> None:
         stop = stop or threading.Event()
-        self.ensure_groups()
-        self.recover_pending()
+        recover = True
         while not stop.is_set():
             try:
+                if recover:
+                    self.ensure_groups()
+                    self.recover_pending()
+                    recover = False
                 if self.clock() >= self._next_requeue:
                     self.requeue_dlq()
                     self._next_requeue = self.clock() + self.requeue_every
@@ -157,9 +219,12 @@ class StreamWorker:
             except redis.ResponseError as e:
                 if "NOGROUP" not in str(e):
                     raise
-                # Redis가 데이터 없이 다시 떴다. 그룹을 다시 만들고, 잃은 이벤트는 야간 정합성 배치가 찾는다
+                # Redis가 데이터 없이 다시 떴다. 그룹은 다음 바퀴에서 다시 만들고, 잃은 이벤트는 야간 정합성 배치가
+                # 찾는다. 여기서 바로 만들면 그사이 연결이 끊겼을 때 잡는 곳이 없어 워커가 죽는다
                 log.error("소비자 그룹이 없어 다시 만든다: %s", e)
-                self.ensure_groups()
-            except redis.ConnectionError as e:
-                log.error("Redis 연결 실패, 1초 뒤 다시 시도: %s", e)
+                recover = True
+            except (redis.ConnectionError, redis.TimeoutError) as e:
+                # TimeoutError는 ConnectionError의 하위 클래스가 아니라 따로 잡는다
+                log.error("Redis 연결 실패, 1초 뒤 다시 시도: %r", e)
+                recover = True
                 self.sleep(1.0)

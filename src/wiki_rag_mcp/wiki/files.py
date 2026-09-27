@@ -15,6 +15,7 @@ import yaml
 
 from wiki_rag_mcp.models import Classification, Document
 from wiki_rag_mcp.search.filters import ALL, allows, validate_stored_principals
+from wiki_rag_mcp.wiki.source import UnknownUserError
 
 _REQUIRED = ("doc_id", "title", "space", "version", "revision", "updated_at")
 _LEVEL = {c: i for i, c in enumerate(Classification)}
@@ -67,14 +68,18 @@ class FileWikiSource:
     def document(self, doc_id: str) -> Document | None:
         return self._docs.get(doc_id)
 
-    def document_for(self, doc_id: str, principals: list[str]) -> Document | None:
+    def document_for(self, doc_id: str, user_id: str) -> Document | None:
+        # 위키 서비스와 같이 모르는 사용자는 없는 문서와 구분하지 않는다
         doc = self._docs.get(doc_id)
-        if doc is None or not allows(principals, doc.space_principals, doc.restricted_principals):
+        if doc is None or user_id not in self.users:
             return None
-        return doc
+        principals = [f"user:{user_id}", *self.groups_of(user_id)]
+        return doc if allows(principals, doc.space_principals, doc.restricted_principals) else None
 
     def groups_of(self, user_id: str) -> list[str]:
-        return [f"group:{g}" for g in self.users.get(user_id, [])]
+        if user_id not in self.users:
+            raise UnknownUserError(f"가상 위키에 없는 사용자: {user_id}")
+        return [f"group:{g}" for g in self.users[user_id]]
 
     def space_title(self, space: str) -> str:
         return self.spaces.get(space, {}).get("title", space)

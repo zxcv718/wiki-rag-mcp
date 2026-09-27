@@ -5,6 +5,8 @@
 bge-m3의 문장 벡터는 CLS 토큰 벡터이고, sentence-transformers 설정이 이를 따른다.
 """
 
+import os
+
 import numpy as np
 
 from wiki_rag_mcp.config import EMBEDDING_DTYPE, EMBEDDING_MODEL, EMBEDDING_REVISION
@@ -39,6 +41,10 @@ class Embedder:
         import torch
         from sentence_transformers import SentenceTransformer
 
+        # 고정한 커밋에는 pytorch_model.bin만 있다. transformers는 .bin을 불러오면 다음번을 위해 변환 PR의
+        # model.safetensors(2.2GB)를 백그라운드로 받고, 다 받을 때까지 프로세스를 붙잡는다. 불러오는 가중치는
+        # 고정 커밋의 .bin이라 받을 이유가 없고, 폐쇄망에서는 외부 접속 시도가 된다
+        os.environ.setdefault("DISABLE_SAFETENSORS_CONVERSION", "1")
         self.device = device or default_device()
         self.model = SentenceTransformer(EMBEDDING_MODEL, revision=EMBEDDING_REVISION, device=self.device,
                                          model_kwargs={"dtype": getattr(torch, EMBEDDING_DTYPE)})

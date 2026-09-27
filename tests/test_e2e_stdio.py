@@ -31,8 +31,8 @@ def alias():
 
 
 def call(alias: str, user: str | None, tool: str, args: dict, tier: str = "external"):
-    env = {**os.environ, "WIKI_DIR": str(FIXTURE), "WIKI_INDEX_ALIAS": alias, "WIKI_CLIENT_TIER": tier,
-           "TOKENIZERS_PARALLELISM": "false"}
+    env = {**os.environ, "WIKI_SOURCE": "file", "WIKI_DIR": str(FIXTURE), "WIKI_INDEX_ALIAS": alias,
+           "WIKI_CLIENT_TIER": tier, "TOKENIZERS_PARALLELISM": "false"}
     env.pop("WIKI_USER", None)
     if user:
         env["WIKI_USER"] = user

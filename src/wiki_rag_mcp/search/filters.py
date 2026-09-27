@@ -10,6 +10,12 @@ from collections.abc import Iterable
 ALL = "all"
 # fullmatch로 쓴다. match와 $는 끝의 줄바꿈("group:eng\n")을 통과시킨다
 _PRINCIPAL = re.compile(r"(user|group):[A-Za-z0-9._-]+")
+_GROUP = re.compile(r"group:[A-Za-z0-9._-]+")
+
+
+def valid_groups(values: object) -> bool:
+    """그룹 목록인가. 그룹 자리에 user:나 all이 오면 다른 사람의 문서가 열리므로 group: 형식만 받는다."""
+    return isinstance(values, list) and all(isinstance(g, str) and _GROUP.fullmatch(g) for g in values)
 
 
 def validate_stored_principals(values: Iterable[str]) -> tuple[str, ...]:

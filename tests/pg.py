@@ -2,8 +2,7 @@
 
 import uuid
 
-import pytest
-
+from tests.services import unavailable
 from wiki_rag_mcp.config import Settings
 
 
@@ -16,7 +15,7 @@ def new_store(prefix: str, dim: int):
     try:
         store = PgStore.from_settings(Settings(index_alias=f"test_{prefix}_{uuid.uuid4().hex[:8]}"))
     except psycopg.OperationalError:
-        pytest.skip("로컬 PostgreSQL이 떠 있지 않다 (docker compose up -d postgres)")
+        unavailable("로컬 PostgreSQL이 떠 있지 않다 (docker compose up -d postgres)")
     store.ensure_index(dim=dim)
     return store
 

@@ -4,7 +4,7 @@
       "command": "uv",
       "args": ["run", "--quiet", "wiki-rag-mcp"],
       "env": {
-        "WIKI_DIR": "data/wiki",
+        "WIKI_SOURCE": "wiki",
         "WIKI_USER": "jiho",
         "TOKENIZERS_PARALLELISM": "false"
       }
