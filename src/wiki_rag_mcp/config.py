@@ -19,6 +19,14 @@ class Settings:
     wiki_dir: Path = Path("data/wiki")
     user: str | None = None  # stdio에서는 실행 환경이 사용자를 정한다 (ADR-06)
     client_tier: str = "external"  # M1에는 OAuth가 없어 가장 좁은 등급을 기본으로 둔다 (ADR-17)
+    # Spring 위키 서비스 (wiki-service/README.md). 토큰 기본값은 docker-compose.yml의 로컬 개발용 값과 같다.
+    # 클라이언트 토큰을 위키에 넘기지 않고 서비스 자격 증명을 따로 쓴다 (ADR-06)
+    wiki_api_url: str = "http://127.0.0.1:8081"
+    wiki_service_token: str = "local-service-token"
+    wiki_admin_token: str = "local-admin-token"  # 가상 위키를 옮겨 넣는 wiki-rag-seed만 쓴다
+    # 인덱싱 이벤트 (ADR-09). 파티션 수는 위키 서비스의 WIKI_EVENT_PARTITIONS와 같아야 한다
+    redis_url: str = "redis://127.0.0.1:6380/0"
+    event_partitions: int = 4
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -28,4 +36,9 @@ class Settings:
             wiki_dir=Path(os.environ.get("WIKI_DIR", str(cls.wiki_dir))),
             user=os.environ.get("WIKI_USER") or None,
             client_tier=os.environ.get("WIKI_CLIENT_TIER", cls.client_tier),
+            wiki_api_url=os.environ.get("WIKI_API_URL", cls.wiki_api_url),
+            wiki_service_token=os.environ.get("WIKI_SERVICE_TOKEN", cls.wiki_service_token),
+            wiki_admin_token=os.environ.get("WIKI_ADMIN_TOKEN", cls.wiki_admin_token),
+            redis_url=os.environ.get("REDIS_URL", cls.redis_url),
+            event_partitions=int(os.environ.get("WIKI_EVENT_PARTITIONS", cls.event_partitions)),
         )

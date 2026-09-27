@@ -5,7 +5,6 @@ M1은 stdio로만 돈다. 사용자는 실행 환경의 WIKI_USER로, 클라이�
 """
 
 import json
-import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -16,6 +15,7 @@ from mcp.types import ToolAnnotations
 from wiki_rag_mcp.auth.principals import principals_for
 from wiki_rag_mcp.auth.tiers import ClientTier
 from wiki_rag_mcp.config import Settings
+from wiki_rag_mcp.models import valid_doc_id
 from wiki_rag_mcp.search.backend import SearchStore
 from wiki_rag_mcp.server.responses import (
     NOT_FOUND,
@@ -29,7 +29,6 @@ from wiki_rag_mcp.wiki.source import GroupLookupError, WikiSource, WikiUnavailab
 MAX_TOP_K = 10
 MAX_QUERY_CHARS = 500
 MAX_CHANGES = 50
-_DOC_ID = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 # 명세상 클라이언트는 annotation을 신뢰하지 않으므로, 실제 보장은 쓰기 경로가 없는 설계다 (ADR-16)
 READ_ONLY = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
@@ -96,7 +95,7 @@ class Services:
         # 권한 정보를 문서보다 먼저 확인한다. 위키 장애 중에 doc_id에 따라 "없음"과 "오류"가 갈리면
         # 문서의 존재가 드러나기 때문이다 (ADR-08)
         principals = self.principals()
-        if not _DOC_ID.match(doc_id):
+        if not valid_doc_id(doc_id):
             raise DocumentNotFound(NOT_FOUND)
         try:
             doc = self.source.document_for(doc_id, principals)

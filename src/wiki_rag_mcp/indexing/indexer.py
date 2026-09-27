@@ -1,6 +1,7 @@
-"""위키 문서를 청크로 나누고 임베딩해 검색 인덱스에 넣는다.
+"""위키 문서 전체를 청크로 나누고 임베딩해 검색 인덱스에 넣는다.
 
-M1은 전체 색인만 한다. 이벤트를 받아 바뀐 섹션만 다시 임베딩하는 증분 색인은 M3에서 붙인다(ADR-09, 10, 19).
+처음 색인하거나 평가용 인덱스를 새로 만들 때 쓴다. 문서가 바뀔 때마다 바뀐 섹션만 다시 임베딩하는 증분 색인은
+incremental.py에 있다(ADR-09, 10, 19).
 """
 
 import time
@@ -12,7 +13,7 @@ import numpy as np
 from wiki_rag_mcp.indexing.chunker import CountTokens, chunk_document, context_header
 from wiki_rag_mcp.models import Chunk, Document
 from wiki_rag_mcp.search.backend import SearchStore
-from wiki_rag_mcp.wiki.source import WikiSource
+from wiki_rag_mcp.wiki.source import DocumentSource
 
 
 class DocumentEncoder(Protocol):
@@ -64,14 +65,18 @@ def to_index_doc(doc: Document, chunk: Chunk, vector: np.ndarray, encoder: Docum
     }
 
 
-def index_all(source: WikiSource, store: SearchStore, encoder: DocumentEncoder, count: CountTokens,
+def index_all(source: DocumentSource, store: SearchStore, encoder: DocumentEncoder, count: CountTokens,
               with_header: bool = True) -> IndexStats:
+    """모든 문서를 다시 임베딩한다. 문서마다 청크 교체와 상태 기록을 한 트랜잭션으로 해서, 이후 이벤트가
+    이 색인보다 오래된 변경을 다시 반영하지 않게 한다 (ADR-19)."""
     started = time.perf_counter()
     docs = source.documents()
     pairs = [(doc, chunk) for doc in docs for chunk in chunk_document(doc.doc_id, doc.body, doc.title, count)]
     inputs = [embedding_input(d, c, source.space_title(d.space), with_header) for d, c in pairs]
     vectors = encoder.encode_documents(inputs)
-    store.index_chunks([to_index_doc(d, c, v, encoder) for (d, c), v in zip(pairs, vectors, strict=True)])
+    rows: dict[str, list[dict[str, Any]]] = {doc.doc_id: [] for doc in docs}
+    for (d, c), v in zip(pairs, vectors, strict=True):
+        rows[d.doc_id].append(to_index_doc(d, c, v, encoder))
     for doc in docs:
-        store.delete_stale_chunks(doc.doc_id, [c.chunk_id for d, c in pairs if d.doc_id == doc.doc_id])
+        store.replace_document(doc.doc_id, rows[doc.doc_id], doc.revision)
     return IndexStats(documents=len(docs), chunks=len(pairs), seconds=time.perf_counter() - started)

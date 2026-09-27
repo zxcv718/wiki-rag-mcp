@@ -1,6 +1,6 @@
 import pytest
 
-from wiki_rag_mcp.search.filters import ALL, allows, principal_set
+from wiki_rag_mcp.search.filters import ALL, allows, principal_set, validate_stored_principals
 
 
 def test_principal_set_adds_all_and_sorts():
@@ -24,3 +24,19 @@ def test_allows_needs_both_layers_and_rejects_empty_fields():
     assert not allows(["user:bob", "group:eng"], *dba_in_infra)  # 스페이스 안이지만 제한 밖
     assert allows(["user:kim"], [ALL], [ALL])
     assert not allows(["user:kim"], [], [ALL]) and not allows(["user:kim"], [ALL], [])
+
+
+@pytest.mark.parametrize("value", ["group:eng\n", "user:bob\n", "group:eng\nall"])
+def test_principal_with_trailing_newline_is_rejected(value):
+    """정규식의 $는 끝의 줄바꿈 앞에서도 맞는다. 형식 검사가 이런 값을 통과시키지 않아야 한다."""
+    with pytest.raises(ValueError):
+        validate_stored_principals([value])
+    with pytest.raises(ValueError):
+        principal_set([value])
+
+
+@pytest.mark.parametrize("doc_id", [".", "..", "...", "a/b", "x\n", "", "a" * 65])
+def test_doc_ids_that_cannot_be_a_url_path_segment_are_invalid(doc_id):
+    from wiki_rag_mcp.models import valid_doc_id
+
+    assert not valid_doc_id(doc_id)
