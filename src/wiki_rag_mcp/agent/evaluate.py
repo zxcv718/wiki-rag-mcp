@@ -270,7 +270,10 @@ def render_evidence(seen: dict[str, dict[str, Any]]) -> str:
     for doc_id, doc in seen.items():
         body = "\n\n".join(doc["texts"]) or "(본문 없음: 제목과 링크만 받았다)"
         head = f"### [{doc_id}] {doc['title']} (버전 {doc['version']}, 수정 {str(doc['updated_at'])[:10]})"
-        parts.append(f"{head}\n{body}")
+        # 서버가 결과에 붙인 표시도 에이전트가 받은 내용이다. 첫 채점에서 빠뜨려, 표시를 옮긴 주장이 근거
+        # 없음으로 채점됐다(README "결과")
+        marks = "".join(f"\n표시: {note}" for note in doc.get("notes", []))
+        parts.append(f"{head}{marks}\n{body}")
     return "\n\n".join(parts)
 
 

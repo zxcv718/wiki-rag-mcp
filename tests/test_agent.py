@@ -155,3 +155,17 @@ def test_wilson_interval_stays_inside_zero_and_one():
     low, high = wilson(45, 50)
     assert round(low, 3) == 0.786 and round(high, 3) == 0.957
     assert wilson(0, 27)[0] == pytest.approx(0.0, abs=1e-12) and wilson(10, 10)[1] <= 1.0
+
+
+def test_judge_evidence_includes_the_notes_the_server_attached():
+    from wiki_rag_mcp.agent.core import ToolCall
+    from wiki_rag_mcp.agent.evaluate import render_evidence
+
+    stale = {"doc_id": "hr-010", "title": "연차 이월", "version": 2, "updated_at": "2024-01-02T00:00:00+09:00",
+             "snippet": "이월은 5일까지", "notes": ["오래된 문서 (1년 이상 수정되지 않음)"]}
+    secret = {"doc_id": "hri-004", "title": "징계 절차", "version": 1, "updated_at": "2026-01-02T00:00:00+09:00",
+              "snippet": "", "notes": ["기밀 문서라 이 클라이언트에는 제목과 링크만 제공합니다."]}
+    seen = documents_seen([ToolCall("search_wiki", {}, "", {"results": [stale, secret]}, False, 0.1)])
+    text = render_evidence(seen)
+    assert "표시: 오래된 문서 (1년 이상 수정되지 않음)" in text and "이월은 5일까지" in text
+    assert "표시: 기밀 문서라" in text and "(본문 없음" in text

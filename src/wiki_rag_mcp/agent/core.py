@@ -150,12 +150,13 @@ def cited_ids(answer: str) -> list[str]:
 
 
 def documents_seen(calls: list[ToolCall]) -> dict[str, dict[str, Any]]:
-    """도구 결과에 나온 문서마다 제목·버전·수정일과 모델이 본 본문 조각."""
+    """도구 결과에 나온 문서마다 제목·버전·수정일, 서버가 붙인 표시(오래된 문서, 기밀), 모델이 본 본문 조각."""
     seen: dict[str, dict[str, Any]] = {}
 
     def add(item: dict[str, Any], text: str) -> None:
         doc = seen.setdefault(item["doc_id"], {"title": item.get("title", ""), "version": item.get("version"),
-                                               "updated_at": item.get("updated_at"), "texts": []})
+                                               "updated_at": item.get("updated_at"), "notes": [], "texts": []})
+        doc["notes"] += [n for n in item.get("notes", []) if n not in doc["notes"]]
         if text and text not in doc["texts"]:
             doc["texts"].append(text)
 
