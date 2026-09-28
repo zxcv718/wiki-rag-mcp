@@ -43,8 +43,8 @@ class ClientRegistry implements RegisteredClientRepository {
 
     /**
      * secretHash가 있으면 기밀 클라이언트(client_secret_basic), 없으면 공개 클라이언트(none)다. 액세스 토큰 10분, 갱신
-     * 토큰 7일이고 갱신 토큰은 쓸 때마다 바꾼다(OAuth 2.1 4.3.1). 동의는 사전 등록 클라이언트도 받는다. 한 번 동의하면
-     * 같은 사용자와 클라이언트에는 다시 묻지 않으므로, 클라이언트 종류로 나누지 않는 편이 단순하다.
+     * 토큰 7일이고 갱신 토큰은 쓸 때마다 바꾼다(OAuth 2.1 4.3.1). 동의는 모든 클라이언트가 받고, 기억할지는
+     * AuthorizationRules.consentRequired가 정한다.
      */
     private static RegisteredClient client(String clientId, String name, Collection<String> redirectUris,
                                            String secretHash, ClientTier tier) {
