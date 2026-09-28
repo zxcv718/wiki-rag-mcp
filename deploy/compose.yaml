@@ -111,6 +111,10 @@ services:
       # 클라이언트라 등급은 외부이고, 로그인과 동의 화면을 매번 거친다
       WIKI_AUTH_CLIENTS_0_ID: wiki-rag-load
       WIKI_AUTH_CLIENTS_0_REDIRECTURIS: http://127.0.0.1/callback
+      # 데모 에이전트(wiki-rag-demo 명령과 experiments/m6-agent 평가)의 공개 클라이언트. 사용자 노트북에서 돌고,
+      # 브라우저가 127.0.0.1의 빈 포트로 돌아온다(루프백이라 포트는 비교하지 않음)
+      WIKI_AUTH_CLIENTS_1_ID: wiki-rag-demo
+      WIKI_AUTH_CLIENTS_1_REDIRECTURIS: http://127.0.0.1/callback
       # 메모리 8GB에 임베딩 모델을 올린 프로세스 두 개가 같이 돈다. JVM 기본 최대 힙(메모리의 1/4)까지 크지 않게 묶는다
       JAVA_TOOL_OPTIONS: -Xmx512m
       # 관측성 (ADR-15, wiki-service application.yml의 management)

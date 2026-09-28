@@ -26,6 +26,8 @@ wiki-rag-worker = "wiki_rag_mcp.indexing.cli:worker_main"
 wiki-rag-reconcile = "wiki_rag_mcp.indexing.cli:reconcile_main"
 wiki-rag-seed = "wiki_rag_mcp.wiki.seed:main"
 wiki-rag-eval = "wiki_rag_mcp.evaluation.cli:main"
+wiki-rag-demo = "wiki_rag_mcp.agent.cli:main"
+wiki-rag-agent-eval = "wiki_rag_mcp.agent.evaluate:main"
 
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]

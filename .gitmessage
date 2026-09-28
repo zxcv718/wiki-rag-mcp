@@ -4,7 +4,7 @@
 #          perf 성능 | build 빌드·의존성·이미지 | ci CI | chore 그 밖의 관리 | revert 되돌림
 #   scope  mcp 검색 서버·도구 | search 검색 저장소 | index 인덱서·워커 | wiki 위키 서비스
 #          auth 인가 서버 | eval 골든셋·평가·판정 실험 | infra Terraform | deploy 배포 설정·Caddy
-#          design 설계서·ADR | readme README
+#          design 설계서·ADR | readme README | agent 데모 에이전트
 #          여러 영역에 걸치면 중심 영역 하나를 쓰고, 고르기 어려우면 생략한다
 #   계약(wiki-service/README.md)이나 도구 응답 형식을 깨는 변경은 type 뒤에 !를 붙인다 (feat(wiki)!: ...)
 #
