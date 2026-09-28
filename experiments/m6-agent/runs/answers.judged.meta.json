@@ -1,0 +1,12 @@
+{
+  "git": "383d413",
+  "dirty": true,
+  "finished_at": "2026-09-28T15:10:37+00:00",
+  "command": "judge",
+  "run": "experiments/m6-agent/runs/answers.jsonl",
+  "model": "claude-opus-4-8",
+  "usage": {
+    "prompt_tokens": 174743,
+    "completion_tokens": 14514
+  }
+}

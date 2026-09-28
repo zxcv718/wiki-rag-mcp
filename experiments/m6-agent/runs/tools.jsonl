@@ -1,0 +1,350 @@
+{"id": "q003", "question": "솔북이 뭐 하는 거야? 어디에 써?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q002", "question": "자주 쓰는 프로그램은 포털에서 직접 설치할 수 있어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q001", "question": "이번 달 솔포인트 지급 기준 최근에 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q004", "question": "RFC 올릴 때 본문에 꼭 넣어야 하는 항목이 뭐야?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q007", "question": "재검토 동의한 보류 후보자 자료는 HR이 언제까지 들고 가?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q005", "question": "병행 검증 결과는 언제 누구랑 같이 리뷰해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q006", "question": "지난 코드 프리즈 예외 배포 건은 배포 직후에 뭘 얼마 동안 확인했어?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q008", "question": "결제 한 건당 붙는 수수료율이 얼마야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q010", "question": "같은 카드 승인 계속 실패하면 고객한테 어떻게 안내해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q009", "question": "장애 대응하느라 야근 사전 승인을 못 받았으면 나중에 신청해도 돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q011", "question": "이번 달 누리 실행 로그 보관 기준 바뀐 거 있어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q012", "question": "불합격자 서류랑 면접 기록은 언제까지 보관해도 돼?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q013", "question": "파도 프로젝트는 누가 주기적으로 관리해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q014", "question": "팀장 회의록 안건에는 어떤 상태값을 붙여야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q015", "question": "가맹점 대상 대량 메일은 누가 승인하고 누가 마무리해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q016", "question": "재택근무는 지금 주에 몇 번까지 가능해?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q017", "question": "추천으로 뽑힌 사람 보상금은 언제 들어와?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q018", "question": "코드 프리즈가 정확히 언제부터 언제까지야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q019", "question": "누리 운영 이슈 생기면 처음 누구한테 붙이고 어디부터 알려야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q020", "question": "접근 재인증 빠진 계정 목록은 누가 얼마나 보관해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q022", "question": "금고에서 결제 인증서나 DB 비밀값은 누가 승인해야 열람돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q023", "question": "사내 헬스장이나 운동할 공간 있어?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q021", "question": "행사 기념품은 누구한테 어떻게 나눠줘?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q024", "question": "온콜 수당은 어떻게 지급돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q025", "question": "운영에 넣을 SQL은 누가 언제까지 받아야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q026", "question": "캘리브레이션에는 누가 들어가?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q027", "question": "L2 올리고 나서 가맹점엔 언제까지 뭐라고 답해야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q028", "question": "하늘 운영 권한은 누구한테 주고 협력사는 어디까지 돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q030", "question": "이번 달 솔데이 발표 시간 기준 뭐로 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q029", "question": "스톡옵션은 협력사도 받을 수 있어?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q031", "question": "L2 에스컬레이션은 언제 올리는 거예요?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q032", "question": "복제 DB가 늦을 때 고객 화면 확인은 뭘 먼저 봐야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q033", "question": "외부 협력사 인력 권한 재인증할 때 내부 승인자는 뭘 남겨야 하나요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q034", "question": "승진 추천서는 누가 쓰고 어떤 내용이 들어가야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q035", "question": "BK-4010 뜨면 예약은 어떻게 처리돼요?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q036", "question": "정산 쪽 공용 조회 뷰는 표준으로 뭐뭐 써?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q037", "question": "요즘 인사팀은 채용 경쟁 높은 스쿼드의 SLA 초과 건을 얼마나 자주 따로 집계해?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q039", "question": "다온 인증기기는 직원이 어떻게 등록해야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q038", "question": "BK-4010 관련 회의에서는 보통 뭘 정하나요?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q040", "question": "채용 요청은 누가 언제 어디로 넣어야 해요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q041", "question": "솔마켓 요청은 협력사 대신 누가 신청해야 하나요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q044", "question": "민원 때문에 임시로 뽑은 자료 원본도 따로 폐기해야 하나요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q042", "question": "솔넷 VPN 대신 요즘 기본으로 쓰는 접속 방식이 뭐야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q043", "question": "게이트웨이에서 받은 에러 값은 로그에 어떻게 남겨야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q045", "question": "솔데이 질문 답변 정리는 언제 어디에 올라와요?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q046", "question": "행이 아주 많은 운영 테이블 스키마를 바꾸기 전에 어떤 승인을 받아야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q048", "question": "PIR 문서에 꼭 들어가야 하는 내용이 뭐야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q047", "question": "정산 데이터에서 제일 민감한 개인정보는 뭐로 봐?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": "죄송하지만, 이건 회사 내부 기준이 필요한 질문이라 위키 근거를 먼저 확인하겠습니다."}
+{"id": "q049", "question": "사내 식당 오늘 메뉴 어디서 확인하나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q051", "question": "솔페이가 정확히 어떤 서비스예요?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q050", "question": "비품 살 때 금액별로 승인 절차가 어떻게 달라져?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q053", "question": "외부 협력사 인력이 고객 확인 업무를 직접 해도 돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q052", "question": "솔넷 VPN은 언제까지 쓰는 거야?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q054", "question": "누리 배치가 몇 시쯤 끝나야 정상으로 봐?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q056", "question": "딥워크 데이에 문구 수정은 언제까지 줘야 당일 반영돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q055", "question": "메일로 주문이나 정산 금액 안내해도 되는 기준이 뭐야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q057", "question": "이번 달 운영 릴리스 라벨 표기 기준 뭐가 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q058", "question": "행사 사진 찍고 나면 공지는 언제 올라오나요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q059", "question": "후보자한테 보내는 제안서는 보통 언제까지 유효해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q060", "question": "솔마켓으로 쓰는 구독형 도구는 종료 전에 뭘 확인해야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q061", "question": "9월부터 경비 처리 마감이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q062", "question": "기능 브랜치는 지금 어디서 따고 얼마나 자주 합쳐야 해?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q063", "question": "리프레시 휴가 잡기 전에 팀장이 먼저 보는 게 뭐야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q064", "question": "안 쓴 연차는 지금 다음 해로 넘길 수 있어?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q065", "question": "개발본부 신입이 받는 보안 교육은 무슨 내용을 다뤄?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q066", "question": "남은 연차는 보통 어떻게 정산돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q067", "question": "회사에 직원용 운동할 공간이나 헬스장 있어요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q068", "question": "협력사 인력도 기숙사나 사택 지원 받을 수 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q069", "question": "이번 달부터 장애 1차 안내 보내는 기준이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q070", "question": "9월에 환불 가능 기간 최근에 바뀐 거 있어요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q072", "question": "직무 발명이나 특허 내면 회사 보상은 어떻게 돼?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q071", "question": "이번 달에 스타터 요금이랑 프로 상담 기준 뭐가 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki", "list_recent_changes"], "content": ""}
+{"id": "q073", "question": "운영 로그 추적 데이터는 얼마나 보관하고 오래 봐야 하면 뭘 써?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q074", "question": "사내 식당 있나요, 있으면 식단은 어디서 봐요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q076", "question": "해외 법인이나 해외 파견 관련 규정도 따로 있어?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q075", "question": "VOC 많이 들어온 건은 누가 언제 보고 다음 배포 후보로 올려?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q077", "question": "9월부터 CAB 검토 들어가는 구매 기준이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q078", "question": "CAB는 언제 열리고 누가 들어오는 회의야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q079", "question": "모아에서 NR-503은 언제 뜨는 경보야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q080", "question": "분기 OKR 후보 만들 때 VOC는 어떤 기준으로 반영해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q081", "question": "해외 구독 결제는 원화 환산을 뭘 기준으로 정산해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q083", "question": "9월에 가맹점 호출 한도 기준 바뀐 거 있어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q084", "question": "수습은 보통 얼마나 하고 전환 결정은 언제 나?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q082", "question": "특정 결제 오류 문의 들어오면 상담원이 바로 어디로 넘겨?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q085", "question": "평가 등급 맞추는 회의는 뭐고 언제 시작해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q087", "question": "다온 계정 잠기면 사유는 어디서 어떻게 확인해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q086", "question": "등대 프로젝트는 완료 판단을 뭘로 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q088", "question": "외부 협력사 사람도 금고 비밀값 조회 권한 받을 수 있어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q089", "question": "프린터 드라이버 설치할 때 운영체제별로 뭐 받아야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q090", "question": "9월 기준으로 다지점 관리 신청 조건이 어떻게 돼?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q091", "question": "문의 답변 마무리는 누가 어떻게 해야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q092", "question": "평가서 마지막 판단이랑 의견란 작성 기준이 어떻게 돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q094", "question": "정산 권한 관리 리스크는 누가 어떤 지표로 보고 있어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q093", "question": "이번 달 출장비 기준 최근에 뭐가 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q095", "question": "사내 주차 등록이랑 주차비 지원은 어떻게 받나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q096", "question": "징계 건 들어오면 인사팀이 언제부터 어떻게 처리해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q097", "question": "회의 결정사항 적을 때 책임자랑 완료일은 꼭 넣어야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q098", "question": "OKR 점검 회의는 보통 언제 어떻게 진행돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q099", "question": "9월부터 협력 개발자 전사 회의 참석 기준이 최근 어떻게 바뀌었나요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q100", "question": "개인정보 테이블을 조회한 기록은 어디로 보내?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q101", "question": "모아 최고 권한 가진 사람은 현재 팀별로 몇 명이야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q102", "question": "재인증 요청할 때 사유란에는 뭘 같이 적어야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q103", "question": "사내 동호회 지원금은 어떻게 신청하나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q104", "question": "외부사 계정도 모아 관리자 권한 받을 수 있어?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q107", "question": "수집 배치는 언제 돌고 승인·취소를 같이 읽어와?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q105", "question": "DB 교체 작업은 혼자 해도 돼, 아니면 같이 해야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q106", "question": "솔북 무료 체험은 지금 며칠로 보면 돼?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q108", "question": "레드브릭소프트 쪽 개발자 계정 열려면 뭘 언제 내야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q109", "question": "고객 보상해줄지 최종 판단은 누가 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q111", "question": "민감 문서 출력하면 표지랑 회수 확인은 어떻게 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q110", "question": "퇴직연금 운용은 회사에서 어떻게 하고 있어?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q112", "question": "운영이랑 스테이징에서 로그 레벨은 누가 어떻게 맞춰?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q114", "question": "협력 개발자도 솔데이에 참석할 수 있어? 얼마나 자주?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q115", "question": "정산 원장 검증에서 결과 차이 나면 배포 기준이 뭐야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q113", "question": "이번 달 개발본부 면접 피드백 기한 뭐로 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q116", "question": "외부 업체 개발자 투입 요청도 사내 채용 승인에 포함돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q119", "question": "핫픽스 접수할 때 하늘은 어디에 어떻게 적어야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q118", "question": "이번 달 긴급 배포 요청서 기준이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q117", "question": "리더 검토는 구성원 작성 끝난 뒤 언제까지 마쳐야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q120", "question": "중복 예약 의심은 어떤 조건이면 잡아?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q122", "question": "개발본부 운영 배포할 때 기본으로 쓰는 배포 도구가 뭐야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q121", "question": "L2로 올라온 건 담당자는 누가 언제까지 정해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q123", "question": "병가는 1년에 얼마나 쓸 수 있고 진단서 없이도 되나?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q124", "question": "보안 점검 시정 조치가 기한을 계속 넘기면 어떻게 관리돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q125", "question": "SP-E1001이 정확히 무슨 에러고 자동 재시도는 어디까지 돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q126", "question": "문의 들어오면 첫 답장은 보통 언제까지 보내야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q128", "question": "등대 쪽 서비스 대시보드 이름은 어떤 규칙으로 맞춰?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q127", "question": "이번 달에 관리자 로그 보관이나 로그인 점검 기준 뭐 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki", "list_recent_changes"], "content": ""}
+{"id": "q129", "question": "알림이 안 오면 내가 제일 먼저 뭘 확인하면 돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q130", "question": "직무 발명이나 특허 보상은 사내에서 어떻게 주는지 알려줘?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q132", "question": "S2 이상 장애 나면 복구 후 회고는 언제까지 열어야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q133", "question": "하루에 BK-4010이 여러 번 나면 PIR은 언제까지 잡아?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q134", "question": "누리 마감 지연 관련 운영 리스크는 팀장 회의에 뭘 정기 보고해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q135", "question": "파도 전환 직후 초반 점검 기록은 어느 팀이 남겨?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q136", "question": "은하수 프로젝트 전환 검증은 뭘 기준으로 봐?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q137", "question": "RFC는 언제 올리는 거야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q139", "question": "솔북 웹은 어느 브라우저 버전까지 지원해?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q138", "question": "매출 인식용 데이터는 어디 원장에서 뽑아?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q140", "question": "팀별로 요청할 수 있는 운영 DB 권한 범위가 어떻게 달라?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q131", "question": "정산 원장 테이블은 보통 어떤 컬럼으로 파티션 잡아?", "expected": "search_wiki", "type": "fact", "chosen": [], "content": "보통은 **정산 기준일자**로 파티션을 잡습니다.  \n예: `settlement_date`, `accounting_date`, `closing_month`\n\n실무에선 대개 이렇게 봅니다.\n\n- **조회/집계 기준이 날짜면** → `정산일` 또는 `회계일` 기준\n- **월 단위 마감이 핵심이면** → `YYYYMM` 형태의 `정산월`\n- **데이터 유입량이 매우 크면** → `일 단위`\n- **보관/삭제 정책이 월 단위면** → `월 단위`\n\n주의할 점:\n- `created_at`으로 파티션 잡으면 적재 시점과 정산 기준 시점이 달라"}
+{"id": "q142", "question": "법인카드 오사용이 반복되면 언제 누가 사용 중지해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q141", "question": "솔패스 적용된 PC에서 예전 VPN이 남아 있으면 어떻게 돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q143", "question": "정산 데이터 조회 권한을 새로 신청하면 처리까지 얼마나 걸려?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q145", "question": "전액 환불 가능 기간이 지금 어떻게 돼?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q144", "question": "운영 계정 비밀번호는 어디에 보관하고 어떻게 공유해야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q147", "question": "리뷰 요청 받으면 누가 언제까지 첫 답 줘야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q148", "question": "경비 청구 마감일이 지금 언제야?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q150", "question": "CSAT은 제품기획팀에 언제 어떻게 공유돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q149", "question": "술값 찍힌 영수증은 어떤 경우에만 비용 처리돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q151", "question": "GW-429 때 고객 안내 문구는 어떻게 쓰는 거야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q146", "question": "협력 개발자가 팀장 회의에 들어와야 하면 회의록에 뭘 언제까지 적어야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q152", "question": "운영 DB 백업 복구 훈련의 목표 복구 시간은 얼마야?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q153", "question": "리프레시 휴가가 정확히 어떻게 붙는 제도야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q154", "question": "금고 경로 이름 정할 때 작명 기준이 어떻게 돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q155", "question": "S1 장애 나면 상황 공유는 얼마나 자주 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q157", "question": "지난 점검 때 솔게이트 인증서 상태가 어땠어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q156", "question": "보안 사고 나면 대외 신고할지 언제까지 누가 판단해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q158", "question": "PRJ-204 때문에 결제가 안 됐다는 문의에는 개발본부가 뭘 알려 줘야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q159", "question": "안식년 제도는 우리 회사에 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q160", "question": "로그랑 지표 형식 통일하는 그 작업은 뭐 하는 거야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q161", "question": "장애 보상은 고객한테 어떤 기준으로 안내하면 돼요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q162", "question": "DB 접근 권한은 주기적으로 다시 확인받아야 하나요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q164", "question": "안식년 제도 운영하고 계신가요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q163", "question": "아직 덜 만든 기능은 배포할 때 보통 어떻게 처리해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q166", "question": "업무망이랑 사내 서비스가 같이 안 되면 어디로 바로 넘겨야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q165", "question": "다온은 복구 코드 보관을 어떻게 해야 하는 거야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q167", "question": "면접관 교육은 어떤 세션들로 진행돼요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q169", "question": "팀장들이 분기 초에 팀 목표 요약은 어디에 언제까지 올려야 해요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q168", "question": "예약금 결제 실패했을 때 다시 시도 버튼은 얼마나 보여?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q170", "question": "반반차는 정확히 어떻게 쓰고 기록해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q172", "question": "국내 출장 일비 지금 기준 얼마야?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q173", "question": "그로스 스쿼드가 정확히 무슨 역할 하는 팀이야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q174", "question": "재인증 확인할 때 DRI는 무슨 역할이야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q171", "question": "직계존속상이나 배우자 쪽 상이면 유급휴가는 며칠이야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q177", "question": "페이코어는 어떤 VOC를 챙기는 팀이야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q176", "question": "사내 벤처 제도는 누가 신청할 수 있어요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q175", "question": "하늘 카나리 단계에서 특정 지표가 기준 넘으면 누가 바로 롤백해야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q178", "question": "권한 승인되고 실제 적용까지 보통 얼마나 걸리고 늦으면 어디에 물어보면 되나요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q180", "question": "누리 배치 다시 돌릴 때 승인만 받으면 전체로 돌려도 돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q181", "question": "사내 어린이집은 외부 협력사도 이용할 수 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q179", "question": "운영 릴리스 라벨 표기는 이번에 누가 언제부터 어떻게 쓰면 돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q182", "question": "개인정보 민감한 화면 테스트할 때 샘플 데이터는 누가 어떻게 써야 해요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q183", "question": "회의 없는 수요일에 늦게 퇴근하면 택시비 청구돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q185", "question": "SP-E2003 뜨면 어떤 금액을 서로 맞춰 봐야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q184", "question": "CSAT은 언제 보내고 한 문의에 몇 번 발송해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q186", "question": "다온에 한동안 로그인 안 하면 계정이 어떻게 돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q187", "question": "딥워크 데이 때 회의 가능 시간은 어떻게 돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q189", "question": "평가 면담은 한 사람당 보통 얼마나 잡아야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q188", "question": "승인 내역은 누가 언제 카드 사용분이랑 맞춰 봐?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q190", "question": "PRJ-204가 정확히 무슨 상황이고 로그엔 뭐가 남아?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q191", "question": "회사 밖에서 내부 업무망 접속할 땐 지금 뭘 써?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q192", "question": "검토안은 언제 이사회 안건으로 올라가나요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q193", "question": "하루 일한 시간은 쉬는 시간 빼고 잡아?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q194", "question": "반려동물 데리고 출근해도 돼?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q195", "question": "메일로 들어온 문의는 번호를 어떻게 붙여서 관리해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q196", "question": "솔페이 API v1은 지금 언제까지 지원해?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q197", "question": "하향 평가 주기 전에 누구랑 먼저 맞춰봐야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q198", "question": "전월 기록 점검은 매달 언제 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q199", "question": "같은 출장에서 숙박 예외가 길어지면 승인권자 누가 돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q200", "question": "정산 원장 건수가 많이 늘면 누가 언제 데이터팀 확인 요청해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q201", "question": "코드 프리즈에 걸친 배포면 체크리스트에 뭘 꼭 남겨야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q202", "question": "이번 달 온콜 인수인계 기준 뭐가 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q203", "question": "PII 등급에서 상호명은 별도 신청 없이 조회돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q204", "question": "VOC가 정확히 뭐고 언제 남기는 거야?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q205", "question": "PII 1등급 보는 툴이면 체험판도 보안 검토 없이 못 써?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q207", "question": "조사 대상자한테 소명 준비 시간은 최소 얼마나 줘야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q206", "question": "이런 보안 사고는 어디까지 언제 보고해야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q208", "question": "평일 야근하려면 누가 언제 어디서 승인받아야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q209", "question": "PR 머지하려면 승인 몇 명 필요해?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q210", "question": "솔북 새 기능 출시는 언제로 잡혀 있어?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q211", "question": "팀장 보고자료에 기획팀은 어떤 내용까지 같이 적어야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q212", "question": "결제 중복 승인 이슈로 들어온 문의엔 어떻게 안내해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q213", "question": "회의실 PC 쓸 때 발표 파일은 어떻게 옮겨야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q215", "question": "등급 조정 결과만으로도 재심 신청할 수 있어?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q214", "question": "이번 회의에서 코드 얼림 때 들어온 긴급 요청 결과도 봤어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q216", "question": "솔포인트는 어디에 쓸 수 있어?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q217", "question": "이번 달부터 돌봄휴가성 휴직 인수인계 서류 기준이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q218", "question": "이번 달 예산 쪽에서 뭐가 최근에 바뀐 거야?", "expected": "search_wiki", "type": "recency", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "q219", "question": "누리 마감 전에 NR-503은 어디서 뭘 확인해야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q220", "question": "솔넷 VPN 장애가 고객지원 이관 건에서 나오면 우선순위는 뭐로 잡아?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q221", "question": "육아 제도 상담은 어디로 문의하면 되고 급여는 누가 같이 봐?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q222", "question": "연동 결제에서 같은 키로 또 요청하면 어떻게 처리돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q223", "question": "복구 훈련은 얼마나 자주 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q224", "question": "운영 서버 접속 로그는 얼마나 보관해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q225", "question": "결제 승인 재시도 초과 장애 때 결제 실패는 몇 건이었어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q227", "question": "SP-E2003 건 봐 달라고 하려면 어디에 접수해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q226", "question": "성수역에서 본사까지 걸어서 얼마나 걸리나요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q228", "question": "계정 신청 승인되면 누가 언제 어떻게 다온 계정 만들어주나요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q230", "question": "사내 어린이집 운영하나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q229", "question": "시정조치는 언제까지 등록해야 하고 같이 적어야 하는 게 뭐예요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q231", "question": "비밀번호는 지금도 주기적으로 꼭 바꿔야 하나요?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q232", "question": "이번 달 솔북이랑 솔페이 배포에서 뭐가 새로 나왔어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki", "search_wiki"], "content": ""}
+{"id": "q233", "question": "DB 관리자 권한 재인증할 때 누가 추가 확인하나요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q234", "question": "실서버 DB 최고 권한 계정 암호는 얼마나 자주 바꾸나요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q235", "question": "결제 쪽 맡는 그 스쿼드는 정확히 무슨 일 해요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q236", "question": "지금 본사 주소가 어디인가요?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q237", "question": "9월에 사내 접속 프로그램 삭제 기한이 어떻게 바뀌었어요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q238", "question": "평가 기간 열리면 본인 평가는 언제까지 내야 해요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q239", "question": "팀 예산 신청은 언제까지 받나요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q240", "question": "해외 법인 근무나 해외 파견 기준이 따로 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q241", "question": "솔북 웹은 어떤 브라우저까지 지원해?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q242", "question": "정산 원장이 정확히 뭐고 한 줄에 뭐가 담겨?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q243", "question": "예산 한도 넘는 건 예외로 몇 번까지 승인돼?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q244", "question": "별빛이 뭐 하는 시스템이고 정산 데이터랑은 어떻게 붙여?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q245", "question": "우회 라우팅 넣기 전에 사전 확인은 누가 어떻게 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q246", "question": "SP-E2003이 무슨 에러고 뜨면 어디에 먼저 알려야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q248", "question": "반려동물 데리고 출근해도 돼?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q247", "question": "카드 암호화 키는 주기적으로 언제 교체해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q249", "question": "이번 달 정산 에러 조회 뷰에 바뀐 점 있어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q250", "question": "실험 끝나면 지표 검증 메모는 누가 언제까지 남겨야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q251", "question": "스톡옵션은 언제 받고 행사 절차는 어떻게 돼?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q254", "question": "사내 동호회 지원금은 어떻게 신청하나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q253", "question": "지난번 모아 경보 검토했을 때 실제 대응 필요 비율이 얼마였어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q252", "question": "감사 대응은 보통 언제부터 얼마나 진행돼?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q255", "question": "7월 솔페이 배포에서 관리자 화면에 생긴 기능이 뭐야?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q258", "question": "NR-503가 오래 가면 어떤 대응을 시작해야 해?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q256", "question": "외부 인력이 처음 운영 반영할 때 누가 어떻게 들어가?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q257", "question": "정산 쪽 환불 오류가 나면 제일 먼저 뭐 봐야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q259", "question": "퇴직연금 운용 방식은 어디서 바꿔요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q262", "question": "가족돌봄 휴가는 언제까지 신청서 내야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q261", "question": "행사 실시간 질문은 어디서 몇 개까지 올릴 수 있나요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q260", "question": "솔게이트 이번 달 기준으로 호출 한도 어떻게 돼?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q263", "question": "개발본부 사람 계정 이슈 나면 누구한테 언제 알려야 해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q266", "question": "매출 확인용 조회 권한은 누가 직접 신청할 수 있어?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q265", "question": "이번 달 DB 긴급 권한이랑 반납 보고 기준 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q264", "question": "이번 달에 부가 문자 요금이랑 다지점 신청 기준 뭐가 달라졌어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki", "search_wiki", "list_recent_changes"], "content": ""}
+{"id": "q267", "question": "사내 벤처 제도는 지금도 신청받나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q269", "question": "제품기획팀은 취소 사유를 언제 어떤 자료랑 같이 봐?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q268", "question": "주말 온콜 수당 지금 기준 얼마야?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q270", "question": "외부 오픈소스 라이브러리 도입 승인은 보통 얼마나 걸려?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q271", "question": "회의실 밖 다른 구역도 돌아다니려면 누구 승인 받아야 해요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q273", "question": "레드브릭 쪽 협력 개발자한테 임원용 문서 내용은 어떻게 전달해요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q272", "question": "예외 접근으로 작업하면 끝나고 뭘 남겨서 언제까지 내야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q275", "question": "통근 버스도 운영하나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q274", "question": "신규 입사자 노트북은 지금 뭐로 지급해?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q276", "question": "면접 평가 내용은 어디에만 남겨야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q277", "question": "이번 달에 야간 배치 완료 판단 시간이 어떻게 바뀌었어?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q278", "question": "이번 달 휴무일 공지 올리는 기준이 어떻게 바뀌었나요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q280", "question": "PRJ-204 뜨면 결제 화면에 어떤 안내를 띄워야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q279", "question": "9월에 결제 실패 안내 문구 기준 뭐가 달라졌어요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q281", "question": "알림이 계속 안 오면 언제 헬프데스크 티켓 만들어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q285", "question": "DB 작업은 보통 언제 시간대에 잡아야 해?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q284", "question": "이번 달 재택근무 기준이 어떻게 바뀌었는지 알려줘.", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q283", "question": "택시비는 언제 퇴근하거나 출근했을 때 청구할 수 있어?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q282", "question": "기숙사나 사택 지원도 있어?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q287", "question": "협력사도 사내 주차 등록하고 주차비 지원받을 수 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q288", "question": "솔게이트 요청은 보통 어떤 단계로 흘러가요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q286", "question": "코드 멈춤 기간에 저쪽 스쿼드 연차 올릴 때 뭐 먼저 봐야 해?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q289", "question": "공통 릴리스 예산 다른 데로 돌릴 때 제품명은 어떻게 적어야 해요?", "expected": "search_wiki", "type": "permission", "chosen": ["search_wiki"], "content": ""}
+{"id": "q290", "question": "결제 승인 재시도 초과 장애 회고 뒤에 핫픽스 창구 승인 템플릿에 뭐가 추가됐어?", "expected": "search_wiki", "type": "abbreviation", "chosen": ["search_wiki"], "content": ""}
+{"id": "q292", "question": "통근 버스 운영 기준이나 신청 방법 정해진 거 있나요?", "expected": "search_wiki", "type": "no_answer", "chosen": ["search_wiki"], "content": ""}
+{"id": "q291", "question": "순환 작업은 누가 같이 맡고 언제 어떻게 진행해요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q293", "question": "지금 S1 장애로 보는 기준이 뭐야?", "expected": "search_wiki", "type": "contradiction", "chosen": ["search_wiki"], "content": ""}
+{"id": "q294", "question": "예산 항목끼리 크게 옮길 때 승인 누구까지 받아야 해요?", "expected": "search_wiki", "type": "fact", "chosen": ["search_wiki"], "content": ""}
+{"id": "q296", "question": "답 없는 권한은 누가 언제 어떤 방식으로 회수해?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q297", "question": "장애 복구 끝나면 고객 안내는 언제 어떻게 보내야 해요?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "q298", "question": "이번 달 무료 체험 기준 뭐가 바뀌었어요?", "expected": "search_wiki", "type": "recency", "chosen": ["search_wiki"], "content": ""}
+{"id": "q299", "question": "이 지표는 몇 시부터 확정값으로 보면 돼?", "expected": "search_wiki", "type": "fact", "chosen": [], "content": "어떤 지표를 말씀하시는지 정보가 부족합니다.\n\n지표 이름이나 화면/시스템 이름을 알려주시면, 사내 위키에서 기준 시각을 찾아 답하겠습니다."}
+{"id": "t-rc01", "question": "이번 주에 수정된 위키 문서 뭐 있어?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "q300", "question": "배포 막히는 기간은 누가 언제 어디에 먼저 알려줘?", "expected": "search_wiki", "type": "procedure", "chosen": ["search_wiki"], "content": ""}
+{"id": "t-rc02", "question": "9월 들어 바뀐 인사 제도 문서 목록 보여 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc04", "question": "이번 달에 개발 스페이스에서 고친 문서들 좀 정리해 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc03", "question": "최근 일주일 사이 업데이트된 문서 알려 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc05", "question": "9월 15일 이후로 새로 올라오거나 바뀐 문서가 있나?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc07", "question": "이번 달 경비·구매 스페이스에 업데이트된 게 있어?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc06", "question": "지난주부터 오늘까지 변경된 IT 헬프데스크 문서는?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc08", "question": "최근 3일 동안 수정된 위키 페이지 목록.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc10", "question": "9월에 개정된 규정 문서들 뭐야?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc09", "question": "요즘 바뀐 문서가 뭔지 한번 훑어보고 싶어.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "q295", "question": "예약금 결제 연동이 얼마나 느려지면 사용자 실수가 많아져요?", "expected": "search_wiki", "type": "fact", "chosen": [], "content": "일반적으로는 **응답이 2~3초를 넘기기 시작하면** 사용자가 중복 클릭, 새로고침, 뒤로가기 같은 실수를 noticeably 더 많이 합니다.  \n특히 **5초 이상**이면 “멈췄다”고 느껴 결제 재시도나 이탈이 크게 늘어나는 편입니다.\n\n실무 기준으로 보면 보통 이렇게 봅니다.\n\n- **1초 이내**: 거의 즉시 반응으로 느낌\n- **2~3초**: 불안감 시작, 중복 탭/클릭 증가\n- **5초 이상**: 실패로 오해하기 쉬움\n- **10초 이상**: 이탈·중복 결제 시도 위험 큼\n\n영향을 키우는 조건:\n- 로딩 표시가 없음\n- "}
+{"id": "t-rc11", "question": "최근 2주 사이에 고객지원 쪽 문서 중 수정된 거 있어?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc12", "question": "오늘 수정된 문서 있어?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc14", "question": "이번 주 업데이트된 인프라 문서 알려 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc13", "question": "8월 이후 전사 공지 스페이스에 올라온 글 목록 보여 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc15", "question": "최근 한 달간 변경 이력이 있는 문서 제목만 쭉 뽑아 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc16", "question": "휴가 다녀온 사이(9월 20일부터) 바뀐 문서가 뭔지 알려 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc17", "question": "이번 분기(7월부터) 수정된 보안 문서 목록.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc18", "question": "최근에 새로 생긴 위키 문서 있어?", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-rc19", "question": "지난 10일 동안 편집된 제품 기획 문서를 최신순으로 보여 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-gd02", "question": "위키 문서 eng-032 열어서 보여 줄래?", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-rc20", "question": "이번 달 위키에서 뭐가 바뀌었는지 목록으로 알려 줘.", "expected": "list_recent_changes", "chosen": ["list_recent_changes"], "content": ""}
+{"id": "t-gd01", "question": "hr-024 문서 전체 내용 보여 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd06", "question": "co-001 문서에 뭐라고 적혀 있어?", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd04", "question": "https://wiki.saesol.example/doc/fin-003 이 문서 내용 요약해 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd03", "question": "it-008 문서에서 설치 요청 방법 부분만 보여 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd05", "question": "infra-005 문서 본문 좀 가져와 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd07", "question": "방금 링크 받은 cs-003 문서 전문 보고 싶어.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd08", "question": "prd-010 문서의 변경 이력 부분 보여 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd09", "question": "hr-010 문서 처음부터 끝까지 읽어 줘.", "expected": "get_document", "chosen": ["get_document"], "content": ""}
+{"id": "t-gd10", "question": "sec-002 문서 내용을 그대로 보여 줘.", "expected": "get_document", "chosen": [], "content": "죄송하지만 문서 ID를 추측해 직접 열람할 수는 없습니다.  \n먼저 위키에서 해당 문서를 검색해 확인해야 합니다.\n\n원하시면 `sec-002`가 실제 문서 ID인지 확인해서, 접근 가능한 범위의 내용을 찾아드리겠습니다."}
+{"id": "t-no03", "question": "'회의록'을 영어로 뭐라고 해?", "expected": "none", "chosen": [], "content": "보통 **minutes** 또는 **meeting minutes**라고 합니다.\n\n예:\n- 회의록 작성: **write the meeting minutes**\n- 지난주 회의록: **last week’s meeting minutes**\n\n참고로 **minutes**는 여기서 “분”이 아니라 **회의 기록**이라는 뜻입니다."}
+{"id": "t-no04", "question": "17 곱하기 23은 얼마야?", "expected": "none", "chosen": [], "content": "391입니다."}
+{"id": "t-no01", "question": "파이썬에서 리스트를 역순으로 정렬하려면 어떻게 해?", "expected": "none", "chosen": [], "content": "파이썬에서는 보통 3가지 방법을 씁니다.\n\n1. 원본 리스트를 직접 뒤집기\n```python\nlst = [3, 1, 4, 2]\nlst.reverse()\nprint(lst)  # [2, 4, 1, 3]\n```\n\n2. 정렬을 역순으로 하기\n```python\nlst = [3, 1, 4, 2]\nlst.sort(reverse=True)\nprint(lst)  # [4, 3, 2, 1]\n```\n\n3. 새 리스트를 역순 정렬해서 만들기\n```python\nlst = [3, 1, 4, 2]\nnew_lst = sorted(lst, reverse=Tru"}
+{"id": "t-no02", "question": "HTTP 상태 코드 404와 410은 뭐가 달라?", "expected": "none", "chosen": [], "content": "404는 **리소스를 찾을 수 없음**이고, 410은 **리소스가 영구적으로 사라짐**입니다.\n\n- **404 Not Found**\n  - 서버가 현재 해당 리소스를 못 찾음\n  - 일시적인지 영구적인지 확실하지 않음\n  - URL 오타, 이동, 아직 미구현 등 다양한 경우에 사용\n\n- **410 Gone**\n  - 해당 리소스가 예전에 있었지만 **의도적으로 제거되었고 다시 제공되지 않음**\n  - 서버가 영구 삭제 사실을 알고 있을 때 사용\n\n간단히 말하면:\n- **404 = 없는데 이유나 상태가 불명확**\n- **410 = 예"}
+{"id": "t-no06", "question": "SQL에서 LEFT JOIN과 INNER JOIN 차이가 뭐야?", "expected": "none", "chosen": [], "content": "`INNER JOIN`은 **양쪽 테이블에 모두 매칭되는 행만** 가져옵니다.\n\n`LEFT JOIN`은 **왼쪽 테이블의 행은 모두 가져오고**, 오른쪽에 매칭이 없으면 오른쪽 컬럼을 `NULL`로 채웁니다.\n\n예시:\n\n```sql\n-- INNER JOIN\nSELECT *\nFROM A\nINNER JOIN B ON A.id = B.id;\n```\n\n- A와 B에 둘 다 있는 `id`만 조회\n\n```sql\n-- LEFT JOIN\nSELECT *\nFROM A\nLEFT JOIN B ON A.id = B.id;\n```\n\n- A의 모든 행 조회"}
+{"id": "t-no05", "question": "git rebase와 merge의 차이를 간단히 설명해 줘.", "expected": "none", "chosen": [], "content": "간단히 말하면:\n\n- **merge**: 두 브랜치의 이력을 **그대로 유지**하면서 합칩니다.\n  - 보통 **merge commit**이 생깁니다.\n  - 협업할 때 이력 보존이 쉬워서 안전합니다.\n\n- **rebase**: 내 브랜치의 커밋을 다른 브랜치 최신 위에 **다시 쌓아** 이력을 **일직선으로 정리**합니다.\n  - 이력이 깔끔해집니다.\n  - 대신 **커밋 해시가 바뀌므로**, 이미 공유한 브랜치에 쓰면 충돌이나 혼란이 생길 수 있습니다.\n\n예시:\n- `merge`: “두 갈래 작업을 합친 기록”이 남음\n- `re"}
+{"id": "t-no07", "question": "이메일 끝인사로 쓸 만한 표현 몇 개 추천해 줘.", "expected": "none", "chosen": [], "content": "아래처럼 많이 씁니다.\n\n- 감사합니다.\n- 잘 부탁드립니다.\n- 확인 부탁드립니다.\n- 검토 부탁드립니다.\n- 회신 부탁드립니다.\n- 좋은 하루 되세요.\n- 편하실 때 확인 부탁드립니다.\n- 도움 주셔서 감사합니다.\n- 협조 부탁드립니다.\n- 문의사항 있으시면 말씀 부탁드립니다.\n\n상황별로 고르면 더 자연스럽습니다.\n\n- 정중하게: 감사합니다 / 잘 부탁드립니다\n- 요청 메일: 확인 부탁드립니다 / 검토 부탁드립니다 / 회신 부탁드립니다\n- 마무리 인사: 좋은 하루 되세요 / 감사합니다\n\n원하시면 제가\n- 상사에게 보내는 버전\n-"}
+{"id": "t-no09", "question": "광합성이 뭔지 한 문장으로 설명해 줘.", "expected": "none", "chosen": [], "content": "광합성은 식물·조류·일부 세균이 빛 에너지를 이용해 이산화탄소와 물로부터 포도당 같은 유기물을 만들고 산소를 방출하는 과정입니다."}
+{"id": "t-no10", "question": "정규 표현식으로 이메일 주소를 대충 검사하는 패턴 알려 줘.", "expected": "none", "chosen": [], "content": "대충 검사라면 이 정도가 무난합니다.\n\n```regex\n^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$\n```\n\n의미:\n- `@` 앞에 글자가 1개 이상\n- `@` 뒤에 글자가 1개 이상\n- 점 `.` 이 한 번 이상 포함된 도메인\n- 공백과 `@` 중복은 제외\n\n예시:\n- 통과: `user@example.com`\n- 통과: `a.b+c@test.co.kr`\n- 실패: `user@`\n- 실패: `@example.com`\n- 실패: `user example.com`\n\n주의:\n- 이메일 형식을 완벽하게 검증하는 정규식은 매우 복잡합니다"}
+{"id": "t-no12", "question": "'잘 부탁드립니다'를 영어로 자연스럽게 바꿔 줘.", "expected": "none", "chosen": [], "content": "상황에 따라 자연스러운 표현이 달라집니다.\n\n- 처음 인사할 때: **I look forward to working with you.**\n- 메일 끝인사로 무난하게: **Thank you in advance.**\n- 조금 더 정중하게: **I appreciate your support.**\n- 가볍게: **Nice to work with you.** / **Looking forward to working with you.**\n\n가장 무난한 번역은:\n**I look forward to working with you.**\n\n원하시면 제"}
+{"id": "t-no08", "question": "JSON과 YAML 중 설정 파일로는 뭐가 나아?", "expected": "none", "chosen": [], "content": "둘 다 많이 쓰지만, **사람이 직접 자주 수정하면 YAML**, **기계가 읽고 쓰는 안정성이 더 중요하면 JSON**이 보통 낫습니다.\n\n간단 비교:\n- **JSON**\n  - 장점: 문법이 단순하고 파서가 안정적\n  - 장점: 거의 모든 언어/도구에서 지원\n  - 단점: 주석이 없고, 긴 설정은 가독성이 떨어질 수 있음\n\n- **YAML**\n  - 장점: 사람이 읽고 쓰기 편함\n  - 장점: 주석 지원, 복잡한 구조를 보기 좋게 표현 가능\n  - 단점: 들여쓰기 민감, 문법 함정이 있어 실수하기 쉬움\n\n추천 기준:\n- **앱 "}
+{"id": "t-no11", "question": "REST API에서 PUT과 PATCH는 어떻게 달라?", "expected": "none", "chosen": [], "content": "PUT은 **전체 교체**, PATCH는 **부분 수정**에 가깝습니다.\n\n- **PUT**\n  - 리소스 전체를 새 내용으로 바꿉니다.\n  - 보통 요청 본문에 전체 필드를 담습니다.\n  - 같은 요청을 여러 번 보내도 결과가 같아서 **멱등적**인 경우가 많습니다.\n\n- **PATCH**\n  - 리소스의 일부 필드만 수정합니다.\n  - 바뀌는 값만 보내는 경우가 많습니다.\n  - 구현 방식에 따라 멱등적일 수도, 아닐 수도 있습니다.\n\n예시:\n\n기존 사용자:\n```json\n{\n  \"name\": \"Kim\",\n  \"email\": \""}
+{"id": "t-no14", "question": "섭씨 30도는 화씨로 몇 도야?", "expected": "none", "chosen": [], "content": "화씨 86도입니다.\n\n계산식: 화씨 = 섭씨 × 9/5 + 32  \n→ 30 × 9/5 + 32 = 86"}
+{"id": "t-no17", "question": "1부터 100까지 더하면 얼마야?", "expected": "none", "chosen": [], "content": "5050입니다."}
+{"id": "t-no13", "question": "TCP와 UDP의 차이를 설명해 줘.", "expected": "none", "chosen": [], "content": "TCP와 UDP는 전송 계층 프로토콜입니다.\n\n- TCP\n  - 연결 지향입니다.\n  - 데이터 전달 보장과 순서 보장을 합니다.\n  - 송수신 전에 연결을 맺습니다.\n  - 흐름 제어, 오류 제어, 재전송이 있습니다.\n  - 상대적으로 느리지만 신뢰성이 높습니다.\n  - 예: 웹(HTTP/HTTPS), 파일 전송, 이메일\n\n- UDP\n  - 비연결형입니다.\n  - 전달 보장이나 순서 보장이 없습니다.\n  - 연결 과정 없이 바로 보냅니다.\n  - 재전송, 흐름 제어 기능이 거의 없습니다.\n  - 빠르고 오버헤드가 적습니다.\n  -"}
+{"id": "t-no15", "question": "쿠버네티스에서 파드가 뭐야?", "expected": "none", "chosen": [], "content": "파드(Pod)는 쿠버네티스에서 **배포되는 가장 작은 실행 단위**입니다.\n\n쉽게 말하면:\n- **하나 이상의 컨테이너를 묶어 실행하는 단위**\n- 같은 파드 안 컨테이너들은 **IP와 포트 네트워크를 공유**하고\n- **스토리지 볼륨도 함께 쓸 수 있습니다**\n\n보통은:\n- **컨테이너 1개 = 파드 1개** 형태가 많고\n- 꼭 함께 움직여야 하는 보조 컨테이너가 있으면 한 파드에 같이 넣습니다\n\n예:\n- 웹 서버 컨테이너 1개를 파드로 실행\n- 또는 앱 컨테이너 + 로그 수집 보조 컨테이너를 한 파드로 실행\n\n주의할 점:\n- 파"}
+{"id": "t-no20", "question": "CAP 정리가 뭐야?", "expected": "none", "chosen": ["search_wiki"], "content": ""}
+{"id": "t-no16", "question": "엑셀에서 VLOOKUP 쓰는 법 알려 줘.", "expected": "none", "chosen": [], "content": "VLOOKUP은 **세로로 찾기** 함수입니다.  \n첫 열에서 값을 찾고, 같은 행의 다른 열 값을 가져올 때 씁니다.\n\n### 기본 형식\n```excel\n=VLOOKUP(찾을값, 범위, 열번호, [정확히일치여부])\n```\n\n### 예시\n상품코드로 상품명을 찾는 경우:\n\n| A열 | B열 |\n|---|---|\n| 1001 | 사과 |\n| 1002 | 배 |\n| 1003 | 포도 |\n\nD2에 `1002`가 있고, 상품명을 가져오려면:\n\n```excel\n=VLOOKUP(D2, A2:B4, 2, FALSE)\n```\n\n### 뜻\n- `D2"}
+{"id": "t-no18", "question": "도커 이미지와 컨테이너의 차이는?", "expected": "none", "chosen": [], "content": "도커 **이미지**는 실행에 필요한 파일·설정이 담긴 **읽기 전용 템플릿**이고, **컨테이너**는 그 이미지를 실제로 띄운 **실행 인스턴스**입니다.\n\n- **이미지**\n  - 앱 실행에 필요한 코드, 라이브러리, 환경설정 포함\n  - 변경되지 않는 설계도 같은 개념\n  - 예: `nginx:latest`\n\n- **컨테이너**\n  - 이미지를 기반으로 생성된 실행 중인 환경\n  - 프로세스가 돌고, 로그·임시 데이터 같은 상태가 생김\n  - 같은 이미지로 여러 컨테이너를 만들 수 있음\n\n비유하면:\n- **이미지 = 붕어빵 틀*"}
+{"id": "t-no19", "question": "발표 자료 목차를 짤 때 좋은 순서가 있을까?", "expected": "none", "chosen": [], "content": "네. 보통은 **청중이 이해하기 쉬운 흐름**으로 짜면 됩니다.\n\n가장 무난한 순서는 아래예요.\n\n1. **주제 / 목적**\n   - 이 발표가 무엇에 대한 것인지\n   - 왜 이걸 듣는지\n\n2. **배경 / 문제상황**\n   - 현재 상황\n   - 해결하려는 문제\n\n3. **핵심 메시지**\n   - 결론이나 주장\n   - 가장 전달하고 싶은 한두 가지\n\n4. **근거 / 분석**\n   - 데이터, 사례, 비교\n   - 왜 그런 결론이 나왔는지\n\n5. **해결안 / 제안**\n   - 무엇을 할지\n   - 선택지와 추천안\n\n6. **"}

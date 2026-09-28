@@ -1,0 +1,13 @@
+{
+  "git": "383d413",
+  "dirty": true,
+  "finished_at": "2026-09-28T14:59:56+00:00",
+  "command": "answers",
+  "server": "https://mcp.dmssh.store/mcp",
+  "model": "gpt-5.4",
+  "usage": {
+    "prompt_tokens": 217055,
+    "completion_tokens": 10670
+  },
+  "today": "2026-09-28"
+}
