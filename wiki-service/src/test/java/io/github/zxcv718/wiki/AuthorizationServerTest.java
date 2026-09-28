@@ -438,6 +438,28 @@ class AuthorizationServerTest extends IntegrationTest {
         assertThat(login).endsWith("/login");
     }
 
+    // ----- 동의 기억 -----
+
+    /**
+     * 공개 클라이언트(CIMD 포함)는 이미 허용했어도 새 인가마다 동의 화면을 보인다(RFC 8252 8.6). 같은 id를 쓴 다른
+     * 프로그램이 살아 있는 로그인 세션으로 화면 없이 코드를 받지 못하게 하기 위해서다. 기밀 클라이언트는 비밀로 신원이
+     * 확인되므로 이미 허용한 범위면 건너뛴다.
+     */
+    @Test
+    void onlyConfidentialClientsSkipConsentOnceApproved() throws Exception {
+        setPassword("gaeun");
+        MockHttpSession session = login("gaeun");
+        for (int round = 0; round < 2; round++) {
+            String consent = redirect(mvc.perform(get(authorizeUri(Map.of())).session(session)));
+            assertThat(consent).contains("/oauth2/consent?");
+            assertThat(redirect(approve(session, CLIENT, query(consent).get("state")))).startsWith(REDIRECT + "?");
+        }
+
+        URI demo = authorizeUri(Map.of("client_id", DEMO_CLIENT, "redirect_uri", DEMO_REDIRECT));
+        assertThat(code(session, demo)).isNotBlank();
+        assertThat(redirect(mvc.perform(get(demo).session(session)))).startsWith(DEMO_REDIRECT + "?");
+    }
+
     // ----- 클라이언트 등급 -----
 
     /** 기밀 클라이언트는 비밀로 인증해야 하고, 그때만 설정한 사내 등급을 받는다. */

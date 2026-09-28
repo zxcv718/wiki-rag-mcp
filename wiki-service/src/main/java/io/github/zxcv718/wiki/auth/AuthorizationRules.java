@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationContext;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationException;
@@ -30,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationValidator;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
@@ -96,6 +98,23 @@ final class AuthorizationRules {
             }
             return converted;
         };
+    }
+
+    /**
+     * 이번 인가에 동의 화면을 보일지. 공개 클라이언트는 이전에 허용했어도 매번 보인다(RFC 8252 8.6). client_id는 누구나
+     * 쓸 수 있어서, 동의를 기억하면 로그인 세션이 살아 있는 동안 같은 id를 쓴 다른 프로그램이 화면 없이 코드를 받아 간다.
+     * 비밀로 인증하는 기밀 클라이언트는 이미 허용한 범위면 건너뛴다(Spring 기본 동작과 같다).
+     */
+    static boolean consentRequired(OAuth2AuthorizationCodeRequestAuthenticationContext context) {
+        RegisteredClient client = context.getRegisteredClient();
+        if (!client.getClientSettings().isRequireAuthorizationConsent()) {
+            return false;
+        }
+        if (client.getClientAuthenticationMethods().contains(ClientAuthenticationMethod.NONE)) {
+            return true;
+        }
+        OAuth2AuthorizationConsent consent = context.getAuthorizationConsent();
+        return consent == null || !consent.getScopes().containsAll(context.getAuthorizationRequest().getScopes());
     }
 
     /** 등록한 주소와 같은가. http 루프백 주소만 포트를 무시하고 나머지(경로, 쿼리)는 정확히 같아야 한다. */

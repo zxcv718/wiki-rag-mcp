@@ -157,6 +157,7 @@ public class AuthorizationServerConfig {
                                 .authenticationProviders(providers -> providers.forEach(provider -> {
                                     if (provider instanceof OAuth2AuthorizationCodeRequestAuthenticationProvider code) {
                                         code.setAuthenticationValidator(rules.authorizationRequestValidator());
+                                        code.setAuthorizationConsentRequired(AuthorizationRules::consentRequired);
                                     }
                                 }))
                                 .authorizationResponseHandler(rules::sendAuthorizationResponse)
