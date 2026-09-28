@@ -6,9 +6,14 @@ float32와 bf16 모델을 차례로 불러(메모리를 아끼려고 동시에 �
 - 코사인 유사도: 32개씩 묶어 만든 벡터와 하나씩 만든 벡터, bf16과 float32 벡터
 
     python bench.py <golden.jsonl> > bench.json
+    TORCH_THREADS=2 python bench.py <golden.jsonl> > bench-threads2.json
+
+PyTorch 2.14는 OMP_NUM_THREADS와 관계없이 물리 코어 수(배포 서버는 1)만큼의 스레드로 시작해서, 스레드 수는
+TORCH_THREADS로 받아 torch.set_num_threads로 정한다.
 """
 
 import json
+import os
 import platform
 import statistics
 import sys
@@ -61,6 +66,8 @@ def measure(dtype: torch.dtype, questions: list[str]) -> tuple[dict, np.ndarray]
 
 
 def main() -> None:
+    if threads := os.environ.get("TORCH_THREADS"):
+        torch.set_num_threads(int(threads))
     lines = Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()
     questions = [json.loads(line)["question"] for line in lines]
     result = {"machine": platform.processor() or platform.machine(), "torch": torch.__version__,
