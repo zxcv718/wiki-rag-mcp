@@ -25,6 +25,14 @@ const META = {
   'io.modelcontextprotocol/clientCapabilities': {},
 };
 
+// 응답 본문의 JSON-RPC 메시지. 오래 걸리는 요청(약 15초 넘게)은 서버가 SSE로 바꿔 ping을 먼저 보내고 결과를
+// message 이벤트로 보낸다. 서버는 이벤트 하나에 data 줄 하나를 쓴다
+function reply(type, body) {
+  if (!type.startsWith('text/event-stream')) return JSON.parse(body);
+  const data = body.split(/\r?\n/).filter((line) => line.startsWith('data:'));
+  return JSON.parse(data[data.length - 1].slice(5));
+}
+
 export default function () {
   const [question, asker] = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
   const body = JSON.stringify({
@@ -46,8 +54,8 @@ export default function () {
   let ok = res.status === 200;
   if (ok) {
     try {
-      const reply = res.json();
-      ok = !reply.error && reply.result !== undefined && reply.result.isError !== true;
+      const message = reply(res.headers['Content-Type'] || '', res.body);
+      ok = !message.error && message.result !== undefined && message.result.isError !== true;
     } catch (e) {
       ok = false;
     }
