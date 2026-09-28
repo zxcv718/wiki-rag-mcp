@@ -1,0 +1,11 @@
+# 최소 권한 확인 (2026-09-28 13:00 KST, 프로필 wiki-rag)
+$ aws sts get-caller-identity
+arn:aws:iam::488914879507:user/wiki-rag-deployer
+$ aws ec2 describe-vpcs --region ap-northeast-2  (허용)
+vpc-016a4d779f86be2c9
+$ aws s3 ls  (거부)
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListBuckets operation: User: arn:aws:iam::488914879507:user/wiki-rag-deployer is not authorized to perform: s3:ListAllMyBuckets because no identity-based policy allows the s3:ListAllMyBuckets action
+$ aws ec2 describe-vpcs --region us-east-1  (거부)
+aws: [ERROR]: An error occurred (UnauthorizedOperation) when calling the DescribeVpcs operation: You are not authorized to perform this operation. User: arn:aws:iam::488914879507:user/wiki-rag-deployer is not authorized to perform: ec2:DescribeVpcs because no identity-based policy allows the ec2:DescribeVpcs action
+$ aws iam list-users  (거부)
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListUsers operation: User: arn:aws:iam::488914879507:user/wiki-rag-deployer is not authorized to perform: iam:ListUsers on resource: arn:aws:iam::488914879507:user/ because no identity-based policy allows the iam:ListUsers action

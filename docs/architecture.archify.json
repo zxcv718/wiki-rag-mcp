@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "wiki-rag-mcp AWS 배포 아키텍처",
+    "output": "architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "dns",
+      "type": "external",
+      "label": "가비아 DNS",
+      "sublabel": "mcp.dmssh.store A 레코드",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "user",
+      "type": "external",
+      "label": "사용자",
+      "sublabel": "브라우저 · MCP 클라이언트",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "운영자",
+      "sublabel": "지정 IP /32에서만",
+      "pos": [
+        40,
+        400
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "igw",
+      "type": "cloud",
+      "label": "인터넷 게이트웨이",
+      "sublabel": "VPC에 연결",
+      "pos": [
+        360,
+        250
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "rt",
+      "type": "cloud",
+      "label": "퍼블릭 라우팅 테이블",
+      "sublabel": "0.0.0.0/0 대상 IGW",
+      "pos": [
+        360,
+        400
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "ec2",
+      "type": "backend",
+      "label": "EC2 m7i-flex.large",
+      "sublabel": "Elastic IP 52.78.251.4",
+      "tag": "IMDSv2",
+      "pos": [
+        640,
+        250
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "caddy",
+      "type": "frontend",
+      "label": "Caddy 컨테이너",
+      "sublabel": "HTTPS · /health OK",
+      "pos": [
+        940,
+        250
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "le",
+      "type": "external",
+      "label": "Let's Encrypt",
+      "sublabel": "인증서 발급·갱신",
+      "pos": [
+        940,
+        100
+      ],
+      "size": [
+        170,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "VPC 10.0.0.0/16 · 서울 리전",
+      "wraps": [
+        "igw",
+        "rt",
+        "ec2",
+        "caddy"
+      ],
+      "pad": 56
+    },
+    {
+      "kind": "region",
+      "label": "퍼블릭 서브넷 10.0.1.0/24",
+      "wraps": [
+        "ec2",
+        "caddy"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "security-group",
+      "label": "보안 그룹: 80·443 전체, 22 운영자 IP만",
+      "wraps": [
+        "ec2",
+        "caddy"
+      ],
+      "pad": 12
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-dns",
+      "from": "user",
+      "to": "dns",
+      "label": "이름 조회",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "user-igw",
+      "from": "user",
+      "to": "igw",
+      "label": "HTTP 80 · HTTPS 443",
+      "variant": "emphasis"
+    },
+    {
+      "id": "igw-ec2",
+      "from": "igw",
+      "to": "ec2",
+      "label": "보안 그룹 통과",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ec2-caddy",
+      "from": "ec2",
+      "to": "caddy",
+      "label": "포트 매핑 80·443",
+      "variant": "emphasis"
+    },
+    {
+      "id": "caddy-le",
+      "from": "caddy",
+      "to": "le",
+      "label": "ACME HTTP-01",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "operator-igw",
+      "from": "operator",
+      "to": "igw",
+      "label": "SSH 22",
+      "variant": "security"
+    },
+    {
+      "id": "rt-igw",
+      "from": "rt",
+      "to": "igw",
+      "label": "기본 경로",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "들어오는 길",
+      "items": [
+        "DNS가 도메인을 Elastic IP로 알려 주고, 요청은 게이트웨이와 보안 그룹을 지나 Caddy에 닿는다",
+        "/health는 200과 OK를 돌려준다"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보안",
+      "items": [
+        "인바운드는 80·443 전체와 22 운영자 IP뿐, 메타데이터는 IMDSv2만",
+        "Terraform은 최소 권한 IAM 사용자 wiki-rag-deployer로 실행"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "정리",
+      "items": [
+        "모든 자원에 project=wiki-rag-mcp 태그",
+        "terraform destroy로 한 번에 지운다"
+      ]
+    }
+  ]
+}

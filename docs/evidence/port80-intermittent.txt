@@ -1,0 +1,13 @@
+# 이 맥에서 80번만 가끔 실패한 건의 근거 (2026-09-28 13:07 KST)
+
+증상: 이 맥에서 http://52.78.251.4/health, http://mcp.dmssh.store/health 가 가끔 curl (7) "Couldn't connect"
+      (2~13ms 만에 실패, 한 번은 "Network is down"). 같은 때 https(443)와 ssh(22)는 정상.
+
+검증 1. 보안 그룹 80 규칙: 0.0.0.0/0 (terraform, describe-security-group-rules)
+검증 2. 서버 안: curl http://localhost/health 200, 도메인 이름으로 요청하면 308(HTTPS로 넘김)
+검증 3. 서버가 자기 공인 IP(52.78.251.4:80)로 요청: 200 (인터넷 게이트웨이와 보안 그룹을 거쳐 들어옴)
+검증 4. 이 맥에서 다른 사이트 80번(example.com): 200
+검증 5. 성공할 때 서버 tcpdump: 이 맥의 공인 IP(보안 그룹에서 SSH를 허용한 운영자 IP와 같음)에서 온 SYN이 enp39s0로 들어와 Caddy 컨테이너(172.18.0.2:80)로 넘어감
+검증 6. check-host.net 해외 노드 5곳(de, ir, md, tr, us)에서 http://mcp.dmssh.store/health: 모두 308 Permanent Redirect
+
+판단: 서버·보안 그룹·Caddy 설정 문제가 아니라, 실패가 수 ms 안에 로컬에서 나는 이 맥의 네트워크 쪽 문제(en8)
