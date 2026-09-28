@@ -1,20 +1,32 @@
 """MCP 서버. 답변을 만들지 않고 권한에 맞는 근거만 돌려준다 (ADR-04, ADR-05).
 
-stdio로 돈다. 사용자는 실행 환경의 WIKI_USER로, 클라이언트 신뢰 등급은 WIKI_CLIENT_TIER로 정한다(ADR-06).
+전송은 둘이다(ADR-06).
+- stdio(기본): 사용자는 실행 환경의 WIKI_USER로, 클라이언트 신뢰 등급은 WIKI_CLIENT_TIER로 정한다.
+  표준 출력은 MCP 메시지 전용이라 로그를 찍지 않는다.
+- http(WIKI_MCP_TRANSPORT=http): Streamable HTTP로 열고, 요청마다 OAuth 액세스 토큰의 sub로 사용자를,
+  client_tier 클레임으로 등급을 정한다(ADR-17, ADR-24). 토큰 검증은 auth/tokens.py가 한다.
 그룹과 본문은 위키 API에서 읽고(WIKI_SOURCE=wiki), 그룹은 Redis에 캐시한다(ADR-08). 평가·테스트용 파일 위키는
-WIKI_SOURCE=file로 쓴다. 표준 출력은 MCP 메시지 전용이라 로그를 찍지 않는다.
+WIKI_SOURCE=file로 쓴다.
 """
 
 import json
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
+from mcp.server.auth.middleware.auth_context import get_access_token
+from mcp.server.auth.provider import TokenVerifier
+from mcp.server.auth.settings import AuthSettings
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ResourceError, ResourceNotFoundError, ToolError
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, Response
 
 from wiki_rag_mcp.auth.principals import principals_for, user_id_of
 from wiki_rag_mcp.auth.tiers import ClientTier
+from wiki_rag_mcp.auth.tokens import REQUIRED_SCOPE, JwtVerifier, tier_of
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.models import valid_doc_id
 from wiki_rag_mcp.search.backend import SearchStore
@@ -85,22 +97,47 @@ class Services:
         self.embedder = embedder
         self.groups = groups or source
 
-    def principals(self) -> list[str]:
-        if not self.settings.user:
+    @property
+    def http(self) -> bool:
+        return self.settings.transport == "http"
+
+    def user_id(self) -> str:
+        """요청한 위키 사용자 id. 요청마다 새로 정하고 어디에도 저장하지 않는다.
+
+        HTTP에서는 한 프로세스가 여러 사용자의 요청을 함께 처리하므로 이 요청의 액세스 토큰에서만 읽는다.
+        SDK가 검증한 토큰을 요청의 contextvar에 두고, 도구를 돌리는 작업 스레드에도 복사해 준다.
+        """
+        if self.http:
+            token = get_access_token()
+            if token is None or not token.subject:
+                raise RequestFailed("인증된 사용자가 없습니다. 다시 로그인하세요.")
+            user = token.subject
+        elif self.settings.user:
+            user = self.settings.user
+        else:
             raise RequestFailed("사용자가 설정되지 않았습니다. MCP 서버 실행 환경에 WIKI_USER를 지정하세요.")
         try:
-            return principals_for(self.settings.user, self.groups)
+            return user_id_of(user)
         except ValueError as e:
             raise RequestFailed("WIKI_USER의 형식이 잘못됐습니다. 위키 사용자 id를 지정하세요.") from e
+
+    def principals(self) -> list[str]:
+        user_id = self.user_id()
+        try:
+            return principals_for(user_id, self.groups)
         except UnknownUserError as e:
-            raise RequestFailed("위키에 없는 사용자입니다. MCP 서버 실행 환경의 WIKI_USER를 확인하세요.") from e
+            hint = "" if self.http else " MCP 서버 실행 환경의 WIKI_USER를 확인하세요."
+            raise RequestFailed("위키에 없는 사용자입니다." + hint) from e
         except GroupLookupError as e:
             # 권한을 덜 반영한 결과를 주지 않고 요청 전체를 실패시킨다 (ADR-08)
             raise RequestFailed("권한 정보를 확인할 수 없어 처리하지 않았습니다. 잠시 뒤 다시 시도하세요.") from e
 
     @property
     def tier(self) -> ClientTier:
-        return ClientTier(self.settings.client_tier)
+        if not self.http:
+            return ClientTier(self.settings.client_tier or ClientTier.EXTERNAL)
+        # 인가 서버가 서명한 토큰의 등급만 믿는다. 요청 파라미터나 헤더로는 받지 않는다 (ADR-17, ADR-24)
+        return tier_of(get_access_token())
 
     def document(self, doc_id: str, section: str | None = None) -> dict[str, Any]:
         # 권한 정보를 문서보다 먼저 확인한다. 위키 장애 중에 doc_id에 따라 "없음"과 "오류"가 갈리면
@@ -109,7 +146,7 @@ class Services:
         if not valid_doc_id(doc_id):
             raise DocumentNotFound(NOT_FOUND)
         try:
-            doc = self.source.document_for(doc_id, user_id_of(self.settings.user or ""))
+            doc = self.source.document_for(doc_id, self.user_id())
         except WikiUnavailableError as e:
             raise RequestFailed("위키에서 문서를 읽을 수 없습니다. 잠시 뒤 다시 시도하세요.") from e
         if doc is None:
@@ -127,11 +164,30 @@ def _parse_date(value: str | None, name: str) -> datetime | None:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
-def build_server(services: Services) -> MCPServer:
+def build_server(services: Services, token_verifier: TokenVerifier | None = None) -> MCPServer:
+    """도구 서버. HTTP 모드면 액세스 토큰을 요구하고, token_verifier가 없으면 설정의 인가 서버로 검증한다."""
+    settings = services.settings
+    auth = None
+    if services.http:
+        # 보호 리소스 메타데이터(RFC 9728)와 401 응답의 resource_metadata는 SDK가 이 값으로 만든다. 주소는 문자열로
+        # 넘긴다. AnyHttpUrl로 먼저 바꾸면 경로 없는 발급자 끝에 /가 붙어, 클라이언트가 인가 서버 메타데이터의
+        # issuer와 정확히 비교할 때 어긋난다
+        auth = AuthSettings.model_validate({
+            "issuer_url": settings.auth_issuer, "resource_server_url": settings.resource_url,
+            # validate_token_resource는 검증기가 resource를 이 주소로 채워 늘 통과한다. 대상 검사는 tokens.py에 있다
+            "required_scopes": [REQUIRED_SCOPE], "validate_token_resource": True})
+        token_verifier = token_verifier or JwtVerifier.from_settings(settings)
     server = MCPServer(
         name="wiki-rag-mcp",
         instructions="사내 위키 검색 서버입니다. 사용자 권한에 맞는 근거만 돌려주며 답변은 만들지 않습니다.",
+        token_verifier=token_verifier,
+        auth=auth,
     )
+
+    # 인증 없이 열린다(SDK의 custom_route). 배포 점검용이라 상태 말고는 아무것도 알려 주지 않는다
+    @server.custom_route("/health", methods=["GET"])
+    async def health(_request: Request) -> Response:
+        return PlainTextResponse("OK")
 
     def principals() -> list[str]:
         try:
@@ -207,8 +263,26 @@ def open_services(settings: Settings) -> Services:
     return Services(settings, source, open_store(settings), Embedder(), groups)
 
 
+def http_options(settings: Settings) -> dict[str, Any]:
+    """Streamable HTTP 설정. main과 테스트가 같은 값을 쓴다.
+
+    세션을 두지 않는다(stateless). 옛 방식(2025-11-25까지) 클라이언트의 요청도 요청마다 새 전송에서 처리해, 요청
+    사이에 사용자 상태가 남지 않는다. 새 방식(2026-07-28)은 원래 세션이 없다.
+    """
+    resource = urlsplit(settings.resource_url)
+    security = TransportSecuritySettings(enable_dns_rebinding_protection=True,
+                                         allowed_hosts=list(settings.allowed_hosts or (resource.netloc,)),
+                                         allowed_origins=list(settings.allowed_origins))
+    return {"streamable_http_path": resource.path, "stateless_http": True, "transport_security": security}
+
+
 def main() -> None:
-    build_server(open_services(Settings.from_env())).run("stdio")
+    settings = Settings.from_env()
+    server = build_server(open_services(settings))
+    if settings.transport == "http":
+        server.run("streamable-http", host=settings.http_host, port=settings.http_port, **http_options(settings))
+    else:
+        server.run("stdio")
 
 
 if __name__ == "__main__":

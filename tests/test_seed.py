@@ -3,10 +3,14 @@
 옮기는 형식은 wiki-service/README.md의 POST /admin/import다.
 """
 
+import json
 from pathlib import Path
 
+import httpx
+import pytest
+
 from wiki_rag_mcp.wiki.files import FileWikiSource
-from wiki_rag_mcp.wiki.seed import import_payload
+from wiki_rag_mcp.wiki.seed import import_payload, seed
 
 FIXTURE = Path(__file__).parent / "fixtures" / "wiki"
 
@@ -39,3 +43,44 @@ def test_versions_and_revisions_are_carried_over():
     docs = {d["doc_id"]: d for d in payload["documents"]}
     for doc in FileWikiSource(FIXTURE).documents():
         assert (docs[doc.doc_id]["version"], docs[doc.doc_id]["revision"]) == (doc.version, doc.revision)
+
+
+def wiki_recording(import_status=200):
+    requests: list[httpx.Request] = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(import_status if request.url.path == "/admin/import" else 204)
+
+    return httpx.Client(base_url="http://wiki.test", transport=httpx.MockTransport(handler)), requests
+
+
+def test_demo_password_is_set_for_every_imported_user():
+    payload = import_payload(FIXTURE)
+    wiki, requests = wiki_recording()
+    seed(wiki, payload, "correct-horse-battery")
+    assert (requests[0].method, requests[0].url.path) == ("POST", "/admin/import")
+    puts = requests[1:]
+    assert all(r.method == "PUT" and json.loads(r.content) == {"password": "correct-horse-battery"} for r in puts)
+    assert sorted(r.url.path for r in puts) == sorted(f"/admin/users/{u['user_id']}/password" for u in payload["users"])
+
+
+def test_without_password_only_imports():
+    wiki, requests = wiki_recording()
+    seed(wiki, import_payload(FIXTURE), None)
+    assert [(r.method, r.url.path) for r in requests] == [("POST", "/admin/import")]
+
+
+def test_short_password_is_refused_before_importing():
+    """옮긴 뒤에 실패하면 위키가 비어 있지 않게 되어 다시 옮길 수 없다. 옮기기 전에 막는다."""
+    wiki, requests = wiki_recording()
+    with pytest.raises(SystemExit):
+        seed(wiki, import_payload(FIXTURE), "short-pw")
+    assert requests == []
+
+
+def test_already_seeded_wiki_sets_no_passwords():
+    wiki, requests = wiki_recording(import_status=409)
+    with pytest.raises(SystemExit):
+        seed(wiki, import_payload(FIXTURE), "correct-horse-battery")
+    assert [r.method for r in requests] == ["POST"]
