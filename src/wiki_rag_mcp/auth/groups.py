@@ -23,6 +23,7 @@ import json
 import logging
 
 import redis
+from opentelemetry import metrics
 from redis.backoff import NoBackoff
 from redis.retry import Retry
 
@@ -36,6 +37,11 @@ KEY_PREFIX = "wiki:groups"
 TTL_SECONDS = 60
 # 검색 지연 예산에서 권한 해석 몫이 20ms다(8장). Redis가 멈춰도 요청이 따라 멈추지 않게 짧게 끊고 위키로 간다
 REDIS_TIMEOUT_SECONDS = 0.5
+
+# 캐시 적중률(ADR-15). 적중하지 못하면 권한 해석이 위키 호출만큼 느려진다(8장 지연 예산)
+_lookups = metrics.get_meter(__name__).create_counter(
+    "wiki.group_cache.lookups", unit="{lookup}",
+    description="그룹 캐시 조회. result: hit(캐시), miss(위키에 물음), error(Redis를 못 읽어 위키에 물음)")
 
 
 def cache_key(user_id: str) -> str:
@@ -99,7 +105,9 @@ class GroupCache:
     def groups_of(self, user_id: str) -> list[str]:
         cached = self._cached(user_id)
         if cached is not None and cached[1] is not None:
+            _lookups.add(1, {"result": "hit"})
             return list(cached[1])
+        _lookups.add(1, {"result": "miss" if cached is not None else "error"})
         groups = self.source.groups_of(user_id)  # 모르는 사용자와 조회 실패는 캐시하지 않고 그대로 올린다
         if cached is not None:
             try:

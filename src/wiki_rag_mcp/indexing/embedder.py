@@ -8,10 +8,16 @@ bge-m3의 문장 벡터는 CLS 토큰 벡터이고, sentence-transformers 설정
 import os
 
 import numpy as np
+from opentelemetry import metrics, trace
 
 from wiki_rag_mcp.config import EMBEDDING_DTYPE, EMBEDDING_MODEL, EMBEDDING_REVISION
 
 MAX_SEQ_LENGTH = 2048  # 청크는 500토큰 안팎이지만 자르지 않는 큰 표가 있어 여유를 둔다
+
+_tracer = trace.get_tracer(__name__)
+# 임베딩 호출 수(ADR-15). 문서는 한 번에 여러 청크를 넣으므로 호출 대신 텍스트 수로 센다. 쿼리는 호출 하나가 하나다
+_texts = metrics.get_meter(__name__).create_counter(
+    "wiki.embedding.texts", unit="{text}", description="임베딩한 텍스트 수. kind: query(검색 쿼리), document(청크)")
 
 
 def default_device() -> str:
@@ -51,7 +57,12 @@ class Embedder:
         self.model.max_seq_length = MAX_SEQ_LENGTH
 
     def encode_documents(self, texts: list[str], batch_size: int = 16) -> np.ndarray:
-        return self.model.encode(texts, batch_size=batch_size, normalize_embeddings=True)
+        # 인덱싱에서 가장 오래 걸리는 부분이라 추적에 따로 보인다. 쿼리 임베딩은 search_wiki의 단계 스팬이 잰다
+        with _tracer.start_as_current_span("embed documents", attributes={"wiki.embedding.texts": len(texts)}):
+            vectors = self.model.encode(texts, batch_size=batch_size, normalize_embeddings=True)
+        _texts.add(len(texts), {"kind": "document"})
+        return vectors
 
     def encode_query(self, text: str) -> list[float]:
+        _texts.add(1, {"kind": "query"})
         return self.model.encode([text], normalize_embeddings=True)[0].tolist()

@@ -16,8 +16,12 @@
   소비자 그룹으로 나눠 받는다. 워커가 멈춰도 캐시 TTL(60초)이 지나면 반영된다.
 - Redis가 응답 없이 멈추면(연결이 반만 열린 채 남는 경우) 소켓 타임아웃으로 끊고 연결 끊김과 같이 복구한다.
   클라이언트는 cli.py가 타임아웃과 keepalive를 넣어 만든다.
+- 이벤트 하나마다 처리 스팬을 연다. 위키가 이벤트에 실어 보낸 traceparent(문서를 고친 요청의 추적)를 부모로
+  이어서, 편집부터 검색 반영까지가 한 추적에 보인다(ADR-15). OpenTelemetry 메시징 규약은 기본으로 링크를
+  권하지만, 이 워커처럼 메시지 하나를 다른 스팬 밖에서 처리할 때는 만든 쪽의 추적을 부모로 써도 된다고 둔다.
 """
 
+import contextlib
 import logging
 import threading
 import time
@@ -26,6 +30,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 import redis
+from opentelemetry import metrics, propagate, trace
+from opentelemetry.metrics import CallbackOptions, Observation
+from opentelemetry.trace import SpanKind, StatusCode
 
 from wiki_rag_mcp.indexing.events import (
     GROUP,
@@ -46,6 +53,23 @@ BACKOFF_SECONDS = 0.5
 REQUEUE_EVERY_SECONDS = 600.0
 ALERT_AFTER = 3  # DLQ에 이만큼 들어간 이벤트는 사람이 봐야 한다
 _DLQ_ONLY_FIELDS = ("error", "failed_at")
+
+_tracer = trace.get_tracer(__name__)
+_meter = metrics.get_meter(__name__)
+# 인덱싱 지연(ADR-15, 5장 "측정 지표"): 아웃박스에 기록된 때부터 반영을 마칠 때까지. 목표는 p95 30초 이하다.
+# 멤버십 이벤트는 그룹 캐시를 무효화하기까지를 잰다. 그룹에서 빠진 사람의 검색 권한이 회수되기까지다(ADR-08)
+_lag_seconds = _meter.create_histogram(
+    "wiki.indexing.lag", unit="s",
+    description="위키가 이벤트를 기록한 때부터 반영하기까지. outcome: indexed, deleted, skipped(이미 반영됨), "
+                "invalidated(그룹 캐시 무효화)",
+    explicit_bucket_boundaries_advisory=[0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 30.0, 60.0, 120.0,
+                                         300.0])
+
+
+def _record_lag(created_at: datetime, outcome: str) -> float:
+    seconds = (datetime.now(UTC) - created_at).total_seconds()
+    _lag_seconds.record(seconds, {"outcome": outcome})
+    return seconds
 
 
 class StreamWorker:
@@ -124,10 +148,23 @@ class StreamWorker:
         items = dict(replies.items() if isinstance(replies, dict) else (replies or []))
         entries = items.get(self.membership_stream, [])
         for entry_id, fields in entries:
-            self._process_membership(entry_id, fields)
+            self.process(self.membership_stream, entry_id, fields)
         return len(entries)
 
     def process(self, stream: str, entry_id: str, fields: dict[str, str]) -> bool:
+        # traceparent가 없거나 깨져 있으면 빈 맥락이 나와 새 추적이 된다. 처리는 그대로 한다
+        attributes = {"messaging.system": "redis", "messaging.operation.type": "process",
+                      "messaging.destination.name": stream, "messaging.message.id": entry_id}
+        if "doc_id" in fields:
+            attributes["wiki.doc_id"] = fields["doc_id"]
+        with _tracer.start_as_current_span(f"process {stream}", context=propagate.extract(fields),
+                                           kind=SpanKind.CONSUMER, attributes=attributes) as span:
+            ok = self._process(stream, entry_id, fields)
+            if not ok:
+                span.set_status(StatusCode.ERROR)
+            return ok
+
+    def _process(self, stream: str, entry_id: str, fields: dict[str, str]) -> bool:
         if stream == self.membership_stream:
             return self._process_membership(entry_id, fields)
         try:
@@ -166,6 +203,9 @@ class StreamWorker:
             return False
         self.membership(user_id)
         self.client.xackdel(self.membership_stream, self.group, entry_id, ref_policy="ACKED")
+        # 시각이 없거나 깨져 있거나 시간대가 없어도 무효화는 끝났다. 지연만 남기지 않는다
+        with contextlib.suppress(ValueError, TypeError):
+            _record_lag(datetime.fromisoformat(fields.get("created_at", "")), "invalidated")
         log.info("그룹 캐시 무효화 user_id=%s", user_id)
         return True
 
@@ -196,10 +236,29 @@ class StreamWorker:
                 moved += 1
         return moved
 
+    def observe_queues(self) -> None:
+        """스트림에 남은(처리 안 된) 이벤트와 DLQ에 쌓인 이벤트 수를 지표로 낸다(ADR-15). 워커 시작 때 한 번 부른다.
+
+        처리한 이벤트는 XACKDEL로 지우므로 스트림 길이가 곧 밀린 이벤트 수다. 값은 지표를 보낼 때 읽는다.
+        """
+        def observe(_options: CallbackOptions):
+            try:
+                if self.membership_stream:
+                    yield Observation(self.client.xlen(self.membership_stream), {"queue": "membership"})
+                for stream, dlq in self.streams.items():
+                    part = stream.rsplit(":", 1)[1]
+                    yield Observation(self.client.xlen(stream), {"queue": "events", "partition": part})
+                    yield Observation(self.client.xlen(dlq), {"queue": "dlq", "partition": part})
+            except redis.RedisError as e:
+                log.warning("큐 길이를 읽지 못했다: %r", e)
+
+        _meter.create_observable_gauge("wiki.indexing.queue.length", [observe], unit="{event}",
+                                       description="처리 안 된 이벤트 수. queue: events(문서), dlq, membership")
+
     def _log_applied(self, event: Event, applied: Applied) -> None:
         latency: Any = "-"
         if event.created_at is not None:
-            latency = int((datetime.now(UTC) - event.created_at).total_seconds() * 1000)
+            latency = int(_record_lag(event.created_at, applied.outcome) * 1000)
         log.info("%s doc_id=%s revision=%d embedded=%d reused=%d latency_ms=%s", applied.outcome, event.doc_id,
                  applied.revision, applied.embedded, applied.reused, latency)
 

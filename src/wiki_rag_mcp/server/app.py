@@ -10,6 +10,9 @@ WIKI_SOURCE=file로 쓴다.
 """
 
 import json
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
@@ -21,9 +24,11 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ResourceError, ResourceNotFoundError, ToolError
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
+from opentelemetry import metrics, trace
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 
+from wiki_rag_mcp import telemetry
 from wiki_rag_mcp.auth.principals import principals_for, user_id_of
 from wiki_rag_mcp.auth.tiers import ClientTier
 from wiki_rag_mcp.auth.tokens import REQUIRED_SCOPE, JwtVerifier, tier_of
@@ -42,6 +47,25 @@ from wiki_rag_mcp.wiki.source import GroupLookupError, GroupSource, UnknownUserE
 MAX_TOP_K = 10
 MAX_QUERY_CHARS = 500
 MAX_CHANGES = 50
+
+_tracer = trace.get_tracer(__name__)
+# 8장 지연 예산의 단계별 시간(ADR-15). 버킷 경계는 단계 예산(20·100·150·30ms)과 목표 p95(800ms) 근처를 촘촘히 둔다
+_stage_seconds = metrics.get_meter(__name__).create_histogram(
+    "wiki.search.stage.duration", unit="s", description="search_wiki 단계별 처리 시간",
+    explicit_bucket_boundaries_advisory=[0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 0.8, 1.0,
+                                         2.0, 5.0])
+
+
+@contextmanager
+def _stage(name: str) -> Iterator[None]:
+    """search_wiki의 한 단계를 스팬으로 남기고 걸린 시간을 기록한다. 실패한 단계도 걸린 시간은 남긴다."""
+    start = time.perf_counter()
+    with _tracer.start_as_current_span(name):
+        try:
+            yield
+        finally:
+            _stage_seconds.record(time.perf_counter() - start, {"stage": name})
+
 
 # 명세상 클라이언트는 annotation을 신뢰하지 않으므로, 실제 보장은 쓰기 경로가 없는 설계다 (ADR-16)
 READ_ONLY = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True, open_world_hint=False)
@@ -207,10 +231,16 @@ def build_server(services: Services, token_verifier: TokenVerifier | None = None
         if not query or len(query) > MAX_QUERY_CHARS:
             raise ToolError(f"query는 1~{MAX_QUERY_CHARS}자여야 합니다.")
         top_k = max(1, min(top_k, MAX_TOP_K))
-        who = principals()
-        hits = store().knn_search(services.embedder.encode_query(query), who, top_k,
-                                  space=space or None, updated_after=_parse_date(updated_after, "updated_after"))
-        return search_response(hits, services.tier, datetime.now(UTC))
+        after = _parse_date(updated_after, "updated_after")
+        # 단계 이름은 8장 지연 예산 표의 행이다: 권한 해석, 쿼리 임베딩, 벡터 검색, 결과 조립
+        with _stage("principals"):
+            who = principals()
+        with _stage("embed_query"):
+            vector = services.embedder.encode_query(query)
+        with _stage("vector_search"):
+            hits = store().knn_search(vector, who, top_k, space=space or None, updated_after=after)
+        with _stage("assemble"):
+            return search_response(hits, services.tier, datetime.now(UTC))
 
     @server.tool(name="get_document", title="사내 위키 문서 보기", description=GET_DOCUMENT_DESCRIPTION,
                  annotations=READ_ONLY)
@@ -278,6 +308,7 @@ def http_options(settings: Settings) -> dict[str, Any]:
 
 def main() -> None:
     settings = Settings.from_env()
+    telemetry.setup("wiki-rag-mcp")
     server = build_server(open_services(settings))
     if settings.transport == "http":
         server.run("streamable-http", host=settings.http_host, port=settings.http_port, **http_options(settings))

@@ -11,6 +11,7 @@ from typing import Any
 
 import httpx
 
+from wiki_rag_mcp import telemetry
 from wiki_rag_mcp.models import Classification, Document, valid_doc_id, valid_user_id
 from wiki_rag_mcp.search.filters import valid_groups, validate_stored_principals
 from wiki_rag_mcp.wiki.source import (
@@ -44,6 +45,7 @@ def _document(data: dict[str, Any]) -> Document:
 class HttpWikiSource:
     def __init__(self, base_url: str, service_token: str, *, client: httpx.Client | None = None):
         self.client = client or httpx.Client(timeout=TIMEOUT_SECONDS)
+        telemetry.instrument_http(self.client)
         self.base_url = base_url.rstrip("/")
         self.headers = {"Authorization": f"Bearer {service_token}"}
         self._space_titles: dict[str, str] | None = None

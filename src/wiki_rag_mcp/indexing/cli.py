@@ -13,6 +13,7 @@ import sys
 import threading
 from pathlib import Path
 
+from wiki_rag_mcp import telemetry
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.search.backend import open_store
 
@@ -75,12 +76,14 @@ def worker_main(argv: list[str] | None = None) -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)  # 이벤트마다 위키 요청 로그가 찍히지 않게 한다
+    telemetry.setup("wiki-rag-worker")
     source, store = _wiki(settings), open_store(settings)
     store.ensure_index()
     embedder, count = Embedder(), TokenCounter()
     client = _redis(settings)
     worker = StreamWorker(client, lambda e: apply_event(e, source, store, embedder, count), partitions,
                           membership=lambda user_id: invalidate(client, user_id))
+    worker.observe_queues()
 
     stop = threading.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
