@@ -44,10 +44,11 @@ class SearchStore(Protocol):
     def mark_deleted(self, doc_id: str, revision: int) -> bool: ...
 
 
-def open_store(settings: Settings, alias: str | None = None) -> SearchStore:
-    """PostgreSQL + pgvector 저장소를 연다. alias는 테이블 이름이다(하이픈은 밑줄로 바뀐다)."""
+def open_store(settings: Settings, alias: str | None = None, readers: int = 0) -> SearchStore:
+    """PostgreSQL + pgvector 저장소를 연다. alias는 테이블 이름이다(하이픈은 밑줄로 바뀐다). readers는 검색 읽기에만
+    쓰는 연결 수로, 검색 서버만 준다(PgStore.from_settings)."""
     from dataclasses import replace
 
     from wiki_rag_mcp.search.pg_store import PgStore
 
-    return PgStore.from_settings(replace(settings, index_alias=alias or settings.index_alias))
+    return PgStore.from_settings(replace(settings, index_alias=alias or settings.index_alias), readers)

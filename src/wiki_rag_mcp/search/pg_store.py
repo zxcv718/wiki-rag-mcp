@@ -17,6 +17,8 @@ pgvector의 HNSW 인덱스는 필터를 인덱스 스캔 뒤에 적용한다. �
 
 import re
 import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -26,6 +28,7 @@ import psycopg
 from pgvector.psycopg import register_vector
 from psycopg import sql
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from wiki_rag_mcp.config import EMBEDDING_DIM, Settings
 from wiki_rag_mcp.search.filters import principal_set
@@ -53,18 +56,39 @@ def table_name(alias: str) -> str:
 
 
 class PgStore:
-    def __init__(self, conn: psycopg.Connection, alias: str):
+    def __init__(self, conn: psycopg.Connection, alias: str, readers: ConnectionPool | None = None):
         self.conn = conn
         self.table = table_name(alias)
         self.alias = alias
         self._lock = threading.Lock()  # 연결 하나를 여러 스레드가 나눠 쓰지 않게 한다
+        self._readers = readers
 
     @classmethod
-    def from_settings(cls, settings: Settings) -> "PgStore":
+    def from_settings(cls, settings: Settings, readers: int = 0) -> "PgStore":
+        """readers가 있으면 검색 읽기(knn_search, recent_changes)만 그만큼의 연결 풀에서 빌려 쓴다(검색 서버).
+
+        연결 하나를 잠가 나눠 쓰면 요청이 몰릴 때 검색이 차례를 기다린다(experiments/m5-speedup, 동시 50에서 벡터 검색
+        p95 399ms). 풀은 빌려줄 때 연결이 살아 있는지 확인하고, 끊긴 연결은 새로 연다. 쓰기는 늘 연결 하나다.
+        """
         conn = psycopg.connect(settings.database_url, autocommit=True)
         conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
         register_vector(conn)
-        return cls(conn, settings.index_alias)
+        pool = None
+        if readers:
+            pool = ConnectionPool(settings.database_url, min_size=readers, max_size=readers, name="search-readers",
+                                  kwargs={"autocommit": True}, configure=register_vector,
+                                  check=ConnectionPool.check_connection, open=True)
+        return cls(conn, settings.index_alias, pool)
+
+    @contextmanager
+    def _reading(self) -> Iterator[psycopg.Connection]:
+        """검색에 쓸 연결. 읽기 풀이 있으면 하나를 빌리고, 없으면 쓰기 연결을 잠가서 쓴다."""
+        if self._readers is None:
+            with self._lock:
+                yield self.conn
+        else:
+            with self._readers.connection() as conn:
+                yield conn
 
     def _t(self) -> sql.Identifier:
         return sql.Identifier(self.table)
@@ -246,7 +270,7 @@ class PgStore:
             "ORDER BY embedding <=> %s LIMIT %s").format(
             cols=sql.SQL(", ").join(map(sql.Identifier, _COLUMNS)), t=self._t(), where=where)
         vec = np.asarray(vector, dtype=np.float32)
-        with self._lock, self.conn.transaction(), self.conn.cursor(row_factory=dict_row) as cur:
+        with self._reading() as conn, conn.transaction(), conn.cursor(row_factory=dict_row) as cur:
             # strict_order는 거리 순서를 지키며 조건에 맞는 결과가 k개 모일 때까지 더 스캔한다
             cur.execute("SET LOCAL hnsw.iterative_scan = strict_order")
             cur.execute(sql.SQL("SET LOCAL hnsw.ef_search = {n}").format(n=sql.Literal(max(EF_SEARCH_MIN, k))))
@@ -262,6 +286,6 @@ class PgStore:
             "SELECT * FROM (SELECT DISTINCT ON (doc_id) {cols} FROM {t} WHERE {where} ORDER BY doc_id, chunk_index) "
             "AS latest ORDER BY updated_at DESC, doc_id LIMIT %s").format(
             cols=sql.SQL(", ").join(map(sql.Identifier, columns)), t=self._t(), where=where)
-        with self._lock, self.conn.cursor(row_factory=dict_row) as cur:
+        with self._reading() as conn, conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, [*params, size])
             return [self._row(r) for r in cur.fetchall()]
