@@ -7,6 +7,10 @@
 # 비밀(DB 비밀번호, 서비스 토큰, 서명 키)은 서버의 deploy/.env와 deploy/secrets/에만 있다. init-secrets.sh가 처음
 # 한 번 만들고 저장소에는 올리지 않는다.
 
+# 관측성 (ADR-15). Prometheus, Tempo, Grafana는 observability/compose.yaml에 있다
+include:
+  - observability/compose.yaml
+
 # 검색 서버와 워커, 시드가 같이 쓰는 설정
 x-search-env: &search-env
   DATABASE_URL: postgresql://wiki:${SEARCH_DB_PASSWORD}@postgres:5432/wiki_search
@@ -14,6 +18,10 @@ x-search-env: &search-env
   WIKI_SERVICE_TOKEN: ${WIKI_SERVICE_TOKEN:?init-secrets.sh로 deploy/.env를 만드세요}
   REDIS_URL: redis://redis:6379/0
   WIKI_EVENT_PARTITIONS: "4"
+  # 추적은 Tempo, 지표는 Prometheus가 OTLP로 받는다 (src/wiki_rag_mcp/telemetry.py)
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://prometheus:9090/api/v1/otlp/v1/metrics
+  OTEL_METRIC_EXPORT_INTERVAL: "15000"
 
 # 검색 이미지는 mcp만 빌드하고 나머지는 같은 이미지를 쓴다. 서비스마다 build를 주면 같은 이미지를 따로 빌드해
 # 풀어 놓느라 디스크를 두 배로 쓴다
@@ -101,6 +109,10 @@ services:
       WIKI_AUTH_SIGNING_KEY: /run/secrets/auth-signing-key.pem
       # 메모리 8GB에 임베딩 모델을 올린 프로세스 두 개가 같이 돈다. JVM 기본 최대 힙(메모리의 1/4)까지 크지 않게 묶는다
       JAVA_TOOL_OPTIONS: -Xmx512m
+      # 관측성 (ADR-15, wiki-service application.yml의 management)
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "true"
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://prometheus:9090/api/v1/otlp/v1/metrics
     volumes:
       - ./secrets/auth-signing-key.pem:/run/secrets/auth-signing-key.pem:ro
     depends_on:

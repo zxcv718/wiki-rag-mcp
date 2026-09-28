@@ -1,0 +1,32 @@
+# Tempo 단일 프로세스, 로컬 디스크 저장. Tempo 3.0.3 예시(example/docker-compose/single-binary)에서 쓰지 않는 것을
+# 뺐다. 지표는 앱이 직접 내므로 스팬에서 지표를 만드는 metrics_generator는 켜지 않는다.
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+overrides:
+  defaults:
+    compaction:
+      # 추적에는 사용자 id와 문서 id가 위키 요청 주소로 남는다. 장애를 조사할 만큼만 둔다. 보관 작업은 이 값을
+      # 스케줄러·워커의 compaction 설정보다 먼저 쓴다(tempodb/retention.go)
+      block_retention: 72h
+
+usage_report:
+  reporting_enabled: false

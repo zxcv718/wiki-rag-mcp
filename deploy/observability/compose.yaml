@@ -1,0 +1,81 @@
+# 관측성 (ADR-15). 추적은 Tempo, 지표는 Prometheus가 OTLP로 받고 Grafana로 본다.
+# deploy/compose.yaml이 include로 불러 같은 네트워크에 띄운다. 로컬에서 따로 띄울 때는
+#   docker compose -f deploy/observability/compose.yaml up -d
+#
+# 포트는 모두 127.0.0.1에만 연다. 서버에서는 SSH 터널로 Grafana를 본다(보안 그룹은 22·80·443만 열려 있고, Caddy는 이
+# 서비스들로 넘기지 않는다). 추적에는 사용자 id와 문서 id가 위키 요청 주소로 남기 때문에 밖에 열지 않는다.
+# 메모리 8GB를 임베딩 모델 두 벌과 나눠 쓰므로, 관측 도구가 검색 서버의 메모리를 뺏지 않게 상한을 둔다.
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml  # 이미지에 든 기본 설정(자기 자신만 긁음)
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=1GB
+      # 앱이 OTLP로 지표를 밀어 넣는다. 서비스마다 긁어 갈 주소를 열지 않아도 된다
+      - --web.enable-otlp-receiver
+    volumes:
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    mem_limit: 512m
+
+  tempo:
+    image: grafana/tempo:3.0.3
+    restart: unless-stopped
+    command: ["-target=all", "-config.file=/etc/tempo.yaml"]
+    environment:
+      # Go 런타임이 컨테이너 상한 전에 GC를 더 자주 돌게 한다. Tempo는 Prometheus와 달리 상한을 스스로 읽지 않는다
+      GOMEMLIMIT: 400MiB
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "127.0.0.1:4318:4318"  # OTLP HTTP. 로컬 개발에서 컨테이너 밖의 앱이 보낼 곳
+    mem_limit: 512m
+
+  grafana:
+    # slim은 Grafana가 이미지에 묶어 넣는 플러그인을 뺀 판이다(이미지 1.31GB 대신 873MB)
+    image: grafana/grafana:13.2.2-slim
+    restart: unless-stopped
+    environment:
+      # SSH 터널로만 닿으므로 로그인 없이 연다. 데이터 소스와 대시보드는 파일로 넣어 두고, 편집자 권한으로 탐색만 한다
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      # 로그인 화면만 막으면 기본 관리자(admin:admin)가 API 기본 인증으로 살아 있다. 같은 네트워크의 컨테이너가
+      # 관리자가 되지 않게 기본 인증도 끈다
+      GF_AUTH_BASIC_ENABLED: "false"
+      # Grafana 13은 Prometheus와 Tempo 데이터 소스도 플러그인으로 두고, 시작할 때 grafana.com에서 기본 목록 18개
+      # (약 480MB)를 받아 매번 최신으로 올린다. 쓰는 두 개만 판을 고정해 시작 전에 받고, 나머지는 끈다.
+      # 기본 목록은 preinstall_disabled로만 통째로 빠지는데 그러면 preinstall_sync도 무시되어, 목록에서 빼는 유일한
+      # 방법인 disable_plugins를 쓴다(pkg/setting/setting_plugins.go, v13.2.2)
+      GF_PLUGINS_PREINSTALL_SYNC: prometheus@13.2.1,tempo@13.2.2
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: "false"
+      GF_PLUGINS_DISABLE_PLUGINS: >-
+        grafana-lokiexplore-app,grafana-pyroscope-app,grafana-exploretraces-app,grafana-metricsdrilldown-app,
+        grafana-advisor-app,grafana-pathfinder-app,elasticsearch,zipkin,opentsdb,stackdriver,mssql,jaeger,loki,mysql,
+        influxdb,grafana-postgresql-datasource,grafana-pyroscope-datasource
+      GOMEMLIMIT: 300MiB
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes:
+      - ./grafana:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    # 로컬에서 잰 사용량이 140~230MB였고, 파일 캐시가 차면 256MB에 닿았다
+    mem_limit: 384m
+    depends_on:
+      - prometheus
+      - tempo
+
+volumes:
+  prometheus-data:
+  tempo-data:
+  grafana-data:

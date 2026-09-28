@@ -21,7 +21,13 @@
 		path /.well-known/oauth-authorization-server /oauth2/authorize /oauth2/token /oauth2/jwks /login /oauth2/consent
 	}
 	handle @public {
-		reverse_proxy wiki:8081
+		# 인터넷에서 온 W3C 추적 헤더는 버린다. 로그인·토큰 요청을 밖에서 추적에서 빼거나 밖에서 정한 추적 id에 붙이지
+		# 못하게 한다. 위키는 B3 형식을 받지 않는다(application.yml management.tracing.propagation) (ADR-15)
+		reverse_proxy wiki:8081 {
+			header_up -traceparent
+			header_up -tracestate
+			header_up -baggage
+		}
 	}
 	handle {
 		respond 404
