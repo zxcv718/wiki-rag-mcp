@@ -25,9 +25,11 @@ import io.github.zxcv718.wiki.outbox.OutboxRepository;
 import io.github.zxcv718.wiki.web.ApiException;
 import io.github.zxcv718.wiki.web.DocumentState;
 import io.github.zxcv718.wiki.web.DocumentTombstone;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.List;
 import java.util.function.Consumer;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,17 +49,19 @@ public class WikiAdminService {
     private final DocumentRepository documents;
     private final OutboxRepository outbox;
     private final WikiProperties properties;
+    private final PasswordEncoder passwordEncoder;
     private final Clock clock;
 
     public WikiAdminService(SpaceRepository spaces, GroupRepository groups, UserRepository users,
                             DocumentRepository documents, OutboxRepository outbox, WikiProperties properties,
-                            Clock clock) {
+                            PasswordEncoder passwordEncoder, Clock clock) {
         this.spaces = spaces;
         this.groups = groups;
         this.users = users;
         this.documents = documents;
         this.outbox = outbox;
         this.properties = properties;
+        this.passwordEncoder = passwordEncoder;
         this.clock = clock;
     }
 
@@ -168,6 +172,18 @@ public class WikiAdminService {
             user.rename(name);
         }
         return UserState.of(user);
+    }
+
+    /**
+     * 로그인 비밀번호를 정한다(ADR-24). bcrypt는 72바이트 뒤를 버리므로, 그보다 긴 값은 뒷부분이 달라도 같은 비밀번호로
+     * 통하게 된다. 조용히 잘라 저장하지 않고 거절한다. 멤버십과 무관해 이벤트는 없다.
+     */
+    public void setPassword(String userId, String password) {
+        if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw ApiException.badRequest("password: UTF-8로 72바이트 이하여야 합니다.");
+        }
+        String hash = passwordEncoder.encode(password);
+        lockUser(userId).changePasswordHash(hash);
     }
 
     /**

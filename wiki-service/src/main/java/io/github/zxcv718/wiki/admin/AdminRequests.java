@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -48,6 +49,10 @@ final class AdminRequests {
     }
 
     record UserName(@NotBlank String name) {
+    }
+
+    /** 12자 이상. bcrypt는 72바이트까지만 쓰므로 그보다 긴 값은 서비스에서 거절한다. */
+    record Password(@NotNull @Size(min = 12, message = "12자 이상이어야 합니다.") String password) {
     }
 
     record Import(

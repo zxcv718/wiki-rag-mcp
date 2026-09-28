@@ -63,6 +63,13 @@ services:
       WIKI_SERVICE_TOKEN: ${WIKI_SERVICE_TOKEN:-local-service-token}
       WIKI_ADMIN_TOKEN: ${WIKI_ADMIN_TOKEN:-local-admin-token}
       WIKI_EVENT_PARTITIONS: "4"
+      # 인가 서버 (wiki-service/README.md "인가 서버"). 로컬은 http 발급자라 서명 키를 시작할 때마다 새로 만든다
+      WIKI_AUTH_ISSUER: ${WIKI_AUTH_ISSUER:-http://127.0.0.1:8081}
+      WIKI_AUTH_RESOURCES: ${WIKI_AUTH_RESOURCES:-http://127.0.0.1:8000/mcp}
+      WIKI_AUTH_CIMD_ALLOW_HTTP_LOCALHOST: ${WIKI_AUTH_CIMD_ALLOW_HTTP_LOCALHOST:-false}
+      # 로컬 점검용 공개 클라이언트. 위키 기본 설정에는 사전 등록 클라이언트가 없어 여기서만 켜진다. 루프백이라 포트는 상관없다
+      WIKI_AUTH_CLIENTS_0_ID: wiki-rag-dev
+      WIKI_AUTH_CLIENTS_0_REDIRECTURIS: http://127.0.0.1/callback
     ports:
       - "127.0.0.1:8081:8081"
     depends_on:

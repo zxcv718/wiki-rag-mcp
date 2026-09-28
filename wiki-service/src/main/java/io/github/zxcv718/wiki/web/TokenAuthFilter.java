@@ -1,5 +1,6 @@
 package io.github.zxcv718.wiki.web;
 
+import io.github.zxcv718.wiki.auth.AuthorizationServerConfig;
 import io.github.zxcv718.wiki.config.WikiProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,11 +16,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * 정적 bearer 토큰 두 개로 요청을 막는다. /admin/**은 관리자 토큰, 나머지는 모두 서비스 토큰을 요구한다.
+ * 정적 bearer 토큰 두 개로 요청을 막는다. /admin/**은 관리자 토큰, 인가 서버의 공개 경로를 뺀 나머지는 모두 서비스
+ * 토큰을 요구한다.
  *
- * 공개 경로가 없으므로 관리자 경로가 아니면 서비스 토큰을 요구해, 경로를 새로 만들 때 인증을 빠뜨려도 열리지 않게
- * 한다. 두 토큰은 서로의 경로에서 통하지 않는다. 검색 서버가 가진 서비스 토큰이 새도 문서를 고칠 수는 없다.
- * Spring Security를 쓰지 않은 이유는 규칙이 이 두 줄뿐이라서다. 사용자 인증(OAuth)은 M5에서 검색 서버 쪽에 붙인다.
+ * 토큰 없이 열리는 경로는 README "공개 경로"의 인가 서버 경로뿐이다. 그 목록(AuthorizationServerConfig.PUBLIC_PATHS)은
+ * 인가 서버 필터 체인과 이 필터가 같이 써서, 체인이 맡는 경로와 이 필터가 건너뛰는 경로가 어긋나지 않는다. 목록에 없는
+ * 경로는 관리자 경로가 아니면 서비스 토큰을 요구해, 경로를 새로 만들 때 인증을 빠뜨려도 열리지 않게 한다. 두 토큰은
+ * 서로의 경로에서 통하지 않는다. 검색 서버가 가진 서비스 토큰이 새도 문서를 고칠 수는 없다.
+ *
+ * 인가 서버(M5)는 Spring Security로 붙였지만 이 필터는 그 체인 밖에 둔다. 규칙이 토큰 비교 두 줄뿐이라, 체인으로 옮기면
+ * CSRF, 세션, 요청 캐시 같은 기본 기능을 하나씩 꺼야 지금과 같게 동작한다. 사용자의 OAuth 액세스 토큰은 위키가 받지
+ * 않는다. MCP 서버가 검증하고, 위키는 지금처럼 서비스 토큰으로 부른다(ADR-06).
  */
 @Component
 public class TokenAuthFilter extends OncePerRequestFilter {
@@ -32,6 +39,12 @@ public class TokenAuthFilter extends OncePerRequestFilter {
     public TokenAuthFilter(WikiProperties properties) {
         this.serviceToken = properties.serviceToken().getBytes(StandardCharsets.UTF_8);
         this.adminToken = properties.adminToken().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /** 공개 경로는 인가 서버 필터 체인이 맡는다. */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return AuthorizationServerConfig.PUBLIC_PATHS.matches(request);
     }
 
     @Override
