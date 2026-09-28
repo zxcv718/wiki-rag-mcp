@@ -2,6 +2,9 @@
 
 doc_id, version, revision, updated_at을 그대로 옮겨 골든셋과 평가 결과가 계속 맞게 한다. 위키가 문서마다
 이벤트를 내므로, 워커가 떠 있으면 옮기는 것만으로 색인까지 된다.
+
+WIKI_DEMO_PASSWORD가 있으면 옮긴 사용자 모두에게 그 비밀번호를 정해(PUT /admin/users/{user_id}/password),
+인가 서버 로그인(M5, ADR-24)을 바로 해 볼 수 있게 한다. 비밀번호가 없는 사용자는 로그인할 수 없다.
 """
 
 import argparse
@@ -14,6 +17,8 @@ import yaml
 from wiki_rag_mcp.config import Settings
 from wiki_rag_mcp.models import Classification
 from wiki_rag_mcp.wiki.files import FileWikiSource
+
+MIN_PASSWORD_CHARS = 12  # 위키 관리자 API의 하한 (wiki-service/README.md "로그인")
 
 
 def import_payload(wiki_dir: Path) -> dict[str, Any]:
@@ -47,20 +52,32 @@ def import_payload(wiki_dir: Path) -> dict[str, Any]:
     }
 
 
+def seed(wiki: httpx.Client, payload: dict[str, Any], password: str | None) -> None:
+    """관리자 API로 옮긴다. wiki는 위키 주소와 관리자 토큰을 붙인 클라이언트다."""
+    # 옮기기 전에 확인한다. 옮긴 뒤에 실패하면 빈 위키가 아니게 되어 다시 옮길 수 없다
+    if password is not None and len(password) < MIN_PASSWORD_CHARS:
+        raise SystemExit(f"WIKI_DEMO_PASSWORD는 {MIN_PASSWORD_CHARS}자 이상이어야 합니다.")
+    response = wiki.post("/admin/import", json=payload)
+    if response.status_code == 409:
+        raise SystemExit("위키에 이미 문서가 있어 옮기지 않았습니다.")
+    response.raise_for_status()
+    print(f"옮김: 스페이스 {len(payload['spaces'])}개, 그룹 {len(payload['groups'])}개, "
+          f"사용자 {len(payload['users'])}개, 문서 {len(payload['documents'])}개")
+    if password is not None:
+        for user in payload["users"]:
+            wiki.put(f"/admin/users/{user['user_id']}/password", json={"password": password}).raise_for_status()
+        print(f"비밀번호를 정함: 사용자 {len(payload['users'])}명")
+
+
 def main(argv: list[str] | None = None) -> None:
     settings = Settings.from_env()
     parser = argparse.ArgumentParser(description="가상 위키 파일을 Spring 위키 서비스로 옮긴다.")
     parser.add_argument("--wiki-dir", type=Path, default=settings.wiki_dir)
     args = parser.parse_args(argv)
 
-    payload = import_payload(args.wiki_dir)
-    response = httpx.post(f"{settings.wiki_api_url.rstrip('/')}/admin/import", json=payload, timeout=60,
-                          headers={"Authorization": f"Bearer {settings.wiki_admin_token}"})
-    if response.status_code == 409:
-        raise SystemExit("위키에 이미 문서가 있어 옮기지 않았습니다.")
-    response.raise_for_status()
-    print(f"옮김: 스페이스 {len(payload['spaces'])}개, 그룹 {len(payload['groups'])}개, "
-          f"사용자 {len(payload['users'])}개, 문서 {len(payload['documents'])}개")
+    with httpx.Client(base_url=settings.wiki_api_url.rstrip("/"), timeout=60,
+                      headers={"Authorization": f"Bearer {settings.wiki_admin_token}"}) as wiki:
+        seed(wiki, import_payload(args.wiki_dir), settings.demo_password)
 
 
 if __name__ == "__main__":

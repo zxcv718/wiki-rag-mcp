@@ -6,6 +6,9 @@
 - wiki: 가상 위키를 옮긴 Spring 위키 서비스(wiki-rag-seed)를 읽는다. 문서는 위키 API로 색인하고, 그룹은 Redis
   캐시를 거쳐 위키에서 해석하고, 본문은 위키가 권한을 다시 판단해 준다. 서버가 실제로 쓰는 경로다(M4).
 
+도구 3개와 리소스의 누출 시험은 전송도 둘로 돌린다. stdio는 실행 환경의 사용자와 등급을 쓰고, http는 가짜
+인가 서버가 서명한 액세스 토큰의 sub와 client_tier 클레임으로 정한다(M5, tests/oauth.py).
+
 정답(누가 무엇을 볼 수 있는가)은 서버 코드가 아니라 생성 기록과 스키마로 따로 계산한다(tools/wikigen/spec.py의
 ledger, can_see). 문서의 권한 필드도 문서를 읽는 코드(파일 위키 파서, 위키 서비스)가 아니라 문서를 만든 계획에서
 가져온다. 서버의 권한 규칙과 독립된 구현이 같은 답을 내야 통과한다. 검색 품질이 아니라 누출을 보는 시험이라
@@ -23,6 +26,7 @@ from mcp.shared.exceptions import MCPError
 from psycopg import sql
 
 from tests.fakeencoder import DIM, FakeEncoder, count_words
+from tests.oauth import CIMD_CLIENT, DEMO_AGENT, FakeAuthServer, http_app, http_settings, mcp_session, serving
 from tests.pg import count, new_store
 from tests.services import redis_client, unavailable, wiki_source
 from tools.wikigen.spec import ledger, load_spec
@@ -95,7 +99,19 @@ def test_indexed_permissions_match_the_generation_ledger(wiki):
             sorted(p.space_principals), sorted(p.restricted_principals), p.classification), d.doc_id
 
 
-def session(wiki, store, user, tier, action):
+def session(wiki, store, user, tier, action, transport="stdio"):
+    if transport == "http":
+        services = Services(http_settings(wiki_dir=WIKI), wiki.source, store, FakeEncoder(), wiki.groups)
+        auth = FakeAuthServer()
+        # 사내 등급은 인가 서버가 기밀 클라이언트에 넣어 주는 client_tier 클레임으로만 받는다 (ADR-24)
+        token = auth.token(user, DEMO_AGENT if tier == "internal" else CIMD_CLIENT, client_tier=tier)
+
+        async def go():
+            async with serving(http_app(services, auth)) as app:
+                return await mcp_session(app, token, action)
+
+        return anyio.run(go)
+
     services = Services(Settings(wiki_dir=WIKI, user=user, client_tier=tier), wiki.source, store, FakeEncoder(),
                         wiki.groups)
 
@@ -157,8 +173,9 @@ def test_filter_is_what_removes_forbidden_documents(wiki):
                                                                                    anonymous))
 
 
+@pytest.mark.parametrize("transport", ["stdio", "http"])
 @pytest.mark.parametrize("tier", ["external", "internal"])
-def test_no_tool_or_resource_leaks_documents(wiki, tier):
+def test_no_tool_or_resource_leaks_documents(wiki, tier, transport):
     spec, source, store = wiki
     docs = source.documents()
     confidential = source.confidential()
@@ -202,7 +219,7 @@ def test_no_tool_or_resource_leaks_documents(wiki, tier):
                         leaks.append(("resource 오류", d.doc_id))
             return leaks, missing
 
-        leaks, missing = session(source, store, user, tier, action)
+        leaks, missing = session(source, store, user, tier, action, transport)
         assert leaks == [], (user, leaks[:10])
         assert missing == set(), (user, "볼 수 있는데 변경 목록에 없는 문서", sorted(missing)[:10])
 
