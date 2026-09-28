@@ -55,6 +55,8 @@ class Embedder:
         self.model = SentenceTransformer(EMBEDDING_MODEL, revision=EMBEDDING_REVISION, device=self.device,
                                          model_kwargs={"dtype": getattr(torch, EMBEDDING_DTYPE)})
         self.model.max_seq_length = MAX_SEQ_LENGTH
+        for kind in ("query", "document"):  # 시계열을 0에서 시작시킨다 (auth/groups.py의 GroupCache와 같은 이유)
+            _texts.add(0, {"kind": kind})
 
     def encode_documents(self, texts: list[str], batch_size: int = 16) -> np.ndarray:
         # 인덱싱에서 가장 오래 걸리는 부분이라 추적에 따로 보인다. 쿼리 임베딩은 search_wiki의 단계 스팬이 잰다

@@ -79,6 +79,10 @@ class GroupCache:
         self.source = source
         self.client = client
         self.ttl = ttl
+        # 시계열을 0에서 시작시킨다. Prometheus는 OTLP 지표의 시작 시각을 쓰지 않아, 처음 보낸 값이 이미 4면
+        # increase()가 그 4를 세지 않는다. 요청이 드문 데모 서버에서는 적중률이 크게 틀어진다
+        for result in ("hit", "miss", "error"):
+            _lookups.add(0, {"result": result})
 
     def _cached(self, user_id: str) -> tuple[int, list[str] | None] | None:
         """(지금 세대 번호, 캐시된 그룹). Redis를 읽지 못하거나 번호가 깨져 있으면 None이고, 이때는 캐시에 쓰지 않는다.
