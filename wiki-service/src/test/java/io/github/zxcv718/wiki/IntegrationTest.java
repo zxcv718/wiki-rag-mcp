@@ -6,16 +6,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.MockMvcBuilderCustomizer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -32,13 +39,54 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "wiki.outbox.relay.enabled=false",
         // 사용자별 문서 조회가 경우마다 같은 수의 SQL을 실행하는지 세려고 켠다 (InternalApiTest)
         "spring.jpa.properties.hibernate.generate_statistics=true",
+        // 토큰 대상이 둘일 때 코드 교환에서 다른 대상으로 바꾸지 못하는지 본다 (AuthorizationServerTest)
+        "wiki.auth.resources=" + IntegrationTest.RESOURCE + "," + IntegrationTest.OTHER_RESOURCE,
         "logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener=WARN"})
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, FakeClientMetadata.class, IntegrationTest.RandomClientAddress.class})
 abstract class IntegrationTest {
 
     static final String SERVICE_TOKEN = "test-service-token";
     static final String ADMIN_TOKEN = "test-admin-token";
+    static final String RESOURCE = "http://127.0.0.1:8000/mcp";
+    static final String OTHER_RESOURCE = "http://127.0.0.1:9000/mcp";
+    /** 서버에서 도는 기밀 클라이언트(데모 에이전트 자리). 설정에는 비밀의 bcrypt 해시만 둔다. */
+    static final String DEMO_CLIENT = "wiki-rag-demo";
+    static final String DEMO_SECRET = "test-demo-secret";
+    static final String DEMO_REDIRECT = "https://demo.example/callback";
+
+    /**
+     * 사전 등록 클라이언트. 기본 설정에는 없으므로(운영에서 저절로 살아 있지 않게) 테스트에서 넣는다. 공개 클라이언트
+     * wiki-rag-dev는 로컬 compose와 같은 값이고, wiki-rag-demo는 사내 등급의 기밀 클라이언트다.
+     */
+    @DynamicPropertySource
+    static void preRegisteredClients(DynamicPropertyRegistry registry) {
+        String secretHash = new BCryptPasswordEncoder().encode(DEMO_SECRET);
+        registry.add("wiki.auth.clients[0].id", () -> "wiki-rag-dev");
+        registry.add("wiki.auth.clients[0].redirect-uris[0]", () -> "http://127.0.0.1/callback");
+        registry.add("wiki.auth.clients[1].id", () -> DEMO_CLIENT);
+        registry.add("wiki.auth.clients[1].redirect-uris[0]", () -> DEMO_REDIRECT);
+        registry.add("wiki.auth.clients[1].secret-hash", () -> secretHash);
+        registry.add("wiki.auth.clients[1].tier", () -> "internal");
+    }
+
+    /**
+     * 요청마다 다른 클라이언트 IP를 준다. 인가 서버는 IP마다 로그인 실패와 인가 요청 수를 세므로(README "남용 방지"),
+     * 테스트들이 같은 IP를 쓰면 1분 안에 한도에 닿아 서로 영향을 준다. 한도를 시험하는 테스트는 IP를 직접 정한다.
+     */
+    @TestConfiguration(proxyBeanMethods = false)
+    static class RandomClientAddress {
+
+        @Bean
+        MockMvcBuilderCustomizer randomRemoteAddress() {
+            return builder -> builder.defaultRequest(get("/").with(request -> {
+                ThreadLocalRandom random = ThreadLocalRandom.current();
+                request.setRemoteAddr("10." + random.nextInt(256) + "." + random.nextInt(256) + "."
+                        + random.nextInt(1, 255));
+                return request;
+            }));
+        }
+    }
 
     /**
      * 가상 위키(data/wiki)를 줄인 데이터. 권한 테스트에 필요한 경우를 담았다.
@@ -103,7 +151,8 @@ abstract class IntegrationTest {
     @BeforeEach
     void resetStores() {
         jdbc.execute("TRUNCATE outbox, document_restrictions, documents, space_viewers, spaces, group_members, users,"
-                + " groups RESTART IDENTITY");
+                + " groups, oauth2_authorization, oauth2_authorization_consent, oauth2_rotated_refresh_token"
+                + " RESTART IDENTITY");
         redis.execute((RedisCallback<Void>) connection -> {
             connection.serverCommands().flushDb();
             return null;

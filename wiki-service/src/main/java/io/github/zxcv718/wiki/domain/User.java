@@ -26,6 +26,9 @@ public class User extends AssignedIdEntity {
 
     private String name;
 
+    /** bcrypt 해시. 없으면 로그인할 수 없다(ADR-24). */
+    private String passwordHash;
+
     @ElementCollection
     @CollectionTable(name = "group_members", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "group_id")
@@ -44,6 +47,10 @@ public class User extends AssignedIdEntity {
         this.name = name;
     }
 
+    public void changePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     /** 멤버십이 실제로 바뀌었으면 true. 바뀐 게 없으면 캐시 무효화 이벤트를 낼 필요가 없다. */
     public boolean joinGroup(String groupId) {
         return groupIds.add(groupId);
@@ -60,6 +67,10 @@ public class User extends AssignedIdEntity {
 
     public String getName() {
         return name;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     public Set<String> getGroupIds() {

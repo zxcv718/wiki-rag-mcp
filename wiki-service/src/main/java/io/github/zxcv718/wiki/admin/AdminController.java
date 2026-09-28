@@ -4,6 +4,7 @@ import io.github.zxcv718.wiki.admin.AdminRequests.CreateDocument;
 import io.github.zxcv718.wiki.admin.AdminRequests.DocumentClassification;
 import io.github.zxcv718.wiki.admin.AdminRequests.EditContent;
 import io.github.zxcv718.wiki.admin.AdminRequests.Import;
+import io.github.zxcv718.wiki.admin.AdminRequests.Password;
 import io.github.zxcv718.wiki.admin.AdminRequests.Principals;
 import io.github.zxcv718.wiki.admin.AdminRequests.SpaceClassification;
 import io.github.zxcv718.wiki.admin.AdminRequests.UserName;
@@ -82,6 +83,12 @@ class AdminController {
     @PutMapping("/users/{user_id}")
     UserState putUser(@PathVariable("user_id") @WikiId String userId, @RequestBody @Valid UserName body) {
         return admin.putUser(userId, body.name());
+    }
+
+    @PutMapping("/users/{user_id}/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void setPassword(@PathVariable("user_id") @WikiId String userId, @RequestBody @Valid Password body) {
+        admin.setPassword(userId, body.password());
     }
 
     @PutMapping("/groups/{group}/members/{user_id}")

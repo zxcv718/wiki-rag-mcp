@@ -30,6 +30,14 @@ spring:
 
 server:
   port: 8081
+  # 운영에서는 리버스 프록시(Caddy) 뒤에 둔다. 로그인·동의 화면으로 보내는 주소와 쿠키의 Secure 표시가 프록시가 알려 준
+  # https 주소를 따르게 한다. 믿는 프록시는 Tomcat 기본값(사설·루프백 주소)이다
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        # 다른 사이트에서 보낸 POST(로그인·동의)에는 세션 쿠키가 따라가지 않는다. 앱에서 인가 화면으로 넘어오는 GET은 따라간다
+        same-site: lax
 
 wiki:
   # 비어 있으면 서비스가 뜨지 않는다 (WikiProperties)
@@ -37,6 +45,14 @@ wiki:
   admin-token: ${WIKI_ADMIN_TOKEN:}
   public-url: ${WIKI_PUBLIC_URL:https://wiki.saesol.example}
   event-partitions: ${WIKI_EVENT_PARTITIONS:4}
+  # 인가 서버 (README "인가 서버"). 발급자가 https면 운영으로 보고, 서명 키가 없으면 뜨지 않는다 (AuthProperties)
+  auth:
+    issuer: ${WIKI_AUTH_ISSUER:http://127.0.0.1:8081}
+    resources: ${WIKI_AUTH_RESOURCES:http://127.0.0.1:8000/mcp}
+    signing-key: ${WIKI_AUTH_SIGNING_KEY:}
+    cimd-allow-http-localhost: ${WIKI_AUTH_CIMD_ALLOW_HTTP_LOCALHOST:false}
+    # 사전 등록 클라이언트(clients)는 기본으로 두지 않는다. 운영에서 점검용 클라이언트가 저절로 살아 있지 않게 하기
+    # 위해서다. 로컬 점검용 wiki-rag-dev는 docker-compose.yml이 환경 변수(WIKI_AUTH_CLIENTS_0_*)로 켠다 (README "실행")
   outbox:
     relay:
       enabled: true
