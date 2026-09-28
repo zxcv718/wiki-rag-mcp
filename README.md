@@ -131,6 +131,16 @@ ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
 - 문서 수정도 한 추적입니다. 위키가 수정 요청의 추적 맥락을 이벤트에 실어 보내, 워커가 그 이벤트를 반영하는 스팬(위키 재조회, 청크 임베딩)이 같은 추적에 붙습니다.
 - 대시보드 `wiki-rag-mcp`에는 검색 단계별 p95, 그룹 캐시 적중률, 반영 지연 p95(문서 인덱싱, 그룹 변경의 권한 반영), 처리 안 된 이벤트와 DLQ, 분당 임베딩 수, 위키 API 응답 시간과 JVM 힙, 최근 추적 목록이 있습니다.
 
+아래는 운영 서버의 화면입니다(2026-09-28). 대시보드는 사용자 네 명으로 1초 간격 검색을 4분 동안 183번 보낸 뒤의 15분입니다.
+
+![운영 대시보드](docs/evidence/observability-dashboard.png)
+
+| 검색 한 번: 권한 해석(위키 그룹 조회 포함), 쿼리 임베딩, 벡터 검색, 결과 조립 | 그룹 멤버십 변경: 위키의 요청과 0.69초 뒤 워커의 그룹 캐시 무효화 |
+|---|---|
+| ![search_wiki 추적](docs/evidence/trace-search.png) | ![멤버십 변경 추적](docs/evidence/trace-membership.png) |
+
+같은 때 서버에서 잰 메모리는 Prometheus 46MiB, Tempo 102MiB, Grafana 264MiB로 셋이 합쳐 약 410MiB였고, 서버 전체는 7.6GiB 중 3.3GB를 쓰고 4.47GB가 남았습니다. 세 도구에는 메모리 상한(512MB, 512MB, 384MB)을 두어, 넘치면 그 컨테이너만 다시 뜹니다.
+
 ### 다시 만들기
 
 1. 배포용 IAM 사용자로 로그인합니다. `aws sts get-caller-identity --profile wiki-rag`가 `user/wiki-rag-deployer`여야 합니다.
