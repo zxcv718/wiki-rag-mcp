@@ -19,7 +19,7 @@
 
 - **기밀 문서를 숨기지 않고 제목·링크를 주는 이유**: 요청한 사용자는 이미 볼 권한이 있습니다. 막아야 할 대상은 사용자가 아니라 외부 LLM으로 본문이 흘러가는 경로이고, 사용자는 링크로 위키에서 직접 읽으면 됩니다.
 - **메타데이터**: 청크에 `classification`(일반·기밀)을 권한처럼 비정규화해 저장합니다. 스페이스 기본값을 상속하고 문서별로 올릴 수 있으며, 9장의 민감정보 탐지가 등급 상향을 제안할 수 있습니다.
-- **클라이언트 등급은 서버가 판단**: 등급은 인증된 OAuth 클라이언트 id로 서버가 결정합니다. 요청 파라미터로 받으면 외부 클라이언트가 스스로 등급을 올릴 수 있기 때문입니다.
+- **클라이언트 등급은 서버가 판단**: 등급은 인증된 OAuth 클라이언트 id로 서버가 결정합니다. 요청 파라미터로 받으면 외부 클라이언트가 스스로 등급을 올릴 수 있기 때문입니다. 비밀로 인증하는 사전 등록 클라이언트만 사내 등급을 받을 수 있고, 인가 서버가 정해 토큰에 넣습니다(ADR-24).
 - **목표**: 외부 LLM 클라이언트로 기밀 문서의 스니펫·본문 반환 0건.
 - **범위 조절**: 필드와 반환 정책까지 구현하고, 등급이 다른 OAuth 클라이언트 두 개로 정책을 테스트합니다. 실제 사내 LLM 에이전트 연결은 폐쇄망 확장(ADR-11)과 묶어 선택 과제로 둡니다.
 - **참고**: [Amazon Bedrock Knowledge Base](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-acl.html) (ACL 필터는 인증을 대신하지 않음), [Azure AI Search 민감도 라벨](https://learn.microsoft.com/en-us/azure/search/search-query-sensitivity-labels) (등급을 질의 시점에 판정), [MCP 보안 모범 사례](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices) (confused deputy)
