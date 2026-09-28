@@ -1,0 +1,23 @@
+# 배포 서버의 컨테이너 구성 (ADR-23). 로컬 개발용은 저장소 루트의 docker-compose.yml이다.
+#
+# Caddy가 80·443을 받는다. 도메인으로 온 요청은 Let's Encrypt 인증서로 HTTPS를 적용하고, IP나 localhost로 온
+# HTTP 요청에는 /health와 소개 페이지를 그대로 준다(과제 검증: curl http://localhost, http://<공인 IP>/health).
+services:
+  caddy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?deploy/.env에 DOMAIN을 지정하세요}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+      # 발급받은 인증서를 보관한다. 컨테이너를 다시 만들 때마다 새로 발급하면 Let's Encrypt 발급 한도에 걸린다
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

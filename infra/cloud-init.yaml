@@ -1,0 +1,11 @@
+#cloud-config
+# 서버가 처음 켜질 때 한 번 돈다. Docker와 git만 설치하고, 앱 배포는 deploy/ 스크립트가 따로 한다.
+# 다시 배포할 때마다 서버를 새로 만들지 않도록 여기에는 한 번만 필요한 일만 둔다.
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - git
+runcmd:
+  - systemctl enable --now docker
+  - usermod -aG docker ubuntu

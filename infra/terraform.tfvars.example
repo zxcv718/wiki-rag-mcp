@@ -1,0 +1,2 @@
+# terraform.tfvars로 복사해 값을 채운다 (커밋하지 않음)
+ssh_cidr = "203.0.113.7/32" # curl -s https://checkip.amazonaws.com 결과에 /32
