@@ -193,3 +193,17 @@ def test_settings_reject_unknown_source_and_dev_token_on_a_remote_wiki():
     with pytest.raises(ValueError):
         Settings(wiki_api_url="https://wiki.internal.example")
     assert Settings(wiki_api_url="https://wiki.internal.example", wiki_service_token="real-secret")
+
+
+def test_cacheable_results_are_private_and_not_cached():
+    """2026-07-28 명세는 목록과 resources/read 결과에 ttlMs와 cacheScope를 붙인다. 문서는 사용자마다 권한이 달라
+    공유 중간 캐시(public)에 남으면 다른 사용자에게 나가고, 권한을 회수해도 옛 본문이 남는다. SDK 기본값에
+    기대는 부분이라, SDK를 올려도 바뀌지 않았는지 여기서 확인한다."""
+
+    async def action(client):
+        return [await client.list_tools(), await client.list_resources(), await client.list_resource_templates(),
+                await client.read_resource("wiki://doc/infra-002")]
+
+    for result in run("dana", action):
+        fields = result.model_dump(by_alias=True)
+        assert (fields["cacheScope"], fields["ttlMs"]) == ("private", 0), type(result).__name__
