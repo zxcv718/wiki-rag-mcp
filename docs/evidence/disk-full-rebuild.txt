@@ -1,0 +1,50 @@
+# 사례 3: 같은 커밋을 다시 배포하다 디스크가 가득 참 (2026-09-28, 서버 52.78.251.4, 루트 볼륨 20GB)
+
+## 실패한 배포 (deploy/push.sh, 이미 떠 있는 커밋 73c6af7을 다시 배포)
+target mcp: failed to solve: failed to extract layer sha256:27c2b03a4eae0da179075526c07dbed2fd4bde64d59f1b433d944f5a270f1c75: write /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/191/fs/app/.venv/lib/python3.12/site-packages/transformers/models/gemma4_unified/__pycache__/processing_gemma4_unified.cpython-312.pyc: no space left on device
+
+## 실패 직후 (컨테이너 7개는 계속 Up)
+$ df -h /
+/dev/root        19G   12G  6.7G  64% /
+$ docker info | grep -i "storage driver\|driver-type"
+ Storage Driver: overlayfs
+  driver-type: io.containerd.snapshotter.v1
+$ sudo du -sh /var/lib/containerd/io.containerd.content.v1.content /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+2.2G	/var/lib/containerd/io.containerd.content.v1.content
+6.6G	/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+$ docker buildx du | tail -5
+ixjdydpt568x0jmqdqurlvhcs    true          117.5MB   38 minutes ago
+isfmn70pxlzdzh80btw7gctnn*   true          326.5MB   4 minutes ago
+52zkiqbzic1x9322il7bphhlw*   true          1.175GB   About a minute ago
+Reclaimable:	1.754GB
+Total:		1.754GB
+
+## 첫 빌드 로그 일부: 같은 이미지를 mcp와 worker가 따로 내보내고 푼다
+#38 [mcp] exporting to image
+#38 unpacking to docker.io/library/wiki-rag-search:latest 58.9s done
+#39 [worker] exporting to image
+#39 unpacking to docker.io/library/wiki-rag-search:latest 58.9s done
+
+## 조치 뒤: overlay2 저장소, 검색 이미지는 mcp만 빌드
+$ docker compose down; docker system prune -af
+Total reclaimed space: 4.046GB
+$ echo '{"features": {"containerd-snapshotter": false}}' | sudo tee /etc/docker/daemon.json; sudo systemctl restart docker
+ Storage Driver: overlay2
+$ docker volume ls   (저장소를 바꾼 뒤에도 그대로)
+deploy_caddy-config deploy_caddy-data deploy_redis-data deploy_search-db-data deploy_wiki-db-data
+
+## 처음부터 다시 빌드 (deploy/push.sh, 커밋 1285496): 2분 53초
+$ df -h /
+/dev/root        19G  9.9G  8.5G  54% /
+$ docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          6         6         5.216GB   5.216GB (100%)
+Containers      7         7         32.9kB    0B (0%)
+Local Volumes   5         5         149.9MB   0B (0%)
+Build Cache     43        0         5.276GB   1.491GB
+
+## 같은 커밋을 다시 배포: 6.5초, 빌드 단계 19개 모두 CACHED
+$ df -h /
+/dev/root        19G  9.9G  8.5G  54% /
+$ select count(*) from wiki_chunks_doc_state   (검색 인덱스, 볼륨이라 저장소 전환 뒤에도 남음)
+200
