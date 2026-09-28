@@ -3,7 +3,7 @@
 사내 위키 문서를 **사용자 권한에 맞게** 검색해, LLM 에이전트가 MCP 도구로 호출할 수 있게 하는 서버입니다. 답변은 만들지 않고 근거가 되는 문서 조각만 돌려주며, 권한 없는 문서는 검색 단계에서부터 제외합니다.
 
 - 설계: [`docs/design.md`](docs/design.md), 결정 기록: [`docs/adr/`](docs/adr/README.md)
-- 진행: M1~M4 완료(MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI). M5 진행 중: HTTP 전송, OAuth 인가 서버, 서버 배포는 마쳤고 관측성과 부하 측정이 남음
+- 진행: M1~M4 완료(MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI). M5 진행 중: HTTP 전송, OAuth 인가 서버, 서버 배포, 관측성은 마쳤고 부하 측정이 남음
 
 프로젝트 전체 소개와 데모는 M6에서 이 문서에 정리합니다. 아래는 서버를 AWS에 올린 기록이며, 코디세이 과제 B3-1의 제출 문서를 겸합니다.
 
@@ -117,6 +117,19 @@ B3-1 제출 시점(Caddy만 있을 때)의 확인 화면입니다.
 | ![docker ps와 서버 안 curl](docs/evidence/terminal-server-docker-ps.png) | ![외부에서 /health 호출](docs/evidence/terminal-external-access.png) |
 
 서버 안 확인 결과: 컨테이너 `Up`, `curl http://localhost` 200, `/health` 본문 `OK`, 서버에서 바깥(example.com)으로 나가는 요청 200([`docs/evidence/server-checks.txt`](docs/evidence/server-checks.txt)).
+
+### 관측성 (M5)
+
+위키 서비스, 검색 서버, 인덱서 워커가 OpenTelemetry로 추적과 지표를 보냅니다([ADR-15](docs/adr/ADR-15.md)). 추적은 Tempo, 지표는 Prometheus가 받고 Grafana로 봅니다. 세 도구도 같은 compose로 뜹니다([`deploy/observability/`](deploy/observability/compose.yaml)). 추적에 사용자 id와 문서 id가 남아서 포트는 서버 안(127.0.0.1)에만 열고, SSH 터널로 봅니다.
+
+```bash
+ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
+# 브라우저에서 http://localhost:3000/d/wiki-rag 를 연다
+```
+
+- 검색 한 번이 한 추적입니다. `tools/call search_wiki` 아래에 권한 해석, 쿼리 임베딩, 벡터 검색, 결과 조립 네 단계가 나뉘고, 그룹 캐시를 못 찾아 위키에 물은 호출은 위키의 처리 스팬까지 이어집니다.
+- 문서 수정도 한 추적입니다. 위키가 수정 요청의 추적 맥락을 이벤트에 실어 보내, 워커가 그 이벤트를 반영하는 스팬(위키 재조회, 청크 임베딩)이 같은 추적에 붙습니다.
+- 대시보드 `wiki-rag-mcp`에는 검색 단계별 p95, 그룹 캐시 적중률, 반영 지연 p95(문서 인덱싱, 그룹 변경의 권한 반영), 처리 안 된 이벤트와 DLQ, 분당 임베딩 수, 위키 API 응답 시간과 JVM 힙, 최근 추적 목록이 있습니다.
 
 ### 다시 만들기
 
