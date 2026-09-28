@@ -277,7 +277,7 @@ def build_server(services: Services, token_verifier: TokenVerifier | None = None
 
 
 def open_services(settings: Settings) -> Services:
-    from wiki_rag_mcp.indexing.embedder import Embedder
+    from wiki_rag_mcp.indexing.embedder import Embedder, QueryBatcher
     from wiki_rag_mcp.search.backend import open_store
 
     if settings.wiki_source == "file":
@@ -293,7 +293,7 @@ def open_services(settings: Settings) -> Services:
         groups = GroupCache(source, open_client(settings))
     embedder = Embedder()
     embedder.warm_up()
-    return Services(settings, source, open_store(settings), embedder, groups)
+    return Services(settings, source, open_store(settings), QueryBatcher(embedder), groups)
 
 
 def http_options(settings: Settings) -> dict[str, Any]:
