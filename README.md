@@ -3,7 +3,7 @@
 사내 위키 문서를 **사용자 권한에 맞게** 검색해, LLM 에이전트가 MCP 도구로 호출할 수 있게 하는 서버입니다. 답변은 만들지 않고 근거가 되는 문서 조각만 돌려주며, 권한 없는 문서는 검색 단계에서부터 제외합니다.
 
 - 설계: [`docs/design.md`](docs/design.md), 결정 기록: [`docs/adr/`](docs/adr/README.md)
-- 진행: M1~M4 완료(MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI), M5(HTTP 전송, OAuth, 부하 측정, 관측성) 진행 중
+- 진행: M1~M4 완료(MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI). M5 진행 중: HTTP 전송, OAuth 인가 서버, 서버 배포는 마쳤고 관측성과 부하 측정이 남음
 
 프로젝트 전체 소개와 데모는 M6에서 이 문서에 정리합니다. 아래는 서버를 AWS에 올린 기록이며, 코디세이 과제 B3-1의 제출 문서를 겸합니다.
 
@@ -20,7 +20,7 @@
 | https://mcp.dmssh.store/health | HTTPS로 `200`, 본문 `OK` (보너스 1) |
 | http://mcp.dmssh.store | `308`으로 HTTPS 주소로 넘김 (보너스 1) |
 
-과제를 마치면 [정리 체크리스트](docs/cleanup-checklist.md)대로 자원을 지우므로, 그 뒤에는 위 주소가 닿지 않습니다. 접속 결과는 아래 스크린샷과 [`docs/evidence/`](docs/evidence/)의 원래 출력으로 남겼습니다.
+과제 평가를 받은 뒤 맨 마지막에 [정리 체크리스트](docs/cleanup-checklist.md)대로 자원을 지우므로, 그 뒤에는 위 주소가 닿지 않습니다. 접속 결과는 아래 스크린샷과 [`docs/evidence/`](docs/evidence/)의 원래 출력으로 남겼습니다.
 
 | 방식 B: 노트북 터미널에서 `curl -i` | 방식 B: 브라우저 |
 |---|---|
@@ -36,7 +36,7 @@
 
 ![AWS 배포 아키텍처](docs/architecture.png)
 
-사용자는 가비아 DNS에서 `mcp.dmssh.store`의 주소(Elastic IP)를 받아 요청을 보냅니다. 요청은 인터넷 게이트웨이를 지나 퍼블릭 서브넷의 EC2에 닿고, 보안 그룹이 허용한 80·443만 들어와 Caddy 컨테이너가 응답합니다. 운영자의 SSH(22)는 지정한 IP 한 곳에서만 들어옵니다. 다이어그램 원본은 [`docs/architecture.archify.json`](docs/architecture.archify.json)이고, 확대해 볼 수 있는 HTML은 [`docs/architecture.html`](docs/architecture.html)입니다.
+사용자는 가비아 DNS에서 `mcp.dmssh.store`의 주소(Elastic IP)를 받아 요청을 보냅니다. 요청은 인터넷 게이트웨이를 지나 퍼블릭 서브넷의 EC2에 닿고, 보안 그룹이 허용한 80·443만 들어와 Caddy 컨테이너가 응답합니다. 운영자의 SSH(22)는 지정한 IP 한 곳에서만 들어옵니다. 다이어그램은 B3-1 제출 시점(Caddy만 있던 때)의 구성이고, M5에서 늘어난 컨테이너는 아래 "보너스 2"에 적었습니다. 원본은 [`docs/architecture.archify.json`](docs/architecture.archify.json)이고, 확대해 볼 수 있는 HTML은 [`docs/architecture.html`](docs/architecture.html)입니다.
 
 | 구성 | 값 | 코드 |
 |---|---|---|
@@ -48,15 +48,15 @@
 | 공인 IP | Elastic IP `52.78.251.4` (다시 시작해도 주소가 바뀌지 않아 DNS 레코드를 고정할 수 있음) | `infra/main.tf` |
 | 웹 서버 | Caddy 2.11.4 컨테이너 | `deploy/` |
 
-인프라는 모두 Terraform으로 만들었습니다. 과제를 마치면 `terraform destroy` 한 번으로 지우고, M5에서 같은 구성을 다시 만들기 위해서입니다. 결정 이유와 다른 선택지(오라클 무료 등급, GCP, 유료 VPS) 비교는 [ADR-23](docs/adr/ADR-23.md)에 있습니다.
+인프라는 모두 Terraform으로 만들었습니다. 평가를 받은 뒤 `terraform destroy` 한 번으로 지우고, 데모 등으로 다시 필요하면 `terraform apply`로 같은 구성을 다시 만들기 위해서입니다. 결정 이유와 다른 선택지(오라클 무료 등급, GCP, 유료 VPS) 비교는 [ADR-23](docs/adr/ADR-23.md)에 있습니다.
 
 ### 인스턴스와 볼륨을 권장보다 크게 잡은 이유
 
 과제는 micro 인스턴스와 8~10GiB 볼륨을 권장하지만, 이 서버는 `m7i-flex.large`(vCPU 2개, 메모리 8GiB)와 20GB를 씁니다.
 
-- 이 서버는 검색 질의를 임베딩하려고 모델(BAAI/bge-m3)을 프로세스 안에 올립니다. 모델을 올린 프로세스 하나가 최대 약 2.2GB였고, 검색 서버와 인덱서 두 프로세스에 DB·위키 서비스까지 합치면 5~6GB가 필요합니다. micro(1GiB)에서는 모델을 올릴 수 없습니다.
+- 이 서버는 검색 질의를 임베딩하려고 모델(BAAI/bge-m3)을 프로세스 안에 올립니다. 모델을 올린 프로세스 하나가 최대 약 2.2GB였고, 검색 서버와 인덱서 두 프로세스에 DB·위키 서비스까지 합치면 5~6GB가 필요합니다. micro(1GiB)에서는 모델을 올릴 수 없습니다. 실제로 전체 구성을 올린 뒤 색인하는 동안 서버 전체 사용량은 3.0GB였습니다. 이때는 검색 서버가 아직 질의를 받지 않았으므로, 부하 측정 때 다시 잽니다.
 - 2025년 7월 15일 이후 만든 계정은 무료 플랜 대상 유형이 `t3.micro`, `t3.small`, `t4g.micro`, `t4g.small`, `c7i-flex.large`, `m7i-flex.large`입니다([AWS 문서](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html)). 이 중 메모리 5GB 이상은 `m7i-flex.large`뿐입니다. 비용은 무료 플랜 크레딧에서 나갑니다.
-- 볼륨 20GB는 모델 파일(약 2.2GB)과 파이썬·PyTorch가 든 Docker 이미지를 담기 위한 크기입니다.
+- 볼륨 20GB는 모델 파일(약 2.2GB)과 파이썬·PyTorch가 든 Docker 이미지를 담기 위한 크기입니다. Docker 29의 기본 이미지 저장소는 레이어를 압축본과 푼 것 두 벌로 보관해 20GB가 모자랐고, 푼 레이어만 두는 저장소로 바꿨습니다([트러블슈팅 사례 3](docs/troubleshooting.md)). 바꾼 직후 전체 구성의 디스크 사용량은 9.9GB였습니다.
 - 같은 유형의 인스턴스에서 질의 임베딩을 실제로 쟀습니다(골든셋 질문 60개, p50 225ms). 측정 방법과 결과는 ADR-23에 있습니다.
 
 ### 보안 그룹
@@ -86,7 +86,7 @@
 
 ### 보너스 1: 도메인과 HTTPS
 
-- 도메인: 가비아에서 산 `dmssh.store`에 A 레코드 `mcp`를 만들어 Elastic IP를 가리키게 했습니다.
+- 도메인: 가비아에서 산 `dmssh.store`에 A 레코드 `mcp`를 만들어 Elastic IP를 가리키게 했습니다. M5에서 인가 서버용 `auth`를 더했고, 이 인증서도 Caddy가 같은 방식으로 받습니다.
 - 인증서: Caddy가 Let's Encrypt에서 HTTP-01 방식으로 자동 발급하고 만료 전에 갱신합니다. 발급된 인증서는 `CN=mcp.dmssh.store`, 발급자 Let's Encrypt, 유효 기간 2026-09-28~2026-12-27이고, 인증서 체인 검증도 통과합니다([`docs/evidence/https-certificate.txt`](docs/evidence/https-certificate.txt)).
 - 도메인으로 온 HTTP 요청은 `308`로 HTTPS 주소에 넘깁니다. IP로 온 HTTP 요청은 인증서를 쓸 수 없으므로 그대로 응답합니다(방식 A·B 검증용). 설정은 [`deploy/Caddyfile`](deploy/Caddyfile)입니다.
 
@@ -110,6 +110,8 @@ deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
 
 서버의 비밀(DB 비밀번호, 서비스 토큰, 토큰 서명 키)은 `deploy/init-secrets.sh`가 서버에서 처음 한 번 만들고 저장소에는 없습니다. 인증서를 이름 있는 볼륨에 두는 이유는, 컨테이너를 다시 만들 때마다 새로 발급받으면 Let's Encrypt 발급 한도에 걸리기 때문입니다.
 
+B3-1 제출 시점(Caddy만 있을 때)의 확인 화면입니다.
+
 | 서버 안: `docker ps`와 `curl http://localhost` | 외부: `/health` 호출 |
 |---|---|
 | ![docker ps와 서버 안 curl](docs/evidence/terminal-server-docker-ps.png) | ![외부에서 /health 호출](docs/evidence/terminal-external-access.png) |
@@ -126,6 +128,6 @@ deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
 
 ### 관련 문서
 
-- [트러블슈팅 보고서](docs/troubleshooting.md): CLI가 루트로 로그인된 건, 노트북에서만 80번이 가끔 끊긴 건
+- [트러블슈팅 보고서](docs/troubleshooting.md): CLI가 루트로 로그인된 건, 노트북에서만 80번이 가끔 끊긴 건, 같은 커밋을 다시 배포하다 디스크가 가득 찬 건(M5)
 - [리소스 정리 체크리스트](docs/cleanup-checklist.md): 정리 순서와 이유, 남은 자원 확인 스크립트(`infra/check-leftovers.sh`)
 - [ADR-23](docs/adr/ADR-23.md): 배포처와 Terraform을 고른 이유
