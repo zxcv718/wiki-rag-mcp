@@ -28,4 +28,5 @@ M5의 지연·부하 측정과 데모에는 인터넷에서 닿는 서버가 필
   - 크레딧은 24시간 켜 두면 두 달쯤 가고, 무료 플랜은 2027년 3월 28일에 끝납니다. 그 뒤에도 데모를 띄워 두려면 옮겨야 합니다.
   - Terraform 상태 파일을 로컬에 둡니다. 한 사람이 한 곳에서만 돌리기 때문입니다.
 - **재검토 조건**: 부하 테스트에서 동시 50요청의 오류율이나 검색 p95 목표를 못 맞추면 bf16 재판정(ADR-11)과 코어 증설 중에서 고릅니다. 크레딧이 떨어지기 전에 장기 호스팅처를 다시 정합니다.
+- **재검토 결과 (M5)**: 동시 50에서 p95 20.5초, 오류율 1.44%로 둘 다 못 맞춰 재검토했습니다. 증설 대신 쿼리 묶음 처리와 bf16(ADR-25)으로 오류율은 0%가 됐고, p95는 2.3초로 남았습니다. 장기 호스팅처를 정할 때 물리 코어 2개 이상을 고르고 같은 방법으로 다시 잽니다.
 - **참고**: [AWS 무료 플랜](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html), [EC2 무료 대상 유형](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html), [M7i-flex](https://aws.amazon.com/ec2/instance-types/m7i/), [오라클 무료 자원](https://docs.oracle.com/en-us/iaas/Content/FreeTier/resourceref.htm), [Caddy 자동 HTTPS](https://caddyserver.com/docs/automatic-https)

@@ -34,10 +34,19 @@
 - CI는 `.github/workflows/ci.yml`입니다. Python 테스트와 권한 테스트셋, 골든셋 회귀 검사(`uv run wiki-rag-eval regress`, Recall@5가 `data/golden/baseline.json`보다 2%p 이상 떨어지거나 권한 위반이 1건이면 실패), 위키 서비스 테스트를 돌립니다. 회귀 검사는 임베딩을 `.cache/ci-embeddings.npz`에 캐시합니다. 저장소는 공개 `zxcv718/wiki-rag-mcp`이고, 캐시가 있을 때 CI 전체가 4~5분입니다(임베딩 캐시가 모두 버려지는 PR은 골든셋 작업이 15분쯤).
 - 측정(`experiments/m4-permissions`): 권한 회수 후 검색에서 사라지기까지 p95 0.42초(문서 제한), 0.40초(그룹 제거). 회수 직후 본문은 40번 모두 바로 막혔습니다.
 
+**M5 완료**: HTTP 전송과 OAuth, AWS 배포, 관측성, 부하 측정
+
+- 운영 서버는 AWS 서울 EC2 한 대(ADR-23, `infra/`)이고, `https://mcp.dmssh.store/mcp`(검색 서버)와 `https://auth.dmssh.store`(위키 안의 인가 서버, ADR-24)로 열립니다. 배포는 `deploy/push.sh <IP>`로, 서버가 공개 저장소에서 `origin/main`에 있는 커밋을 받아 빌드합니다. 먼저 푸시해야 합니다. 서버의 비밀(`deploy/.env`, `deploy/secrets/`)은 서버에만 있고 값을 출력하지 않습니다.
+- HTTP에서는 사용자를 액세스 토큰의 `sub`로, 신뢰 등급을 `client_tier` 클레임으로 정합니다. 인가 서버 계약은 `wiki-service/README.md` "인가 서버"입니다. 우리가 만든 클라이언트는 미리 등록합니다(부하 측정용 `wiki-rag-load`).
+- 관측성(ADR-15): 세 서비스가 OTLP로 추적은 Tempo, 지표는 Prometheus에 보내고 Grafana로 봅니다(`deploy/observability/`). 포트는 서버 안에만 열려 있어 SSH 터널로 봅니다. 스팬과 지표에 쿼리 원문과 문서 내용을 넣지 않습니다.
+- 부하 측정(`experiments/m5-load`, `experiments/m5-speedup`, ADR-25): 쿼리 임베딩을 묶어 처리하고 배포 서버에서는 쿼리만 bf16으로 인코딩해, 동시 50의 처리량이 초당 3.2건에서 33건, 오류율이 1.44%에서 0%가 됐습니다. 동시 50의 p95는 2.3초로 목표(800ms)를 못 맞췄고, 물리 코어 하나가 임베딩으로 차 있는 것이 원인입니다. 동시 10의 p95는 0.5초입니다.
+- 성능 개선도 판정 기준을 측정 전에 적고 하나씩 잽니다. 기준을 못 맞춘 변경은 적용하지 않거나 되돌립니다(PyTorch 스레드 2개는 벤치마크에서 기각, 연결 풀은 배포 뒤 되돌림).
+- 알려진 위험은 설계서 10장 "알려진 위험 (M5 뒤)"에 있습니다.
+
 구현 원칙:
 
 - 위키 접근은 `wiki/source.py`의 인터페이스로 감쌉니다. 파일 위키(`data/wiki/`, 평가·테스트용)와 Spring 위키 API(`wiki/http.py`) 두 구현이 있고, 인덱서는 M3부터, 검색 서버는 M4부터 위키 API를 읽습니다.
-- M5 전까지는 OAuth 없이 stdio로만 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 위키에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다.
+- 로컬 개발(`.mcp.json`)은 OAuth 없이 stdio로 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 위키에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다. 운영은 HTTP + OAuth입니다(M5).
 - 서버 밖 LLM 작업(가상 위키 생성 등)은 코디세이 Public API(`https://copa.codyssey.kr`)의 OpenAI 호환 엔드포인트(`/v1/chat/completions`)와 `gpt-5.4`를 씁니다. 키가 OpenAI 호환용이라 Claude 모델은 이 키로 부를 수 없습니다. 키는 `.env`의 `COPA_API_KEY`에 두고(형식은 `.env.example`), `.env`는 커밋하지 않습니다.
 
 로드맵: M1, M2(골든셋·평가·판정 실험), M3(Spring 위키·아웃박스·증분 인덱싱), M4(권한 pre-filter·CI), M5(HTTP·OAuth·부하·관측성), M6(README·데모) 순서로 진행합니다.
@@ -63,7 +72,7 @@
 - 문서 권한은 `space_principals`(스페이스 보기 권한)와 `restricted_principals`(문서 제한) 두 필드이고, 둘 다 만족해야 보입니다. 검색 필터는 두 조건을 AND로 묶어 검색 쿼리 안에서 겁니다 (ADR-21, ADR-22).
 - 권한 필드가 비어 있으면 아무도 볼 수 없는 문서로 다룹니다. 공개는 `all`로만 표시하고, 제한 없는 문서의 `restricted_principals`도 `all`입니다 (4장 "권한 모델").
 - 클라이언트 신뢰 등급은 요청 파라미터로 받지 않고, OAuth 클라이언트 id로 서버가 정합니다 (ADR-17).
-- 임베딩 모델은 MCP 서버 안에서 직접 돌리는 `BAAI/bge-m3`이고, float32로 불러옵니다 (ADR-11, 선택 근거는 `experiments/embedding-model/README.md`). BGE-M3의 문장 벡터는 CLS 토큰 벡터입니다. 상용 임베딩 API는 비교 실험에만 씁니다.
+- 임베딩 모델은 MCP 서버 안에서 직접 돌리는 `BAAI/bge-m3`이고, float32로 불러옵니다 (ADR-11, 선택 근거는 `experiments/embedding-model/README.md`). 배포 서버의 쿼리만 bf16입니다(`WIKI_QUERY_DTYPE`, ADR-25). 문서 벡터는 늘 float32입니다. BGE-M3의 문장 벡터는 CLS 토큰 벡터입니다. 상용 임베딩 API는 비교 실험에만 씁니다.
 - 검색 결과는 "신뢰할 수 없는 외부 콘텐츠"로 표시해 반환합니다 (9장).
 - 권한 없는 문서는 흔적을 남기지 않습니다. "N건 제외" 같은 안내도 하지 않습니다.
 - 검색 결과 캐시는 만들지 않습니다. 실사용 로그로 반복 질의 비율을 확인할 수 있을 때 다시 검토합니다 (8장). 쿼리 임베딩 캐시는 권한과 무관해 써도 됩니다.
