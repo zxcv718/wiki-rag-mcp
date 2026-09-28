@@ -1,0 +1,50 @@
+{"id": "t-rc01", "question": "이번 주에 수정된 위키 문서 뭐 있어?", "expected": "list_recent_changes"}
+{"id": "t-rc02", "question": "9월 들어 바뀐 인사 제도 문서 목록 보여 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc03", "question": "최근 일주일 사이 업데이트된 문서 알려 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc04", "question": "이번 달에 개발 스페이스에서 고친 문서들 좀 정리해 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc05", "question": "9월 15일 이후로 새로 올라오거나 바뀐 문서가 있나?", "expected": "list_recent_changes"}
+{"id": "t-rc06", "question": "지난주부터 오늘까지 변경된 IT 헬프데스크 문서는?", "expected": "list_recent_changes"}
+{"id": "t-rc07", "question": "이번 달 경비·구매 스페이스에 업데이트된 게 있어?", "expected": "list_recent_changes"}
+{"id": "t-rc08", "question": "최근 3일 동안 수정된 위키 페이지 목록.", "expected": "list_recent_changes"}
+{"id": "t-rc09", "question": "요즘 바뀐 문서가 뭔지 한번 훑어보고 싶어.", "expected": "list_recent_changes"}
+{"id": "t-rc10", "question": "9월에 개정된 규정 문서들 뭐야?", "expected": "list_recent_changes"}
+{"id": "t-rc11", "question": "최근 2주 사이에 고객지원 쪽 문서 중 수정된 거 있어?", "expected": "list_recent_changes"}
+{"id": "t-rc12", "question": "오늘 수정된 문서 있어?", "expected": "list_recent_changes"}
+{"id": "t-rc13", "question": "8월 이후 전사 공지 스페이스에 올라온 글 목록 보여 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc14", "question": "이번 주 업데이트된 인프라 문서 알려 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc15", "question": "최근 한 달간 변경 이력이 있는 문서 제목만 쭉 뽑아 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc16", "question": "휴가 다녀온 사이(9월 20일부터) 바뀐 문서가 뭔지 알려 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc17", "question": "이번 분기(7월부터) 수정된 보안 문서 목록.", "expected": "list_recent_changes"}
+{"id": "t-rc18", "question": "최근에 새로 생긴 위키 문서 있어?", "expected": "list_recent_changes"}
+{"id": "t-rc19", "question": "지난 10일 동안 편집된 제품 기획 문서를 최신순으로 보여 줘.", "expected": "list_recent_changes"}
+{"id": "t-rc20", "question": "이번 달 위키에서 뭐가 바뀌었는지 목록으로 알려 줘.", "expected": "list_recent_changes"}
+{"id": "t-gd01", "question": "hr-024 문서 전체 내용 보여 줘.", "expected": "get_document"}
+{"id": "t-gd02", "question": "위키 문서 eng-032 열어서 보여 줄래?", "expected": "get_document"}
+{"id": "t-gd03", "question": "it-008 문서에서 설치 요청 방법 부분만 보여 줘.", "expected": "get_document"}
+{"id": "t-gd04", "question": "https://wiki.saesol.example/doc/fin-003 이 문서 내용 요약해 줘.", "expected": "get_document"}
+{"id": "t-gd05", "question": "infra-005 문서 본문 좀 가져와 줘.", "expected": "get_document"}
+{"id": "t-gd06", "question": "co-001 문서에 뭐라고 적혀 있어?", "expected": "get_document"}
+{"id": "t-gd07", "question": "방금 링크 받은 cs-003 문서 전문 보고 싶어.", "expected": "get_document"}
+{"id": "t-gd08", "question": "prd-010 문서의 변경 이력 부분 보여 줘.", "expected": "get_document"}
+{"id": "t-gd09", "question": "hr-010 문서 처음부터 끝까지 읽어 줘.", "expected": "get_document"}
+{"id": "t-gd10", "question": "sec-002 문서 내용을 그대로 보여 줘.", "expected": "get_document"}
+{"id": "t-no01", "question": "파이썬에서 리스트를 역순으로 정렬하려면 어떻게 해?", "expected": "none"}
+{"id": "t-no02", "question": "HTTP 상태 코드 404와 410은 뭐가 달라?", "expected": "none"}
+{"id": "t-no03", "question": "'회의록'을 영어로 뭐라고 해?", "expected": "none"}
+{"id": "t-no04", "question": "17 곱하기 23은 얼마야?", "expected": "none"}
+{"id": "t-no05", "question": "git rebase와 merge의 차이를 간단히 설명해 줘.", "expected": "none"}
+{"id": "t-no06", "question": "SQL에서 LEFT JOIN과 INNER JOIN 차이가 뭐야?", "expected": "none"}
+{"id": "t-no07", "question": "이메일 끝인사로 쓸 만한 표현 몇 개 추천해 줘.", "expected": "none"}
+{"id": "t-no08", "question": "JSON과 YAML 중 설정 파일로는 뭐가 나아?", "expected": "none"}
+{"id": "t-no09", "question": "광합성이 뭔지 한 문장으로 설명해 줘.", "expected": "none"}
+{"id": "t-no10", "question": "정규 표현식으로 이메일 주소를 대충 검사하는 패턴 알려 줘.", "expected": "none"}
+{"id": "t-no11", "question": "REST API에서 PUT과 PATCH는 어떻게 달라?", "expected": "none"}
+{"id": "t-no12", "question": "'잘 부탁드립니다'를 영어로 자연스럽게 바꿔 줘.", "expected": "none"}
+{"id": "t-no13", "question": "TCP와 UDP의 차이를 설명해 줘.", "expected": "none"}
+{"id": "t-no14", "question": "섭씨 30도는 화씨로 몇 도야?", "expected": "none"}
+{"id": "t-no15", "question": "쿠버네티스에서 파드가 뭐야?", "expected": "none"}
+{"id": "t-no16", "question": "엑셀에서 VLOOKUP 쓰는 법 알려 줘.", "expected": "none"}
+{"id": "t-no17", "question": "1부터 100까지 더하면 얼마야?", "expected": "none"}
+{"id": "t-no18", "question": "도커 이미지와 컨테이너의 차이는?", "expected": "none"}
+{"id": "t-no19", "question": "발표 자료 목차를 짤 때 좋은 순서가 있을까?", "expected": "none"}
+{"id": "t-no20", "question": "CAP 정리가 뭐야?", "expected": "none"}

@@ -47,7 +47,7 @@
 
 - 위키 접근은 `wiki/source.py`의 인터페이스로 감쌉니다. 파일 위키(`data/wiki/`, 평가·테스트용)와 Spring 위키 API(`wiki/http.py`) 두 구현이 있고, 인덱서는 M3부터, 검색 서버는 M4부터 위키 API를 읽습니다.
 - 로컬 개발(`.mcp.json`)은 OAuth 없이 stdio로 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 위키에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다. 운영은 HTTP + OAuth입니다(M5).
-- 서버 밖 LLM 작업(가상 위키 생성 등)은 코디세이 Public API(`https://copa.codyssey.kr`)의 OpenAI 호환 엔드포인트(`/v1/chat/completions`)와 `gpt-5.4`를 씁니다. 키가 OpenAI 호환용이라 Claude 모델은 이 키로 부를 수 없습니다. 키는 `.env`의 `COPA_API_KEY`에 두고(형식은 `.env.example`), `.env`는 커밋하지 않습니다.
+- 서버 밖 LLM 작업(가상 위키 생성, 데모 에이전트와 그 채점)은 코디세이 Public API(`https://copa.codyssey.kr`)의 OpenAI 호환 엔드포인트(`/v1/chat/completions`)를 씁니다. 생성과 데모 에이전트는 `gpt-5.4`, 에이전트 답변 채점은 다른 계열인 `claude-opus-4-8`입니다. 2026-09-28부터 이 키로 Claude 모델도 응답하며, `claude-opus-4-8`에는 `temperature`를 넘기지 않습니다(502). 키는 `.env`의 `COPA_API_KEY`에 두고(형식은 `.env.example`), `.env`는 커밋하지 않습니다.
 
 로드맵: M1, M2(골든셋·평가·판정 실험), M3(Spring 위키·아웃박스·증분 인덱싱), M4(권한 pre-filter·CI), M5(HTTP·OAuth·부하·관측성), M6(README·데모) 순서로 진행합니다.
 
