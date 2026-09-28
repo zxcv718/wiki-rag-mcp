@@ -515,7 +515,13 @@ class AuthorizationServerTest extends IntegrationTest {
             parameters.put("redirect_uri", landing);
             mvc.perform(get(authorizeUri(parameters)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(redirectedUrl(null));
+                    .andExpect(redirectedUrl(null))
+                    // 브라우저가 보는 화면이라 Spring 기본 오류 응답 대신 한국어 오류 화면을 준다
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                    .andExpect(content().string(containsString("앱의 연결 요청을 처리할 수 없습니다")))
+                    .andExpect(content().string(containsString("오류 코드 <code>")))
+                    .andExpect(header().string("Content-Security-Policy", CSP))
+                    .andExpect(header().string("X-Frame-Options", "DENY"));
         }
 
         setPassword("seoyeon");
@@ -572,7 +578,9 @@ class AuthorizationServerTest extends IntegrationTest {
         }
         mvc.perform(login("198.51.100.10", "limited", PASSWORD))
                 .andExpect(status().isTooManyRequests())
-                .andExpect(header().string("Retry-After", "60"));
+                .andExpect(header().string("Retry-After", "60"))
+                .andExpect(content().string(containsString("1분 뒤에 다시 시도하세요")))
+                .andExpect(header().string("Content-Security-Policy", CSP));
         mvc.perform(login("198.51.100.11", "limited", PASSWORD)).andExpect(redirectedUrl("/"));
 
         // IP를 바꿔 가며 한 사용자 id로 10번 틀려도 그 id는 막힌다
@@ -601,6 +609,17 @@ class AuthorizationServerTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Security-Policy", CSP))
                 .andExpect(header().string("X-Frame-Options", "DENY"));
+    }
+
+    /** 비밀번호가 틀리면 /login?error로 돌아와 안내를 보인다. 로그인 화면은 쿼리가 붙어도 로그인 없이 열려야 한다. */
+    @Test
+    void failedLoginShowsTheErrorOnTheLoginPage() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        String back = redirect(mvc.perform(login("198.51.100.50", "gaeun", "wrong password!").session(session)));
+        assertThat(back).isEqualTo("/login?error");
+        mvc.perform(get(back).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<p class=\"alert\" role=\"alert\">")));
     }
 
     // ----- 동의 화면 -----

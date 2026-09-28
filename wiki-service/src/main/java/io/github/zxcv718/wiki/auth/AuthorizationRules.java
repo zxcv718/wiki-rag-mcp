@@ -249,7 +249,11 @@ final class AuthorizationRules {
                         ? e.getAuthorizationCodeRequestAuthentication() : null;
         if (failed == null || !StringUtils.hasText(failed.getRedirectUri())
                 || (!preRegistered.test(failed.getClientId()) && !isLoggedIn(failed.getPrincipal()))) {
-            response.sendError(HttpStatus.BAD_REQUEST.value(), error.toString());
+            String code = StringUtils.hasText(error.getDescription())
+                    ? error.getErrorCode() + " (" + error.getDescription() + ")" : error.getErrorCode();
+            AuthHtml.sendError(response, HttpStatus.BAD_REQUEST, "앱의 연결 요청을 처리할 수 없습니다",
+                    "앱에서 연결을 처음부터 다시 시작하세요. 같은 화면이 계속 나오면 앱 제공자에게 아래 오류 코드를 알려 주세요.",
+                    code);
             return;
         }
         UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(failed.getRedirectUri())
