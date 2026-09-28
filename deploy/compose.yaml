@@ -15,9 +15,11 @@ x-search-env: &search-env
   REDIS_URL: redis://redis:6379/0
   WIKI_EVENT_PARTITIONS: "4"
 
+# 검색 이미지는 mcp만 빌드하고 나머지는 같은 이미지를 쓴다. 서비스마다 build를 주면 같은 이미지를 따로 빌드해
+# 풀어 놓느라 디스크를 두 배로 쓴다
 x-search-image: &search-image
-  build: ..
   image: wiki-rag-search
+  pull_policy: never
 
 services:
   caddy:
@@ -124,6 +126,7 @@ services:
   # MCP 서버 (Streamable HTTP). 토큰은 AUTH_DOMAIN의 인가 서버가 발급하고, 서명 공개 키는 컨테이너 사이에서 바로 읽는다
   mcp:
     <<: *search-image
+    build: ..
     restart: unless-stopped
     command: ["wiki-rag-mcp"]
     environment:

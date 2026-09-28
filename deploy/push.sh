@@ -31,5 +31,7 @@ git checkout -q --detach "$2"
 deploy/init-secrets.sh
 cd deploy
 docker compose up -d --build --remove-orphans
+# 새로 빌드해 이름이 넘어간 옛 이미지를 지운다. 20GB 디스크에서 배포할 때마다 쌓이지 않게 한다
+docker image prune -f >/dev/null
 docker compose ps
 EOF
