@@ -45,7 +45,6 @@ from wiki_rag_mcp.server.responses import (
 from wiki_rag_mcp.wiki.source import GroupLookupError, GroupSource, UnknownUserError, WikiSource, WikiUnavailableError
 
 MAX_TOP_K = 10
-SEARCH_CONNECTIONS = 4  # 검색 읽기에 쓰는 DB 연결 수 (experiments/m5-speedup "2차")
 MAX_QUERY_CHARS = 500
 MAX_CHANGES = 50
 
@@ -294,7 +293,7 @@ def open_services(settings: Settings) -> Services:
         groups = GroupCache(source, open_client(settings))
     embedder = Embedder(dtype=settings.query_dtype)
     embedder.warm_up()
-    return Services(settings, source, open_store(settings, readers=SEARCH_CONNECTIONS), QueryBatcher(embedder), groups)
+    return Services(settings, source, open_store(settings), QueryBatcher(embedder), groups)
 
 
 def http_options(settings: Settings) -> dict[str, Any]:

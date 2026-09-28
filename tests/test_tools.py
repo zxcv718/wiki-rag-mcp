@@ -184,7 +184,7 @@ def test_server_startup_wires_the_wiki_api_behind_the_group_cache(monkeypatch):
     from wiki_rag_mcp.wiki.http import HttpWikiSource
 
     monkeypatch.setattr(embedder, "Embedder", NoEmbedder)
-    monkeypatch.setattr(backend, "open_store", lambda settings, **_options: None)
+    monkeypatch.setattr(backend, "open_store", lambda settings: None)
     services = open_services(Settings(user="jiho"))
     assert isinstance(services.source, HttpWikiSource)
     assert isinstance(services.groups, GroupCache) and services.groups.source is services.source

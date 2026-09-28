@@ -105,20 +105,3 @@ def test_returns_k_results_even_when_nearest_chunks_are_forbidden():
         assert all(h["doc_id"].startswith("eng-") for h in hits)
     finally:
         s.drop()
-
-
-def test_reader_pool_applies_the_same_filter_under_concurrent_searches(store, permission_docs):
-    """검색 서버는 읽기 연결 풀로 검색한다. 여러 스레드가 동시에 검색해도 사용자마다 권한 필터 결과가 같아야 한다."""
-    from concurrent.futures import ThreadPoolExecutor
-
-    from tests.pg import new_store
-
-    pooled = new_store("pooled", DIM, readers=3)
-    try:
-        pooled.index_chunks(permission_docs)
-        users = [BOB, DANA, ERIN] * 10
-        with ThreadPoolExecutor(8) as pool:
-            got = list(pool.map(lambda p: visible(pooled, p), users))
-        assert got == [visible(store, p) for p in users]
-    finally:
-        pooled.drop()
