@@ -101,3 +101,5 @@
 ## 커밋 메시지
 
 Conventional Commits 형식에 한국어 제목을 씁니다(예: `fix(deploy): 검색 이미지를 한 번만 빌드`). type과 scope 목록, 본문과 꼬리말 규칙은 `.gitmessage`가 원본이고, 형식은 `.githooks/commit-msg`가 검사합니다. 새로 clone하면 `git config commit.template .gitmessage && git config core.hooksPath .githooks`로 켭니다.
+
+2026-09-28에 그 전 커밋 44개의 메시지를 이 형식으로 고쳤습니다(파일 내용은 그대로). 실험 기록(`experiments/*/runs/*.meta.json`)과 증빙에 적힌 옛 커밋 해시는 태그 `archive/pre-conventional-commits`에서 찾습니다.
