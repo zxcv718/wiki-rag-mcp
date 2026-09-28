@@ -1,0 +1,28 @@
+{
+ "config": "baseline",
+ "index": {
+  "alias": "wiki-chunks",
+  "with_header": true
+ },
+ "rerank": false,
+ "query_dtype": "float32",
+ "query_batch": 1,
+ "store": "PgStore",
+ "embedder": "BAAI/bge-m3",
+ "embedder_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+ "reranker": null,
+ "reranker_revision": null,
+ "device": "cpu",
+ "embedder_dtype": "float32",
+ "passes": 1,
+ "warmup": 10,
+ "questions": 300,
+ "git": "",
+ "machine": {
+  "cpu": "",
+  "cores": "",
+  "memory_gb": null,
+  "os": "Linux-7.0.0-1013-aws-x86_64-with-glibc2.41"
+ },
+ "at": "2026-09-28T12:21:18+00:00"
+}

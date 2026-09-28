@@ -1,0 +1,5 @@
+connect 0.014271 first_byte 0.049377
+connect 0.012128 first_byte 0.027904
+connect 0.009632 first_byte 0.025607
+connect 0.009317 first_byte 0.023147
+connect 0.008069 first_byte 0.021686
