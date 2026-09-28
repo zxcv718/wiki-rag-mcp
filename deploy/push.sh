@@ -26,12 +26,20 @@ ssh "${ssh_opts[@]}" "ubuntu@$host" bash -s -- "$(git remote get-url origin)" "$
 set -euo pipefail
 [ -d ~/wiki-rag-mcp ] || git clone -q "$1" ~/wiki-rag-mcp
 cd ~/wiki-rag-mcp
+before="$(git rev-parse -q --verify HEAD || true)"
 git fetch -q origin
 git checkout -q --detach "$2"
 deploy/init-secrets.sh
 cd deploy
 docker compose up -d --build --remove-orphans
-# 새로 빌드해 이름이 넘어간 옛 이미지를 지운다. 20GB 디스크에서 배포할 때마다 쌓이지 않게 한다
+# Caddyfile은 파일 하나를 bind mount한다. git은 파일을 새로 만들어 바꾸므로 컨테이너는 옛 파일(inode)을 계속 보고,
+# compose는 내용이 바뀐 줄 모른다. 바뀐 배포에서만 재시작해 새 파일을 잡게 한다(1~2초 끊김, docs/troubleshooting.md)
+if [ -n "$before" ] && ! git diff --quiet "$before" HEAD -- Caddyfile; then
+  docker compose restart caddy
+fi
+# 새로 빌드해 이름이 넘어간 옛 이미지와, 어느 이미지도 쓰지 않는 빌드 캐시를 지운다. 20GB 디스크에서 배포할 때마다
+# 쌓이지 않게 한다. 의존성이 바뀌면 옛 의존성 층이 캐시에 5.6GB 남는다(docs/troubleshooting.md 3번)
 docker image prune -f >/dev/null
+docker builder prune -f >/dev/null
 docker compose ps
 EOF

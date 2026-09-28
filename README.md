@@ -141,6 +141,6 @@ ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
 
 ### 관련 문서
 
-- [트러블슈팅 보고서](docs/troubleshooting.md): CLI가 루트로 로그인된 건, 노트북에서만 80번이 가끔 끊긴 건, 같은 커밋을 다시 배포하다 디스크가 가득 찬 건(M5)
+- [트러블슈팅 보고서](docs/troubleshooting.md): CLI가 루트로 로그인된 건, 노트북에서만 80번이 가끔 끊긴 건, 같은 커밋을 다시 배포하다 디스크가 가득 찬 건(M5), Caddyfile을 고쳐 배포했는데 Caddy가 옛 설정으로 돈 건(M5)
 - [리소스 정리 체크리스트](docs/cleanup-checklist.md): 정리 순서와 이유, 남은 자원 확인 스크립트(`infra/check-leftovers.sh`)
 - [ADR-23](docs/adr/ADR-23.md): 배포처와 Terraform을 고른 이유

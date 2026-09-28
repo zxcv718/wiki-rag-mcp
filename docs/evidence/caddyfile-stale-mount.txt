@@ -1,0 +1,30 @@
+# 사례 4: Caddyfile을 고쳐 배포했는데 Caddy가 옛 설정으로 돎 (2026-09-28, 서버 ~/wiki-rag-mcp/deploy)
+
+## 배포 직후 (커밋 5a649f2)
+$ docker compose ps caddy
+deploy-caddy-1   caddy:2.11.4-alpine   ...   3 hours ago   Up 3 hours
+
+$ grep -c "header_up -traceparent" Caddyfile                                  # 호스트(서버 저장소)
+1
+$ docker compose exec -T caddy grep -c "header_up -traceparent" /etc/caddy/Caddyfile   # 컨테이너 안
+0
+$ stat -c "%i" Caddyfile; docker compose exec -T caddy stat -c "%i" /etc/caddy/Caddyfile
+358755
+304203
+
+## 왜 지금까지 드러나지 않았나
+$ git log --format='%h %ad %s' -- deploy/Caddyfile
+9551e63 2026-09-28 19:24:42 +0900 feat(deploy): Prometheus, Tempo, Grafana를 서버에 함께 띄우기
+5f68637 2026-09-28 16:00:30 +0900 feat(deploy): 배포 서버에 전체 구성 올리기 (위키, 인가 서버, 검색 서버, 인덱서)
+cec9497 2026-09-28 13:53:48 +0900 feat(infra): AWS 인프라(Terraform)와 Caddy 배포 설정 추가
+$ docker inspect deploy-caddy-1 --format "created {{.Created}}"
+created 2026-09-28T07:43:52Z        # 16:43 KST. 5f68637을 배포하며 처음 만든 컨테이너이고, 그 뒤 Caddyfile은 9551e63까지 바뀌지 않았다
+
+## 조치 뒤
+$ docker compose restart caddy
+$ docker compose exec -T caddy grep -c "header_up -traceparent" /etc/caddy/Caddyfile
+1
+$ curl -s -o /dev/null -w "%{http_code} %{url}\n" <주소>
+200 https://mcp.dmssh.store/health
+200 https://auth.dmssh.store/.well-known/oauth-authorization-server
+200 https://mcp.dmssh.store/.well-known/oauth-protected-resource/mcp
