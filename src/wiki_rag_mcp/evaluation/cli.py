@@ -50,7 +50,10 @@ def main(argv: list[str] | None = None) -> None:
     judge_p.add_argument("base")
     judge_p.add_argument("candidate")
     judge_p.add_argument("--metric", default="recall@5", choices=["recall@5", "mrr@10", "ndcg@10"])
-    judge_p.add_argument("--threshold", type=float, required=True)
+    judge_bound = judge_p.add_mutually_exclusive_group(required=True)
+    judge_bound.add_argument("--threshold", type=float, help="개선 채택 기준값 (ADR-20)")
+    judge_bound.add_argument("--margin", type=float, help="나빠지지 않았는가를 볼 때 허용 폭 (experiments/m5-speedup)")
+    judge_p.add_argument("--runs", type=Path, default=RUNS)
     regress_p = sub.add_parser("regress")
     regress_p.add_argument("--golden", type=Path, default=GOLDEN)
     regress_p.add_argument("--baseline", type=Path, default=BASELINE)
@@ -69,7 +72,7 @@ def main(argv: list[str] | None = None) -> None:
         config = CONFIGS[args.name]
         settings = Settings.from_env()
         golden = [json.loads(line) for line in args.golden.read_text(encoding="utf-8").splitlines()]
-        embedder = Embedder(device="cpu")  # 배포 서버처럼 CPU에서 질문을 임베딩한다
+        embedder = Embedder(device="cpu", dtype=config.query_dtype)  # 배포 서버처럼 CPU에서 질문을 임베딩한다
         reranker = None
         if config.rerank:
             from wiki_rag_mcp.search.reranker import Reranker
@@ -93,13 +96,16 @@ def main(argv: list[str] | None = None) -> None:
         if not check(args.golden, args.baseline, args.cache, args.out):
             raise SystemExit(1)
     else:
-        from wiki_rag_mcp.evaluation.judge import verdict
+        from wiki_rag_mcp.evaluation.judge import non_inferior, verdict
         from wiki_rag_mcp.evaluation.report import load_run, paired
 
-        c = paired(load_run(RUNS / f"{args.base}.jsonl"), load_run(RUNS / f"{args.candidate}.jsonl"), args.metric)
+        runs = args.runs
+        c = paired(load_run(runs / f"{args.base}.jsonl"), load_run(runs / f"{args.candidate}.jsonl"), args.metric)
+        rule = (f"기준값 {args.threshold:+.3f} -> {verdict(c, args.threshold)}" if args.threshold is not None
+                else f"허용 폭 {args.margin:.3f} -> {non_inferior(c, args.margin)}")
         print(f"{args.metric}: {args.base} {c.base:.3f}, {args.candidate} {c.candidate:.3f}, "
               f"차이 {c.diff:+.3f} (95% 신뢰구간 {c.low:+.3f} ~ {c.high:+.3f}), 문항 {c.n}개, "
-              f"결과가 다른 문항 {c.discordant:.1%}, 기준값 {args.threshold:+.3f} -> {verdict(c, args.threshold)}")
+              f"결과가 다른 문항 {c.discordant:.1%}, {rule}")
 
 
 if __name__ == "__main__":

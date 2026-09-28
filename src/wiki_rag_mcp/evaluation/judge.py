@@ -43,3 +43,9 @@ def verdict(c: Comparison, threshold: float) -> str:
     if c.high < threshold:
         return "기각"
     return "보류"
+
+
+def non_inferior(c: Comparison, margin: float) -> str:
+    """나빠지지 않았는가 (experiments/m5-speedup, bf16 재판정). 속도를 얻는 변경은 개선을 채택하는 규칙 대신, 차이의
+    95% 신뢰구간 하한이 -margin 이상이면 같은 품질로 본다. 증거가 부족하면 바꾸지 않는다."""
+    return "같음" if c.low >= -margin else "나빠졌을 수 있음"

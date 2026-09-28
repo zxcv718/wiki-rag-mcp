@@ -2,7 +2,7 @@
 
 import pytest
 
-from wiki_rag_mcp.evaluation.judge import compare, verdict
+from wiki_rag_mcp.evaluation.judge import compare, non_inferior, verdict
 from wiki_rag_mcp.evaluation.metrics import mrr_at, ndcg_at, recall_at
 
 
@@ -38,3 +38,13 @@ def test_verdict_rules_follow_adr20():
     noisy = compare([1.0, 0.0] * 135, [1.0, 0.0] * 130 + [1.0, 1.0] * 5)
     assert verdict(noisy, 0.02) == "보류"
 
+
+def test_non_inferiority_needs_the_lower_bound_within_the_margin():
+    same = compare([1.0, 0.0] * 135, [1.0, 0.0] * 135)
+    assert non_inferior(same, 0.02) == "같음"
+    # 270문항 중 12문항을 새로 놓침: 차이 -4.4%p, 신뢰구간 하한이 -2%p보다 낮다
+    worse = compare([1.0] * 270, [1.0] * 258 + [0.0] * 12)
+    assert worse.low < -0.02 and non_inferior(worse, 0.02) == "나빠졌을 수 있음"
+    # 한 문항만 달라져도 하한이 허용 폭 안이면 같다고 본다
+    one = compare([1.0] * 270, [1.0] * 269 + [0.0])
+    assert one.low >= -0.02 and non_inferior(one, 0.02) == "같음"

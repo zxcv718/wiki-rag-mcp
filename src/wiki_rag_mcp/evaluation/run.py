@@ -43,12 +43,17 @@ INDEXES = {
 class Config:
     index: str
     rerank: bool = False
+    query_dtype: str = "float32"  # 쿼리 인코딩 형식. 문서 벡터는 인덱스에 든 그대로다
+    query_batch: int = 1  # 1보다 크면 골든셋 질문을 이만큼씩 묶어 미리 인코딩한다 (묶음 처리를 켠 서버가 몰릴 때)
 
 
 CONFIGS = {
     "baseline": Config("main"),
     "no-header": Config("noheader"),
     "vector-rerank": Config("main", rerank=True),
+    # ADR-11 재판정 (experiments/m5-speedup): 쿼리만 bf16, 하나씩과 16개씩 묶어
+    "query-bf16": Config("main", query_dtype="bfloat16"),
+    "query-bf16-batch16": Config("main", query_dtype="bfloat16", query_batch=16),
 }
 
 
@@ -84,10 +89,12 @@ class Runner:
     def principals(self, user: str) -> list[str]:
         return [f"user:{user}", *self.source.groups_of(user)]
 
-    def search(self, question: str, user: str) -> tuple[list[dict[str, Any]], dict[str, float]]:
+    def search(self, question: str, user: str,
+               vector: list[float] | None = None) -> tuple[list[dict[str, Any]], dict[str, float]]:
         principals = self.principals(user)
         started = time.perf_counter()
-        vector = self.embedder.encode_query(question)
+        if vector is None:
+            vector = self.embedder.encode_query(question)
         embedded = time.perf_counter()
         depth = CANDIDATES if self.config.rerank else TOP
         hits = self.store.knn_search(vector, principals, depth)
@@ -105,12 +112,17 @@ def run(name: str, runner: Runner, golden: list[dict[str, Any]], out_dir: Path) 
     passes = RERANK_PASSES if runner.config.rerank else 1
     for q in golden[:WARMUP]:
         runner.search(q["question"], q["asker"])
+    vectors: list[Any] = [None] * len(golden)
+    if (size := runner.config.query_batch) > 1:  # 묶어 만든 벡터로 검색한다. 이때 embed_ms는 0에 가깝다
+        questions = [q["question"] for q in golden]
+        vectors = [v.tolist() for i in range(0, len(questions), size)
+                   for v in runner.embedder.encode_queries(questions[i:i + size])]
     rows = []
     for n in range(passes):
         for i, q in enumerate(golden):
             if i % 50 == 0:
                 print(f"  {n + 1}/{passes}회차 {i}/{len(golden)}문항", file=sys.stderr, flush=True)
-            hits, timings = runner.search(q["question"], q["asker"])
+            hits, timings = runner.search(q["question"], q["asker"], vectors[i])
             if n == 0:
                 rows.append({"id": q["id"], "type": q["type"], "relevant": q["relevant"],
                              "results": [{"chunk_id": h["chunk_id"], "doc_id": h["doc_id"], "score": h["score"]}
@@ -126,7 +138,8 @@ def run(name: str, runner: Runner, golden: list[dict[str, Any]], out_dir: Path) 
             "embedder_revision": getattr(runner.embedder, "revision", ""),
             "reranker": getattr(runner.reranker, "model_name", None),
             "reranker_revision": getattr(runner.reranker, "revision", None),
-            "device": getattr(runner.embedder, "device", "api"), "passes": passes, "warmup": WARMUP,
+            "device": getattr(runner.embedder, "device", "api"),
+            "embedder_dtype": getattr(runner.embedder, "dtype", None), "passes": passes, "warmup": WARMUP,
             "questions": len(golden), "git": git_head(), "machine": machine(),
             "at": datetime.now(UTC).isoformat(timespec="seconds")}
     (out_dir / f"{name}.meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
