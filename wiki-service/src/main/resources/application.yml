@@ -56,3 +56,30 @@ wiki:
   outbox:
     relay:
       enabled: true
+
+# 관측성 (ADR-15). 보낼 곳은 운영 설정(deploy/compose.yaml)의 환경 변수로 정한다.
+# 추적은 MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT(Tempo), 지표는 MANAGEMENT_OTLP_METRICS_EXPORT_URL(Prometheus)
+management:
+  tracing:
+    sampling:
+      # 기본값은 10%다. 요청이 적은 데모 서버라 모두 남기고, 부하 측정도 같은 조건에서 잰다
+      probability: 1.0
+    propagation:
+      # 기본값은 W3C와 B3를 모두 받는다. Caddy는 인터넷에서 온 traceparent를 지우는데, B3 헤더를 받으면 밖의
+      # 클라이언트가 "표본에서 빼라"는 표시로 로그인 시도 같은 요청을 추적에서 뺄 수 있다
+      type: w3c
+  otlp:
+    metrics:
+      export:
+        # 운영에서만 켠다(MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED). 보낼 곳이 없는 로컬 개발과 테스트에서 켜 두면 기본 주소
+        # (localhost:4318)로 보내려다 주기마다 연결 경고를 남긴다
+        enabled: false
+        step: 15s
+  observations:
+    enable:
+      # 아웃박스 폴러가 0.5초마다 도는 것이 추적 하나씩 되어 쌓이지 않게 한다. 폴러의 Redis 명령(XADD)도 요청 밖에서
+      # 돌아 부모 없는 추적이 되므로 함께 끈다. 이벤트 처리는 이벤트에 실은 traceparent로 편집 요청의 추적에 이어진다
+      tasks.scheduled: false
+      lettuce: false
+      # 보안 필터 체인의 단계마다 스팬이 붙어 요청 하나에 수십 개가 되고, 검색 경로의 스팬이 묻힌다
+      spring.security: false

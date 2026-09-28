@@ -28,6 +28,8 @@ uv run wiki-rag-seed                       # data/wiki의 가상 위키 200문�
 | `WIKI_AUTH_CLIENTS_{n}_ID`, `WIKI_AUTH_CLIENTS_{n}_REDIRECTURIS` | 없음 | 사전 등록 클라이언트의 id와 돌아갈 주소(쉼표로 구분). `n`은 0부터 차례로 붙인다 |
 | `WIKI_AUTH_CLIENTS_{n}_SECRETHASH` | 없음 | 있으면 기밀 클라이언트(`client_secret_basic`), 없으면 공개 클라이언트(`none`). 비밀의 bcrypt 해시만 넣고, 해시가 아닌 값이면 뜨지 않는다 |
 | `WIKI_AUTH_CLIENTS_{n}_TIER` | `external` | 토큰의 `client_tier`. `internal`은 기밀 클라이언트만 가질 수 있고, 공개 클라이언트를 `internal`로 두면 뜨지 않는다 |
+| `MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT` | 없음 (보내지 않음) | 추적을 OTLP로 보낼 곳(Tempo). 요청은 모두 추적한다(표본 비율 1.0) |
+| `MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED`, `MANAGEMENT_OTLP_METRICS_EXPORT_URL` | `false`, 없음 | 지표를 OTLP로 보낼지와 보낼 곳(Prometheus). 15초마다 보낸다 |
 
 토큰이 비어 있으면 서비스가 뜨지 않습니다. 인증 정보 없이 열린 상태로 뜨는 것보다 실패하는 편이 안전하기 때문입니다. 두 토큰이 같아도 뜨지 않습니다. 검색 서버가 가진 서비스 토큰으로 문서를 고칠 수 있게 되기 때문입니다.
 
@@ -255,11 +257,12 @@ MCP 서버는 서명, `iss`, `aud`(자기 주소), `exp`, `scope`를 모두 검�
 
 | 스트림 | 필드 | 설명 |
 |---|---|---|
-| `wiki:events:{p}` | `doc_id`, `revision`, `type`(`CONTENT_CHANGED`, `ACL_CHANGED`, `DELETED`), `outbox_id`, `created_at` | 문서 이벤트. `p = CRC32(doc_id의 UTF-8 바이트) mod WIKI_EVENT_PARTITIONS` |
-| `wiki:membership` | `user_id`, `type`(`MEMBERSHIP_CHANGED`), `outbox_id`, `created_at` | 그룹 캐시 무효화용. 인덱서 워커가 문서 이벤트보다 먼저 읽어 검색 서버의 그룹 캐시를 무효화하고, 처리한 이벤트는 `XACKDEL ... ACKED`로 지운다 |
+| `wiki:events:{p}` | `doc_id`, `revision`, `type`(`CONTENT_CHANGED`, `ACL_CHANGED`, `DELETED`), `outbox_id`, `created_at`, `traceparent`(있을 때만) | 문서 이벤트. `p = CRC32(doc_id의 UTF-8 바이트) mod WIKI_EVENT_PARTITIONS` |
+| `wiki:membership` | `user_id`, `type`(`MEMBERSHIP_CHANGED`), `outbox_id`, `created_at`, `traceparent`(있을 때만) | 그룹 캐시 무효화용. 인덱서 워커가 문서 이벤트보다 먼저 읽어 검색 서버의 그룹 캐시를 무효화하고, 처리한 이벤트는 `XACKDEL ... ACKED`로 지운다 |
 
 - 이벤트 형식은 ADR-09의 `(doc_id, version, type)`이고, version 자리에 revision을 담습니다(ADR-19). 필드 이름은 헷갈리지 않게 `revision`으로 씁니다.
 - `created_at`은 아웃박스 행을 쓴 시각입니다. 인덱싱 지연(5장 "측정 지표")을 여기서부터 잽니다.
+- `traceparent`는 변경을 일으킨 요청의 추적 맥락입니다([W3C Trace Context](https://www.w3.org/TR/trace-context/) 형식, ADR-15). 아웃박스 행을 쓸 때 함께 적어 둡니다. 폴러는 나중에 다른 스레드에서 발행하므로 발행할 때는 요청의 맥락이 없기 때문입니다. 인덱서는 이 값을 부모로 처리 스팬을 열어, 편집부터 검색 반영까지를 한 추적으로 봅니다. 요청 밖의 변경(추적 중이 아닐 때)에는 넣지 않습니다. 없거나 형식이 틀려도 처리는 같고 추적만 새로 시작합니다.
 - 문서 id로 스트림을 나누는 이유는 같은 문서의 이벤트를 소비자 하나가 차례로 처리하게 하기 위해서입니다(ADR-19). 파티션 계산은 Python 쪽(`zlib.crc32`)과 같아야 하므로 양쪽 테스트에 같은 값을 둡니다. `co-001`은 1, `eng-022`는 1, `infra-011`은 3, `hr-007`은 0, `fin-011`은 0, `data-003`은 1입니다(파티션 4개).
 - 폴러는 스트림 길이를 자르지 않습니다. 인덱서가 처리를 마친 이벤트를 `XACKDEL ... ACKED`로 확인과 동시에 지워, 스트림에는 처리 안 된 이벤트만 남습니다. 발행 시점에 길이로 자르면 인덱서가 멈춘 동안 쌓인 이벤트가 처리 전에 지워질 수 있습니다.
 - 발행한 아웃박스 행은 7일 뒤 지웁니다. 발행 기록을 며칠 남겨 두면 장애를 조사할 때 "위키가 이벤트를 냈는가"를 확인할 수 있습니다.

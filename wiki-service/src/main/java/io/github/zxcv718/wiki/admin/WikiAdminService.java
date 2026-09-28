@@ -22,6 +22,7 @@ import io.github.zxcv718.wiki.domain.UserRepository;
 import io.github.zxcv718.wiki.outbox.OutboxEvent;
 import io.github.zxcv718.wiki.outbox.OutboxEvent.EventType;
 import io.github.zxcv718.wiki.outbox.OutboxRepository;
+import io.github.zxcv718.wiki.outbox.TraceParent;
 import io.github.zxcv718.wiki.web.ApiException;
 import io.github.zxcv718.wiki.web.DocumentState;
 import io.github.zxcv718.wiki.web.DocumentTombstone;
@@ -50,11 +51,12 @@ public class WikiAdminService {
     private final OutboxRepository outbox;
     private final WikiProperties properties;
     private final PasswordEncoder passwordEncoder;
+    private final TraceParent traceParent;
     private final Clock clock;
 
     public WikiAdminService(SpaceRepository spaces, GroupRepository groups, UserRepository users,
                             DocumentRepository documents, OutboxRepository outbox, WikiProperties properties,
-                            PasswordEncoder passwordEncoder, Clock clock) {
+                            PasswordEncoder passwordEncoder, TraceParent traceParent, Clock clock) {
         this.spaces = spaces;
         this.groups = groups;
         this.users = users;
@@ -62,6 +64,7 @@ public class WikiAdminService {
         this.outbox = outbox;
         this.properties = properties;
         this.passwordEncoder = passwordEncoder;
+        this.traceParent = traceParent;
         this.clock = clock;
     }
 
@@ -194,7 +197,7 @@ public class WikiAdminService {
         requireGroup(groupId);
         User user = lockUser(userId);
         if (user.joinGroup(groupId)) {
-            outbox.save(OutboxEvent.membershipChanged(userId, clock.instant()));
+            outbox.save(OutboxEvent.membershipChanged(userId, clock.instant(), traceParent.current()));
         }
         return UserState.of(user);
     }
@@ -203,13 +206,13 @@ public class WikiAdminService {
         requireGroup(groupId);
         User user = lockUser(userId);
         if (user.leaveGroup(groupId)) {
-            outbox.save(OutboxEvent.membershipChanged(userId, clock.instant()));
+            outbox.save(OutboxEvent.membershipChanged(userId, clock.instant(), traceParent.current()));
         }
         return UserState.of(user);
     }
 
     private void recordEvent(Document document, EventType type) {
-        outbox.save(OutboxEvent.forDocument(document, type, clock.instant()));
+        outbox.save(OutboxEvent.forDocument(document, type, clock.instant(), traceParent.current()));
     }
 
     /** 삭제된 문서는 고칠 수 없는 문서로 본다. 이미 삭제된 문서를 다시 삭제해도 404다. */

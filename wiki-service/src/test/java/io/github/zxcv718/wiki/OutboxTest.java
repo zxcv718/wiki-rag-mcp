@@ -83,7 +83,8 @@ class OutboxTest extends IntegrationTest {
                 .filter(fields -> "infra-011".equals(fields.get("doc_id")))
                 .findFirst()
                 .orElseThrow();
-        assertThat(infra011).containsOnlyKeys("doc_id", "revision", "type", "outbox_id", "created_at");
+        // 가져오기 요청의 추적이 함께 실린다 (eventsCarryTheTraceOfTheRequestThatCausedThem)
+        assertThat(infra011).containsOnlyKeys("doc_id", "revision", "type", "outbox_id", "created_at", "traceparent");
         assertThat(infra011.get("revision")).isEqualTo("5");
         assertThat(infra011.get("type")).isEqualTo("CONTENT_CHANGED");
         assertThat(infra011.get("outbox_id")).isEqualTo("4");
@@ -130,10 +131,47 @@ class OutboxTest extends IntegrationTest {
         List<MapRecord<String, Object, Object>> records = stream("wiki:membership");
         assertThat(records).hasSize(1);
         assertThat(records.getFirst().getValue())
-                .containsOnlyKeys("user_id", "type", "outbox_id", "created_at")
+                .containsOnlyKeys("user_id", "type", "outbox_id", "created_at", "traceparent")
                 .containsEntry("user_id", "seoyeon")
                 .containsEntry("type", "MEMBERSHIP_CHANGED")
                 .containsEntry("outbox_id", String.valueOf(FIXTURE_DOCUMENTS + 1));
+    }
+
+    /**
+     * 변경을 일으킨 요청의 추적이 이벤트에 실려, 인덱서의 처리 스팬이 같은 추적에 이어진다 (ADR-15). 추적 id는 요청에
+     * 들어온 traceparent의 것이고, 부모 스팬은 위키가 그 요청을 처리한 스팬이다. 요청 밖의 변경에는 싣지 않는다.
+     */
+    @Test
+    void eventsCarryTheTraceOfTheRequestThatCausedThem() throws Exception {
+        relay.publishPending();
+        String traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+        asAdmin(put("/admin/groups/dba/members/seoyeon").header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
+                .andExpect(status().isOk());
+        admin.removeMember("dba", "seoyeon");
+        relay.publishPending();
+
+        List<Map<Object, Object>> events = stream("wiki:membership").stream().map(MapRecord::getValue).toList();
+        assertThat(events).hasSize(2);
+        assertThat((String) events.get(0).get("traceparent")).matches("00-" + traceId + "-[0-9a-f]{16}-01")
+                .doesNotContain("00f067aa0ba902b7");
+        assertThat(events.get(1)).doesNotContainKey("traceparent");
+    }
+
+    /**
+     * 추적 맥락은 W3C traceparent로만 받는다. Caddy가 인터넷에서 온 traceparent를 지워도 B3 헤더를 받으면, 밖의 클라이언트가
+     * "표본에서 빼라"는 표시로 로그인 시도 같은 요청을 추적에서 뺄 수 있다.
+     */
+    @Test
+    void b3HeadersDoNotSteerTheTrace() throws Exception {
+        relay.publishPending();
+        String traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+        asAdmin(put("/admin/groups/dba/members/seoyeon").header("b3", traceId + "-00f067aa0ba902b7-0"))
+                .andExpect(status().isOk());
+        relay.publishPending();
+
+        // 새로 시작한 추적이고 표본에 들어 있다. 새 추적 id에는 "무작위 id" 표시(0x02)가 함께 붙어 03이 된다
+        String traceParent = (String) stream("wiki:membership").getFirst().getValue().get("traceparent");
+        assertThat(traceParent).matches("00-[0-9a-f]{32}-[0-9a-f]{16}-0[13]").doesNotContain(traceId);
     }
 
     /** 두 요청이 같은 문서를 동시에 고쳐도 행 잠금으로 차례가 정해져 revision이 겹치지 않는다. */

@@ -86,6 +86,9 @@ public class OutboxRelay {
         fields.put("type", event.getEventType().name());
         fields.put("outbox_id", String.valueOf(event.getId()));
         fields.put("created_at", event.getCreatedAt().toString());
+        if (event.getTraceParent() != null) {
+            fields.put("traceparent", event.getTraceParent());
+        }
         return StreamRecords.newRecord().in(stream).ofMap(fields);
     }
 }
