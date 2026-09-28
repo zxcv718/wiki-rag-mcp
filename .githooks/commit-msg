@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# 커밋 메시지 형식 검사. 형식은 .gitmessage에 있다. 켜기: git config core.hooksPath .githooks
+set -euo pipefail
+
+message="$1"
+subject="$(grep -v '^#' "$message" | sed '/^[[:space:]]*$/d' | head -n 1 || true)"
+types='feat|fix|docs|test|refactor|perf|build|ci|chore|revert'
+
+# git merge와 git revert가 만드는 기본 제목은 그대로 받는다
+if ! printf '%s\n' "$subject" | grep -Eq "^(($types)(\([a-z0-9-]+\))?!?: .+|Merge .+|Revert .+)$"; then
+  echo "커밋 제목은 type(scope): 제목 형식이어야 합니다 (.gitmessage 참고)." >&2
+  echo "  받은 제목: $subject" >&2
+  exit 1
+fi
+
+if grep -Eiq '^co-authored-by:.*(claude|anthropic)|generated with \[?claude' "$message"; then
+  echo "커밋 메시지의 꼬리말에는 Refs와 BREAKING CHANGE만 씁니다. Claude 표기를 지워 주세요." >&2
+  exit 1
+fi

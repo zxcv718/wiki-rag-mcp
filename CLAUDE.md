@@ -97,3 +97,7 @@
 - 원본은 `docs/design.md`의 ADR 절입니다. 설계서를 고친 뒤 `python3 scripts/adr_sync.py`로 파일과 목록을 다시 만들고, ADR 파일을 직접 고치지 않습니다.
 - 결정이 바뀌면 기존 파일을 지우지 않습니다. 상태를 `대체됨`으로 바꾸고 새 ADR을 추가합니다.
 - "실험으로 검증" 상태인 ADR은 판정 기준이 이미 정해져 있습니다. 결과를 본 뒤 기준을 바꾸지 않습니다. 판정 방법(부트스트랩 신뢰구간, 보류일 때의 선택)은 ADR-20을 따릅니다. M2에서 ADR-02·11·12·13을 모두 판정했습니다.
+
+## 커밋 메시지
+
+Conventional Commits 형식에 한국어 제목을 씁니다(예: `fix(deploy): 검색 이미지를 한 번만 빌드`). type과 scope 목록, 본문과 꼬리말 규칙은 `.gitmessage`가 원본이고, 형식은 `.githooks/commit-msg`가 검사합니다. 새로 clone하면 `git config commit.template .gitmessage && git config core.hooksPath .githooks`로 켭니다.
