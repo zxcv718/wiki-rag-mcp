@@ -53,6 +53,10 @@ class Settings:
     # 인덱싱 이벤트 (ADR-09). 파티션 수는 위키 서비스의 WIKI_EVENT_PARTITIONS와 같아야 한다
     redis_url: str = "redis://127.0.0.1:6380/0"
     event_partitions: int = 4
+    # 검색 서버가 쿼리를 인코딩하는 형식 (ADR-11 재판정, experiments/m5-speedup). 문서 벡터는 늘 EMBEDDING_DTYPE이다.
+    # bf16은 골든셋 결과가 float32와 같았고, AMX가 있는 배포 서버(Xeon 8488C)에서 쿼리 하나가 250ms에서 101ms로
+    # 줄었다. bf16을 하드웨어로 계산하지 못하는 장비(M1 GPU)에서는 오히려 느려져서 배포 설정에서만 켠다
+    query_dtype: str = EMBEDDING_DTYPE
 
     def __post_init__(self):
         # 오타가 난 값을 조용히 기본값으로 읽으면 어느 위키로 권한을 판단하는지 모르게 된다
@@ -61,6 +65,8 @@ class Settings:
         # 로컬 개발용 토큰은 저장소에 공개돼 있다. 로컬이 아닌 위키에 그대로 붙으면 누구나 아는 토큰으로 인증하는 셈이다
         if urlsplit(self.wiki_api_url).hostname not in _LOCAL_HOSTS and self.wiki_service_token == _DEV_SERVICE_TOKEN:
             raise ValueError("로컬이 아닌 위키에는 WIKI_SERVICE_TOKEN을 따로 지정해야 한다")
+        if self.query_dtype not in ("float32", "bfloat16"):
+            raise ValueError(f"WIKI_QUERY_DTYPE는 float32나 bfloat16이어야 한다: {self.query_dtype!r}")
         if self.transport not in ("stdio", "http"):
             raise ValueError(f"WIKI_MCP_TRANSPORT는 stdio나 http여야 한다: {self.transport!r}")
         if self.transport == "http":
@@ -98,4 +104,5 @@ class Settings:
             demo_password=os.environ.get("WIKI_DEMO_PASSWORD") or None,
             redis_url=os.environ.get("REDIS_URL", cls.redis_url),
             event_partitions=int(os.environ.get("WIKI_EVENT_PARTITIONS", cls.event_partitions)),
+            query_dtype=os.environ.get("WIKI_QUERY_DTYPE", cls.query_dtype),
         )

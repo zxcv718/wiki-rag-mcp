@@ -291,7 +291,7 @@ def open_services(settings: Settings) -> Services:
 
         source = HttpWikiSource(settings.wiki_api_url, settings.wiki_service_token)
         groups = GroupCache(source, open_client(settings))
-    embedder = Embedder()
+    embedder = Embedder(dtype=settings.query_dtype)
     embedder.warm_up()
     return Services(settings, source, open_store(settings), QueryBatcher(embedder), groups)
 

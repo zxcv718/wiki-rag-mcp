@@ -152,6 +152,8 @@ services:
       WIKI_MCP_RESOURCE_URL: https://${DOMAIN}/mcp
       WIKI_AUTH_ISSUER: https://${AUTH_DOMAIN}
       WIKI_AUTH_JWKS_URL: http://wiki:8081/oauth2/jwks
+      # 쿼리만 bf16으로 인코딩한다. 서버 CPU의 AMX로 2.5배 빨라지고 검색 결과는 같다 (ADR-11, experiments/m5-speedup)
+      WIKI_QUERY_DTYPE: bfloat16
     depends_on:
       postgres:
         condition: service_healthy

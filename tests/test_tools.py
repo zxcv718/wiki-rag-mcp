@@ -22,6 +22,9 @@ FIXTURE = Path(__file__).parent / "fixtures" / "wiki"
 
 
 class NoEmbedder:
+    def __init__(self, **_options):  # open_services가 Embedder(dtype=...)로 만든다
+        pass
+
     def warm_up(self):
         pass
 
