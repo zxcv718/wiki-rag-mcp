@@ -1,0 +1,14 @@
+# 서버 안 확인 (2026-09-28 13:19 KST, ssh ubuntu@52.78.251.4)
+
+$ docker ps
+IMAGE                 STATUS          PORTS
+caddy:2.11.4-alpine   Up 17 minutes   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 443/udp, 2019/tcp
+
+$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost
+200
+
+$ curl -s http://localhost/health
+OK
+
+$ curl -s -o /dev/null -w "%{http_code}\n" https://example.com   # 인터넷으로 나가기
+200

@@ -1,0 +1,27 @@
+# 외부 접속 확인 (2026-09-28 13:19 KST, 이 맥에서)
+
+$ curl -i http://52.78.251.4/health
+HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+Server: Caddy
+Date: Mon, 28 Sep 2026 04:19:41 GMT
+Content-Length: 2
+
+OK
+
+$ curl -i https://mcp.dmssh.store/health
+HTTP/2 200 
+alt-svc: h3=":443"; ma=2592000
+content-type: text/plain; charset=utf-8
+server: Caddy
+content-length: 2
+date: Mon, 28 Sep 2026 04:19:41 GMT
+
+OK
+
+도메인으로 온 HTTP(80) 요청이 HTTPS로 넘어가는지는 이 맥의 80번 연결이 가끔 끊기는 문제(docs/evidence/port80-intermittent.txt) 때문에
+해외 점검 노드에서 확인했다 (check-host.net 요청 4dd919f4k3e3, GET http://mcp.dmssh.store/health):
+  fr2: Permanent Redirect 308
+  jp1: Permanent Redirect 308
+  se2: Permanent Redirect 308
+  us5: Permanent Redirect 308

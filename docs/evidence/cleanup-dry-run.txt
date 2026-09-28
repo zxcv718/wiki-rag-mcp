@@ -1,0 +1,34 @@
+# 정리 권한 모의 실행 (2026-09-28 13:26 KST, 프로필 wiki-rag, 모든 호출에 --dry-run)
+# --dry-run은 자원을 바꾸지 않고 권한만 판정한다. DryRunOperation이면 허용, UnauthorizedOperation이면 거부.
+
+## 이 프로젝트 자원 (project=wiki-rag-mcp 태그): terraform destroy가 부르는 삭제 호출
+허용  disassociate-address           eipalloc-0c18065934a830a35
+허용  release-address                eipalloc-0c18065934a830a35
+허용  terminate-instances            i-01edbaf39408d24ef (루트 볼륨 vol-0c3df9448c49869d0은 DeleteOnTermination=true)
+허용  revoke-security-group-ingress  sg-0ab61932333ffdfc3
+허용  delete-security-group          sg-0ab61932333ffdfc3
+허용  disassociate-route-table       rtb-031342c5cabae623b
+허용  delete-route-table             rtb-031342c5cabae623b
+허용  detach-internet-gateway        igw-023e2ba76f935ad15
+허용  delete-internet-gateway        igw-023e2ba76f935ad15
+허용  delete-subnet                  subnet-05d8c7e84536436cd
+허용  delete-vpc                     vpc-0b900133c37418e1b
+허용  delete-key-pair                wiki-rag-operator
+
+## 태그가 없는 자원: 서울 리전 기본 VPC (IsDefault=true, 태그 없음)
+$ aws ec2 delete-vpc --vpc-id vpc-016a4d779f86be2c9 --dry-run
+
+An error occurred (UnauthorizedOperation) when calling the DeleteVpc operation: You are not authorized to perform this operation. User: arn:aws:iam::488914879507:user/wiki-rag-deployer is not authorized to perform: ec2:DeleteVpc on resource: arn:aws:ec2:ap-northeast-2:488914879507:vpc/vpc-016a4d779f86be2c9 because no identity-based policy allows the ec2:DeleteVpc action. Encoded authorization failure message: (생략)
+
+## 정리 전 남은 자원 (infra/check-leftovers.sh)
+  1  EC2 (종료되지 않은 것)
+  1  EBS 볼륨 (프로젝트)
+  0  EBS 볼륨 (연결 안 됨, 전체)
+  1  Elastic IP (전체)
+  1  인터넷 게이트웨이
+  1  VPC
+  1  서브넷
+  1  라우팅 테이블
+  1  보안 그룹
+  1  키 페어
+  0  NAT 게이트웨이 (전체)

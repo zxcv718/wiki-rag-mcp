@@ -1,0 +1,10 @@
+# HTTPS 인증서 확인 (2026-09-28 13:36 KST, 이 맥에서)
+
+$ openssl s_client -connect mcp.dmssh.store:443 -servername mcp.dmssh.store | openssl x509 -noout -subject -issuer -dates
+subject=CN=mcp.dmssh.store
+issuer=C=US, O=Let's Encrypt, CN=YE1
+notBefore=Sep 28 03:06:48 2026 GMT
+notAfter=Dec 27 03:06:47 2026 GMT
+
+$ openssl s_client ... | grep -m1 "Verify return code"
+Verify return code: 0 (ok)
