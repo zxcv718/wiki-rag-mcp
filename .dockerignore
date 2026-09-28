@@ -1,0 +1,11 @@
+# 루트 Dockerfile은 필요한 경로만 COPY한다. 빌드 맥락으로 보내는 크기를 줄이고, 로컬 비밀이 맥락에 들어가지 않게 한다
+.git
+.venv
+.cache
+.env
+*_credentials.csv
+*.local.md
+infra
+experiments
+wiki-service
+deploy

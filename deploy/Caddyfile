@@ -1,11 +1,34 @@
-# 도메인으로 온 요청: Caddy가 Let's Encrypt 인증서를 받아 HTTPS로 응답하고, 같은 이름의 HTTP 요청은 HTTPS로 넘긴다
+# 도메인으로 온 요청은 Caddy가 Let's Encrypt 인증서를 받아 HTTPS로 응답하고, 같은 이름의 HTTP 요청은 HTTPS로 넘긴다.
+# 뒤로 넘길 때 X-Forwarded-For는 Caddy가 본 접속 주소로 새로 쓴다(클라이언트가 보낸 값은 믿지 않는 기본 동작).
+
+# MCP 서버. MCP 엔드포인트, 보호 리소스 메타데이터(RFC 9728), 상태 확인만 넘기고 나머지는 소개 페이지다
 {$DOMAIN} {
-	respond /health "OK" 200
-	root * /srv
-	file_server
+	@mcp path /mcp /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /health
+	handle @mcp {
+		reverse_proxy mcp:8000
+	}
+	handle {
+		root * /srv
+		file_server
+	}
 }
 
-# 도메인이 아닌 이름(공인 IP, localhost)으로 온 HTTP 요청
+# 인가 서버. 위키 서비스에서 인가 서버의 공개 경로만 넘긴다(AuthorizationServerConfig.PUBLIC_PATHS와 같은 목록).
+# 위키 API(/internal, /admin)는 인터넷에서 닿지 않는다
+{$AUTH_DOMAIN} {
+	@public {
+		method GET POST
+		path /.well-known/oauth-authorization-server /oauth2/authorize /oauth2/token /oauth2/jwks /login /oauth2/consent
+	}
+	handle @public {
+		reverse_proxy wiki:8081
+	}
+	handle {
+		respond 404
+	}
+}
+
+# 도메인이 아닌 이름(공인 IP, localhost)으로 온 HTTP 요청 (B3-1 검증: curl http://localhost, http://<공인 IP>/health)
 :80 {
 	respond /health "OK" 200
 	root * /srv

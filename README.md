@@ -100,13 +100,15 @@
 | 재시작 | `restart: unless-stopped` (서버를 다시 켜도 컨테이너가 다시 뜸) |
 | 정의 | [`deploy/compose.yaml`](deploy/compose.yaml) |
 
-실행 방식: 서버의 Docker는 첫 부팅 때 cloud-init이 설치합니다(`infra/cloud-init.yaml`). 노트북에서 아래를 실행하면 `deploy/`를 서버에 복사하고 `docker compose up -d`로 컨테이너를 띄웁니다.
+M5부터는 같은 compose에 위키 서비스(인가 서버 포함), 검색 서버, 인덱서 워커, DB 두 개, Redis가 함께 뜹니다. 밖으로 열린 포트는 여전히 Caddy의 80·443뿐이고, Caddy는 `mcp.dmssh.store`를 검색 서버로, `auth.dmssh.store`를 인가 서버의 공개 경로로만 넘깁니다.
+
+실행 방식: 서버의 Docker는 첫 부팅 때 cloud-init이 설치합니다(`infra/cloud-init.yaml`). 노트북에서 아래를 실행하면 서버가 공개 저장소에서 푸시된 커밋을 받아 이미지를 빌드하고 `docker compose up -d`로 컨테이너를 띄웁니다. 커밋한 파일만 서버로 가므로 노트북의 `.env`나 자격 증명 파일이 섞여 나가지 않습니다.
 
 ```bash
 deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
 ```
 
-서버에서 직접 띄울 때는 `deploy/.env`에 `DOMAIN=mcp.dmssh.store`를 적고 `cd ~/deploy && docker compose up -d`입니다. 인증서를 이름 있는 볼륨에 두는 이유는, 컨테이너를 다시 만들 때마다 새로 발급받으면 Let's Encrypt 발급 한도에 걸리기 때문입니다.
+서버의 비밀(DB 비밀번호, 서비스 토큰, 토큰 서명 키)은 `deploy/init-secrets.sh`가 서버에서 처음 한 번 만들고 저장소에는 없습니다. 인증서를 이름 있는 볼륨에 두는 이유는, 컨테이너를 다시 만들 때마다 새로 발급받으면 Let's Encrypt 발급 한도에 걸리기 때문입니다.
 
 | 서버 안: `docker ps`와 `curl http://localhost` | 외부: `/health` 호출 |
 |---|---|
@@ -119,7 +121,7 @@ deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
 1. 배포용 IAM 사용자로 로그인합니다. `aws sts get-caller-identity --profile wiki-rag`가 `user/wiki-rag-deployer`여야 합니다.
 2. `infra/terraform.tfvars.example`을 `infra/terraform.tfvars`로 복사하고 `ssh_cidr`에 내 IP(`/32`)를 넣습니다.
 3. `terraform -chdir=infra init && terraform -chdir=infra apply`로 자원을 만듭니다. 출력의 `public_ip`가 Elastic IP입니다.
-4. 도메인을 쓰면 DNS에 A 레코드를 넣고, 서버의 `~/deploy/.env`에 `DOMAIN`을 적습니다.
+4. DNS에 A 레코드(`mcp`, `auth`)를 넣고, 서버의 `~/wiki-rag-mcp/deploy/.env`에 `DOMAIN`과 `AUTH_DOMAIN`을 적습니다(`deploy/.env.example`).
 5. `deploy/push.sh <public_ip>`로 컨테이너를 띄웁니다.
 
 ### 관련 문서
