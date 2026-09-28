@@ -61,7 +61,7 @@
    AWS_PROFILE=wiki-rag infra/check-leftovers.sh
    ```
 
-5. 가비아 DNS에서 `mcp` A 레코드를 지운다. 반납한 Elastic IP는 다른 AWS 고객에게 다시 할당될 수 있어서, 레코드를 두면 `mcp.dmssh.store`가 남의 서버를 가리킨다. `www` CNAME(Vercel)은 이 과제와 무관하므로 그대로 둔다.
+5. 가비아 DNS에서 `mcp`와 `auth` A 레코드를 지운다. 반납한 Elastic IP는 다른 AWS 고객에게 다시 할당될 수 있어서, 레코드를 두면 `mcp.dmssh.store`와 `auth.dmssh.store`가 남의 서버를 가리킨다. `www` CNAME(Vercel)은 이 과제와 무관하므로 그대로 둔다.
 6. 루트 계정으로 결제 콘솔(Billing and Cost Management)에 들어가 서울 리전 EC2, EBS, 공인 IPv4 항목이 더 늘지 않는지 본다. 사용량은 몇 시간 늦게 반영되므로 다음 날 한 번 더 본다.
 
 ## 정리하지 않는 것
@@ -78,7 +78,7 @@
 
 ## 정리 실행 기록
 
-M5(부하 측정, 데모)에 같은 서버를 쓰므로 아직 지우지 않았다. 지운 뒤 아래를 채운다.
+과제 평가 항목에 "SSH로 접속 가능하고 웹 서버가 실행 중인가"가 있고 M5(부하 측정, 데모)에도 같은 서버를 쓰므로, 평가를 받은 뒤 맨 마지막에 지운다. 지운 뒤 아래를 채운다.
 
 | 항목 | 확인 방법 | 결과 |
 |---|---|---|
@@ -89,5 +89,5 @@ M5(부하 측정, 데모)에 같은 서버를 쓰므로 아직 지우지 않았�
 | Elastic IP 반납 | `check-leftovers.sh` Elastic IP 0 | 실행 전 |
 | 인터넷 게이트웨이 삭제 | `check-leftovers.sh` 0 | 실행 전 |
 | VPC, 서브넷, 라우팅 테이블, 보안 그룹 삭제 | `check-leftovers.sh` 모두 0 | 실행 전 |
-| DNS 레코드 삭제 | `dig +short A mcp.dmssh.store`가 빈 값 | 실행 전 |
+| DNS 레코드 삭제 | `dig +short A mcp.dmssh.store`와 `dig +short A auth.dmssh.store`가 빈 값 | 실행 전 |
 | 결제 콘솔 | 다음 날 서울 리전 과금 항목이 늘지 않음 (스크린샷) | 실행 전 |
