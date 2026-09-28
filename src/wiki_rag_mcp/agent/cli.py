@@ -1,7 +1,7 @@
 """wiki-rag-demo: 운영 검색 서버에 로그인해, 사내 위키를 근거로 답하는 데모 에이전트.
 
     uv run wiki-rag-demo "주말 온콜 수당 얼마야?"
-    uv run wiki-rag-demo            # 대화 모드. 빈 줄이나 Ctrl-D로 끝낸다
+    uv run wiki-rag-demo            # 대화 모드. "/새 대화"로 앞 대화를 지우고, 빈 줄이나 Ctrl-D로 끝낸다
 
 처음 도구를 부를 때 브라우저가 열리고, 위키 계정으로 로그인해 동의하면 이어서 답한다.
 """
@@ -67,6 +67,10 @@ async def _run(server: str, model: str, question: str | None) -> None:
                     break
                 if not line:
                     break
+                if line == "/새 대화":  # 앞 대화를 기억하면 같은 질문에 도구를 다시 부르지 않을 수 있다
+                    history = None
+                    print("새 대화를 시작합니다.\n")
+                    continue
                 reply = await agent.ask(line, history)
                 show_reply(reply)
                 history = reply.messages
