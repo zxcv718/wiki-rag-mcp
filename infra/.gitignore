@@ -1,0 +1,7 @@
+# 상태 파일에는 자원 id와 공인 IP가 들어 있다. 이 프로젝트는 한 사람이 한 곳에서 돌려 로컬 상태로 둔다
+.terraform/
+*.tfstate
+*.tfstate.*
+# 운영자 IP처럼 사람마다 다른 값
+terraform.tfvars
+tfplan

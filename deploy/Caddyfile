@@ -1,0 +1,13 @@
+# 도메인으로 온 요청: Caddy가 Let's Encrypt 인증서를 받아 HTTPS로 응답하고, 같은 이름의 HTTP 요청은 HTTPS로 넘긴다
+{$DOMAIN} {
+	respond /health "OK" 200
+	root * /srv
+	file_server
+}
+
+# 도메인이 아닌 이름(공인 IP, localhost)으로 온 HTTP 요청
+:80 {
+	respond /health "OK" 200
+	root * /srv
+	file_server
+}
