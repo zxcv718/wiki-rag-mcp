@@ -47,6 +47,11 @@ from wiki_rag_mcp.wiki.source import GroupLookupError, GroupSource, UnknownUserE
 MAX_TOP_K = 10
 MAX_QUERY_CHARS = 500
 MAX_CHANGES = 50
+# space를 줬는데 결과가 없을 때. 에이전트가 스페이스 id를 지어내 빈 결과를 받고 "근거 없음"으로
+# 답한 일이 있었다(experiments/m6-agent). 없는 스페이스, 볼 수 없는 스페이스, 기간 조건으로 빈
+# 경우에 모두 같은 문구라 권한이 드러나지 않는다
+SPACE_EMPTY = ("이 space에서 볼 수 있는 결과가 없습니다. 스페이스 id가 틀렸거나 볼 권한이 없을 수 있으니 "
+               "space를 비우고 다시 검색하세요.")
 
 _tracer = trace.get_tracer(__name__)
 # 8장 지연 예산의 단계별 시간(ADR-15). 버킷 경계는 단계 예산(20·100·150·30ms), 서버에서 잰 쿼리 임베딩(float32 약
@@ -240,6 +245,8 @@ def build_server(services: Services, token_verifier: TokenVerifier | None = None
             vector = services.embedder.encode_query(query)
         with _stage("vector_search"):
             hits = store().knn_search(vector, who, top_k, space=space or None, updated_after=after)
+        if space and not hits:
+            raise ToolError(SPACE_EMPTY)
         with _stage("assemble"):
             return search_response(hits, services.tier, datetime.now(UTC))
 

@@ -1,4 +1,5 @@
 """get_document와 wiki://doc 리소스를 MCP 클라이언트로 부른다 (서버를 같은 프로세스에 띄움, 검색 저장소 불필요).
+search_wiki는 빈 결과를 주는 저장소로 space 안내 오류만 본다.
 
 4장 "검증 방법": 두 층 권한의 두 방향, 빈 권한, 없는 doc_id와 권한 없는 doc_id의 같은 응답,
 그룹 조회 실패 시 doc_id와 관계없는 같은 오류, 등급 정책을 도구와 리소스 모두에 적용한다.
@@ -13,7 +14,7 @@ from mcp import Client
 from mcp.shared.exceptions import MCPError
 
 from wiki_rag_mcp.config import Settings
-from wiki_rag_mcp.server.app import Services, build_server
+from wiki_rag_mcp.server.app import SPACE_EMPTY, Services, build_server
 from wiki_rag_mcp.server.responses import CONFIDENTIAL_NOTE, NOT_FOUND
 from wiki_rag_mcp.wiki.files import FileWikiSource
 from wiki_rag_mcp.wiki.source import GroupLookupError, WikiUnavailableError
@@ -199,6 +200,32 @@ def test_settings_reject_unknown_source_and_dev_token_on_a_remote_wiki():
     with pytest.raises(ValueError):
         Settings(wiki_api_url="https://wiki.internal.example")
     assert Settings(wiki_api_url="https://wiki.internal.example", wiki_service_token="real-secret")
+
+
+class EmptyStore:
+    def knn_search(self, _vector, _principals, _k, *, space=None, updated_after=None):
+        return []
+
+
+class ZeroEmbedder:
+    def encode_query(self, _text):
+        return [0.0]
+
+
+def test_search_in_a_space_with_no_visible_results_says_to_drop_the_space():
+    """에이전트가 지어낸 스페이스 id로 빈 결과를 받고 근거가 없다고 답하던 문제(experiments/m6-agent).
+    없는 스페이스와 볼 수 없는 스페이스는 같은 문구다. space 없이 비면 전처럼 빈 결과다."""
+    services = Services(Settings(wiki_dir=FIXTURE, user="dana"), FileWikiSource(FIXTURE), EmptyStore(),
+                        ZeroEmbedder())
+
+    async def go():
+        async with Client(build_server(services)) as client:
+            return (await client.call_tool("search_wiki", {"query": "재택", "space": "HR"}),
+                    await client.call_tool("search_wiki", {"query": "재택"}))
+
+    in_space, anywhere = anyio.run(go)
+    assert error_text(in_space) == SPACE_EMPTY
+    assert payload(anywhere)["results"] == []
 
 
 def test_cacheable_results_are_private_and_not_cached():
