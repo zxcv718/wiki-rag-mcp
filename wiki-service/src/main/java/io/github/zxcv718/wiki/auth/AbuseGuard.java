@@ -102,7 +102,11 @@ final class AbuseGuard extends OncePerRequestFilter {
 
     private static void reject(HttpServletResponse response, HttpStatus status) throws IOException {
         response.setHeader("Retry-After", String.valueOf(WINDOW.toSeconds()));
-        response.sendError(status.value());
+        if (status == HttpStatus.TOO_MANY_REQUESTS) {
+            AuthHtml.sendError(response, status, "시도가 너무 많습니다", "1분 뒤에 다시 시도하세요.", null);
+        } else {
+            AuthHtml.sendError(response, status, "지금은 새 로그인을 받을 수 없습니다", "잠시 뒤에 다시 시도하세요.", null);
+        }
     }
 
     /**

@@ -166,7 +166,11 @@ public class AuthorizationServerConfig {
                                 .authenticationConverter(AuthorizationServerConfig::publicRefreshClient)
                                 .authenticationProvider(new PublicRefreshClientAuthentication(clients))))
                 .with(new ConsentSubmission(rules), Customizer.withDefaults())
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                // formLogin의 permitAll은 로그인 화면을 쿼리까지 같은 주소로만 비교해, 비밀번호가 틀려 돌아오는
+                // /login?error가 다시 /login으로 넘어가 안내가 보이지 않았다. 경로로 비교하는 규칙을 따로 둔다
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(matcher(HttpMethod.GET, LOGIN)).permitAll()
+                        .anyRequest().authenticated())
                 .formLogin(login -> login.loginPage(LOGIN).failureHandler(guard.loginFailureHandler()).permitAll())
                 .headers(headers -> headers.contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY)))
                 .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
