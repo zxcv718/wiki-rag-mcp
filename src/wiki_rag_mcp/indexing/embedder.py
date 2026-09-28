@@ -58,6 +58,11 @@ class Embedder:
         for kind in ("query", "document"):  # 시계열을 0에서 시작시킨다 (auth/groups.py의 GroupCache와 같은 이유)
             _texts.add(0, {"kind": kind})
 
+    def warm_up(self) -> None:
+        """첫 인코딩에만 드는 준비 시간을 요청을 받기 전에 치른다. 운영에서 재시작 뒤 첫 쿼리가 5.5초, 이후는
+        0.2~0.3초였다. 지표에는 세지 않는다."""
+        self.model.encode(["준비"], normalize_embeddings=True)
+
     def encode_documents(self, texts: list[str], batch_size: int = 16) -> np.ndarray:
         # 인덱싱에서 가장 오래 걸리는 부분이라 추적에 따로 보인다. 쿼리 임베딩은 search_wiki의 단계 스팬이 잰다
         with _tracer.start_as_current_span("embed documents", attributes={"wiki.embedding.texts": len(texts)}):

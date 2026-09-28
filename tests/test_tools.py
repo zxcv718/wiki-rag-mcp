@@ -22,6 +22,9 @@ FIXTURE = Path(__file__).parent / "fixtures" / "wiki"
 
 
 class NoEmbedder:
+    def warm_up(self):
+        pass
+
     def encode_query(self, _text):
         raise AssertionError("이 테스트는 검색을 부르지 않는다")
 

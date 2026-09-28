@@ -80,6 +80,7 @@ def worker_main(argv: list[str] | None = None) -> None:
     source, store = _wiki(settings), open_store(settings)
     store.ensure_index()
     embedder, count = Embedder(), TokenCounter()
+    embedder.warm_up()
     client = _redis(settings)
     worker = StreamWorker(client, lambda e: apply_event(e, source, store, embedder, count), partitions,
                           membership=lambda user_id: invalidate(client, user_id))

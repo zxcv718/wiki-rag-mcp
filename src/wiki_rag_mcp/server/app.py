@@ -49,11 +49,12 @@ MAX_QUERY_CHARS = 500
 MAX_CHANGES = 50
 
 _tracer = trace.get_tracer(__name__)
-# 8장 지연 예산의 단계별 시간(ADR-15). 버킷 경계는 단계 예산(20·100·150·30ms)과 목표 p95(800ms) 근처를 촘촘히 둔다
+# 8장 지연 예산의 단계별 시간(ADR-15). 버킷 경계는 단계 예산(20·100·150·30ms), 서버에서 잰 쿼리 임베딩(float32 약
+# 0.25초, bf16 약 0.09초), 목표 p95(0.8초) 근처를 촘촘히 두고, 부하로 줄을 설 때를 위해 30초까지 둔다
 _stage_seconds = metrics.get_meter(__name__).create_histogram(
     "wiki.search.stage.duration", unit="s", description="search_wiki 단계별 처리 시간",
-    explicit_bucket_boundaries_advisory=[0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 0.8, 1.0,
-                                         2.0, 5.0])
+    explicit_bucket_boundaries_advisory=[0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.3, 0.4,
+                                         0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0, 20.0, 30.0])
 
 
 @contextmanager
@@ -290,7 +291,9 @@ def open_services(settings: Settings) -> Services:
 
         source = HttpWikiSource(settings.wiki_api_url, settings.wiki_service_token)
         groups = GroupCache(source, open_client(settings))
-    return Services(settings, source, open_store(settings), Embedder(), groups)
+    embedder = Embedder()
+    embedder.warm_up()
+    return Services(settings, source, open_store(settings), embedder, groups)
 
 
 def http_options(settings: Settings) -> dict[str, Any]:
