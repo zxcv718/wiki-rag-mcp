@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 운영 위키에서 사용자를 그룹에 넣거나 뺀다. 데모 영상의 "권한 회수" 장면에 쓴다(docs/demo-script.md).
+# 운영 위키에서 사용자를 그룹에 넣거나 뺀다. 권한 회수가 검색에 바로 반영되는 것을 운영 서버에서 보여 줄 때 쓴다.
 #
 #   deploy/membership.sh "$(terraform -chdir=infra output -raw public_ip)" remove dba taeyang
 #   deploy/membership.sh "$(terraform -chdir=infra output -raw public_ip)" add dba taeyang
