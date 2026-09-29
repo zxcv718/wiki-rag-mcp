@@ -10,8 +10,7 @@
   - 결정 기록: [`docs/adr/`](docs/adr/README.md)
   - 실험 기록: [`experiments/`](experiments/README.md)
 - **진행**
-  - M1~M5 완료: MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI, OAuth와 배포, 관측성, 부하 측정
-  - M6: 데모 에이전트와 그 측정, 실험 결과 정리, README를 마쳤고, 3분 데모 영상만 남았습니다.
+  - M1~M6 완료: MCP 서버, 골든셋 평가, 위키 서비스와 증분 인덱싱, 권한 pre-filter와 CI, OAuth와 배포, 관측성, 부하 측정, 데모 에이전트와 그 측정
 
 ## 같은 질문, 다른 답
 
