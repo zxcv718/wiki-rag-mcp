@@ -8,9 +8,9 @@
   },
   "components": [
     {
-      "id": "client",
+      "id": "agent",
       "type": "external",
-      "label": "MCP 클라이언트",
+      "label": "AI 에이전트",
       "sublabel": "Claude Code 등 · LLM이 답을 씀",
       "pos": [
         60,
@@ -159,8 +159,8 @@
   ],
   "connections": [
     {
-      "id": "client-caddy",
-      "from": "client",
+      "id": "agent-caddy",
+      "from": "agent",
       "to": "caddy",
       "label": "MCP · HTTPS + OAuth",
       "variant": "emphasis",
