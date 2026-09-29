@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "wiki-rag-mcp 구성",
+    "output": "system-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "claude-code", "type": "external", "label": "Claude Code", "sublabel": "MCP 클라이언트 · LLM이 답을 씀", "brand": "claude", "pos": [60, 110], "size": [190, 64] },
+    { "id": "demo-agent", "type": "external", "label": "데모 에이전트", "sublabel": "wiki-rag-demo · 측정용", "pos": [60, 300], "size": [190, 64] },
+    { "id": "caddy", "type": "security", "label": "Caddy", "sublabel": "밖으로 열린 문 80·443", "pos": [330, 205], "size": [180, 64] },
+    { "id": "search", "type": "backend", "label": "검색 서버", "sublabel": "MCP 도구 3개 · bge-m3", "brand": "python", "pos": [590, 110], "size": [200, 64] },
+    { "id": "search-db", "type": "database", "label": "검색 DB", "sublabel": "pgvector · 권한 필드 2개", "brand": "postgresql", "pos": [1070, 110], "size": [200, 64] },
+    { "id": "wiki", "type": "backend", "label": "위키 서비스", "sublabel": "Spring Boot · 인가 서버", "pos": [590, 300], "size": [200, 64] },
+    { "id": "worker", "type": "backend", "label": "인덱서 워커", "sublabel": "바뀐 섹션만 임베딩", "brand": "python", "pos": [1070, 300], "size": [200, 64] },
+    { "id": "wiki-db", "type": "database", "label": "위키 DB", "sublabel": "문서 · 권한 · 아웃박스", "brand": "postgresql", "pos": [590, 490], "size": [200, 64] },
+    { "id": "redis", "type": "messagebus", "label": "Redis", "sublabel": "Streams · 그룹 캐시", "brand": "redis", "pos": [830, 490], "size": [200, 64] },
+    { "id": "observability", "type": "cloud", "label": "관측성", "sublabel": "Tempo · Prometheus · Grafana", "brand": "grafana", "pos": [1070, 490], "size": [200, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "AWS 서울 · EC2 한 대 · Docker Compose", "wraps": ["caddy", "search", "search-db", "wiki", "worker", "wiki-db", "redis", "observability"], "pad": 48 },
+    { "kind": "security-group", "label": "보안 그룹: 80·443 전체, 22 운영자 IP만", "wraps": ["caddy", "search", "search-db", "wiki", "worker", "wiki-db", "redis", "observability"], "pad": 20 }
+  ],
+  "connections": [
+    { "id": "cc-caddy", "from": "claude-code", "to": "caddy", "label": "MCP · HTTPS", "variant": "emphasis" },
+    { "id": "demo-caddy", "from": "demo-agent", "to": "caddy", "label": "MCP · HTTPS", "variant": "emphasis" },
+    { "id": "caddy-search", "from": "caddy", "to": "search", "label": "/mcp", "variant": "emphasis" },
+    { "id": "caddy-wiki", "from": "caddy", "to": "wiki", "label": "로그인 · 토큰 발급", "variant": "security" },
+    { "id": "search-db-query", "from": "search", "to": "search-db", "label": "권한 pre-filter 벡터 검색", "variant": "emphasis" },
+    { "id": "search-wiki", "from": "search", "to": "wiki", "label": "그룹 · 본문 권한 재확인", "labelAt": [690, 237] },
+    { "id": "wiki-db-write", "from": "wiki", "to": "wiki-db", "label": "문서와 이벤트를 한 트랜잭션에", "labelAt": [690, 427] },
+    { "id": "wiki-redis", "from": "wiki", "to": "redis", "label": "변경 이벤트" },
+    { "id": "redis-worker", "from": "redis", "to": "worker", "label": "이벤트 소비" },
+    { "id": "worker-wiki", "from": "worker", "to": "wiki", "label": "상태 다시 읽기", "variant": "dashed" },
+    { "id": "worker-search-db", "from": "worker", "to": "search-db", "label": "청크 교체" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "검색 경로 (굵은 선)",
+      "items": [
+        "MCP 요청은 Caddy를 지나 검색 서버로 가고, 권한 조건을 벡터 검색 쿼리 안에 넣어 거른다",
+        "본문은 위키가 요청마다 권한을 다시 판단한다. 서버는 LLM을 부르지 않고 근거만 돌려준다"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "반영 경로",
+      "items": [
+        "위키는 문서를 고친 트랜잭션에 이벤트를 함께 적고(아웃박스) Redis Streams로 보낸다",
+        "워커는 이벤트를 신호로만 쓰고 위키에서 상태를 다시 읽어 바뀐 섹션만 임베딩한다"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "문과 관측",
+      "items": [
+        "밖으로 열린 문은 Caddy의 80·443뿐이고, 두 도메인을 검색 서버와 인가 서버의 공개 경로로만 넘긴다",
+        "세 서비스의 추적과 지표는 서버 안에서만 열고 SSH 터널로 본다"
+      ]
+    }
+  ]
+}
