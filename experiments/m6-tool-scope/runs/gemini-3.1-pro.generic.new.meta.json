@@ -1,0 +1,19 @@
+{
+  "git": "6fd7679",
+  "dirty": true,
+  "finished_at": "2026-09-29T05:34:21+00:00",
+  "command": "scope run",
+  "model": "gemini-3.1-pro",
+  "prompt": "generic",
+  "set": "new",
+  "conditions": [
+    "A",
+    "B"
+  ],
+  "repeat": 1,
+  "today": "2026-09-29",
+  "usage": {
+    "prompt_tokens": 78656,
+    "completion_tokens": 15958
+  }
+}

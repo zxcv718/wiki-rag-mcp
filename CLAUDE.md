@@ -47,6 +47,7 @@
 
 - 데모 에이전트는 `src/wiki_rag_mcp/agent/`입니다. `uv run wiki-rag-demo`가 운영 서버에 브라우저로 로그인해(미리 등록한 공개 클라이언트 `wiki-rag-demo`) 답합니다. LLM은 COPA `gpt-5.4`이고, 도구 호출 반복은 프레임워크 없이 직접 짰습니다.
 - 측정은 운영 서버에서 합니다(`experiments/m6-agent`, `uv run wiki-rag-agent-eval`). 토큰은 `token.sh`가 서버 안에서 받아 평가 프로세스의 메모리에만 둡니다. 결과: 도구 선택 통과, 근거 충실도 0.960, 인용 정확도 0.940, 인젝션은 지시문이 도달한 24번 중 따름 0번. 첫 채점은 평가 도구 버그(근거에서 `notes` 누락)로 무효였고, 두 채점을 함께 남겼습니다. 사람 검수 10개는 Claude가 채점 결과를 보지 않고 쓴 초안(`review/claude.yaml`)을 사용자가 확정했고(`review/human.yaml`), 채점 모델과 일치율은 근거 90%, 인용 100%입니다.
+- 후속 실험(`experiments/m6-tool-scope`, `python -m wiki_rag_mcp.agent.scope`): 서버 안내문과 `search_wiki` 설명에 범위를 적는 변경은 기각했습니다. 일반 클라이언트도 지금 문구로 회사 질문 24개 중 23개를 찾았고, 넓히면 법령 질문의 과잉 호출이 늘었습니다. COPA는 Claude 모델에 도구 정의를 넘기지 않아 Claude는 잴 수 없습니다.
 - 측정에서 에이전트가 `search_wiki`의 `space`에 없는 스페이스 id를 지어내 빈 결과를 받았습니다. 그래서 `space`를 줬는데 결과가 없으면 안내 오류를 돌려줍니다(응답 형식은 그대로).
 - 실험 전체 요약은 `experiments/README.md`입니다. 운영 위키의 그룹 멤버십은 `deploy/membership.sh`가 서버 안에서 관리자 API를 불러 바꿉니다(권한 회수를 운영 서버에서 보여 줄 때).
 

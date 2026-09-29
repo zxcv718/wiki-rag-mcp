@@ -1,0 +1,19 @@
+{
+  "git": "6fd7679",
+  "dirty": true,
+  "finished_at": "2026-09-29T05:31:25+00:00",
+  "command": "scope run",
+  "model": "gpt-5.4",
+  "prompt": "generic",
+  "set": "new",
+  "conditions": [
+    "A",
+    "B"
+  ],
+  "repeat": 3,
+  "today": "2026-09-29",
+  "usage": {
+    "prompt_tokens": 222936,
+    "completion_tokens": 48429
+  }
+}
