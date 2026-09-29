@@ -64,12 +64,9 @@
 
 ## 구성
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/system-architecture-dark.png">
-  <img src="docs/system-architecture-light.png" alt="wiki-rag-mcp 구성도. Claude Code와 데모 에이전트가 Caddy(80·443)를 거쳐 검색 서버에 MCP로 요청한다. 검색 서버는 권한 조건을 건 벡터 검색으로 검색 DB를 찾고, 위키 서비스에서 그룹과 본문 권한을 확인한다. 위키 서비스는 문서와 변경 이벤트를 위키 DB에 한 트랜잭션으로 쓰고 Redis Streams로 보낸다. 인덱서 워커는 이벤트를 받아 위키에서 상태를 다시 읽고 검색 DB의 청크를 바꾼다. 관측성 도구까지 모두 EC2 한 대의 Docker Compose 안에서 돈다.">
-</picture>
+[![wiki-rag-mcp 구성도. Claude Code와 데모 에이전트가 Caddy(80·443)를 거쳐 검색 서버에 MCP로 요청한다. 검색 서버는 권한 조건을 건 벡터 검색으로 검색 DB를 찾고, 위키 서비스에서 그룹과 본문 권한을 확인한다. 위키 서비스는 문서와 변경 이벤트를 위키 DB에 한 트랜잭션으로 쓰고 Redis Streams로 보낸다. 인덱서 워커는 이벤트를 받아 위키에서 상태를 다시 읽고 검색 DB의 청크를 바꾼다. 관측성 도구까지 모두 EC2 한 대의 Docker Compose 안에서 돈다.](docs/system-architecture.png)](docs/system-architecture.png)
 
-굵은 초록 선은 검색 경로, 회색 선은 반영 경로, 빨간 점선은 로그인, 보라 점선은 워커가 위키에서 상태를 다시 읽는 길입니다. 원본은 [`docs/system-architecture.archify.json`](docs/system-architecture.archify.json)이고, 내려받아 브라우저로 열면 확대하고 경로를 따라가 볼 수 있는 HTML은 `docs/system-architecture.html`입니다.
+굵은 초록 선은 검색 경로, 회색 선은 반영 경로, 빨간 점선은 로그인, 보라 점선은 워커가 위키에서 상태를 다시 읽는 길입니다. 원본은 [`docs/system-architecture.archify.json`](docs/system-architecture.archify.json)이고, 확대하고 경로를 따라가 볼 수 있는 HTML은 [`docs/system-architecture.html`](docs/system-architecture.html)입니다.
 
 - **검색**
   - 검색 서버는 액세스 토큰의 `sub`로 사용자를 정합니다.
