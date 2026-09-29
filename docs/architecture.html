@@ -5163,7 +5163,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="2" data-composition-frame-label="보안 그룹: 80·443 전체, 22 운영자 IP만" x="628" y="226" width="494" height="108" rx="8" class="c-security-group" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="user" data-edge-to="dns" data-edge-label="이름 조회" data-edge-key="0" data-edge-id="user-dns" data-composition-points="125,250;125,164" d="M 125 250 L 125 164" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="user" data-edge-to="dns" data-edge-label="DNS 조회" data-edge-key="0" data-edge-id="user-dns" data-composition-points="125,250;125,164" d="M 125 250 L 125 164" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
         <path data-edge-from="user" data-edge-to="igw" data-edge-label="HTTP 80 · HTTPS 443" data-edge-key="1" data-edge-id="user-igw" data-composition-points="210,275;360,275" d="M 210 275 L 360 275" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="igw" data-edge-to="ec2" data-edge-label="보안 그룹 통과" data-edge-key="2" data-edge-id="igw-ec2" data-composition-points="530,282;640,282" d="M 530 282 L 640 282" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="ec2" data-edge-to="caddy" data-edge-label="포트 매핑 80·443" data-edge-key="3" data-edge-id="ec2-caddy" data-composition-points="830,282;940,282" d="M 830 282 L 940 282" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
@@ -5269,9 +5269,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="user" data-edge-to="dns" data-edge-label="이름 조회" data-edge-key="0" data-edge-id="user-dns">
-          <rect x="98.4" y="230" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
-          <text x="125" y="240" class="t-messagebus" font-size="8" text-anchor="middle">이름 조회</text>
+        <g data-detail="context" data-edge-from="user" data-edge-to="dns" data-edge-label="DNS 조회" data-edge-key="0" data-edge-id="user-dns">
+          <rect x="100.8" y="230" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="125" y="240" class="t-messagebus" font-size="8" text-anchor="middle">DNS 조회</text>
         </g>
         <g data-detail="context" data-edge-from="user" data-edge-to="igw" data-edge-label="HTTP 80 · HTTPS 443" data-edge-key="1" data-edge-id="user-igw">
           <rect x="234.4" y="255" width="101.2" height="14" rx="3" class="c-mask"/>

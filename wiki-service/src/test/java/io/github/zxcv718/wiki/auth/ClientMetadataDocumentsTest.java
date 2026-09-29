@@ -23,7 +23,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
 /**
- * CIMD 문서를 받는 조건(README "클라이언트")을 경우마다 하나씩 확인한다. 이름 해석과 가져오기는 가짜로 바꿔, 네트워크
+ * CIMD 문서를 받는 조건(README "클라이언트")을 경우마다 하나씩 확인한다. DNS 조회와 가져오기는 가짜로 바꿔, 네트워크
  * 없이 어떤 주소로 몇 번 가져왔는지 센다.
  */
 class ClientMetadataDocumentsTest {
@@ -258,7 +258,7 @@ class ClientMetadataDocumentsTest {
         assertThat(connectedTo).hasSize(2);
     }
 
-    /** 이름 해석이 느려도 전체 시간 안에 요청 스레드를 돌려준다. 이름 해석은 멈출 수 없어 작업 스레드에서 한다. */
+    /** DNS 조회가 느려도 전체 시간 안에 요청 스레드를 돌려준다. DNS 조회는 멈출 수 없어 작업 스레드에서 한다. */
     @Test
     void slowNameResolutionCountsTowardTheBudget() {
         ClientMetadataDocuments documents = new ClientMetadataDocuments(host -> {

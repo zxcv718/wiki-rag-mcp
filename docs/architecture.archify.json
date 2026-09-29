@@ -157,7 +157,7 @@
       "id": "user-dns",
       "from": "user",
       "to": "dns",
-      "label": "이름 조회",
+      "label": "DNS 조회",
       "variant": "dashed",
       "fromSide": "top",
       "toSide": "bottom"
