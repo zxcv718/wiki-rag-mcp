@@ -13,3 +13,6 @@ __pycache__/
 *.local.md
 # IAM 콘솔에서 받은 자격 증명 파일 (비밀번호가 들어 있음)
 *_credentials.csv
+
+# Claude Code MCP 설정은 저장소 밖(local scope)에 둔다. README "로컬 개발"
+.mcp.json

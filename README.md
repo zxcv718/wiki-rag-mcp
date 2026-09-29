@@ -180,7 +180,13 @@ uv run wiki-rag-worker      # 이벤트를 받아 색인
 uv run pytest               # Python 테스트 (서비스가 떠 있으면 통합 테스트까지)
 ```
 
-- 로컬에서 Claude Code는 [`.mcp.json`](.mcp.json)으로 서버를 stdio로 띄웁니다. 이때 사용자는 환경 변수 `WIKI_USER`로 정합니다(ADR-06).
+- 로컬 서버를 Claude Code에 붙이려면 stdio 서버로 등록합니다. 로그인이 없는 대신 사용자를 환경 변수 `WIKI_USER`로 정하고(ADR-06), 이 값은 운영(HTTP) 모드에서는 받지 않습니다.
+
+  ```bash
+  claude mcp add --scope local wiki-rag -e WIKI_SOURCE=wiki -e WIKI_USER=jiho \
+    -e TOKENIZERS_PARALLELISM=false -- uv run --quiet wiki-rag-mcp
+  ```
+
 - 위키 서비스 테스트는 `cd wiki-service && ./gradlew test`입니다.
 
 ## 저장소 구조

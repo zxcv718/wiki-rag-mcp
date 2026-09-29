@@ -28,7 +28,7 @@
 
 **M4 완료**: 검색 서버를 위키 API에 연결, 그룹 캐시, 권한 테스트셋을 위키 서비스로 확장, CI
 
-- 검색 서버는 기본으로 위키 API를 씁니다(`WIKI_SOURCE=wiki`). 그룹은 `GET /internal/users/{id}/groups`를 Redis에 60초 캐시하고(`auth/groups.py`), 본문은 `GET /internal/users/{id}/documents/{doc}`로 위키가 권한을 다시 판단해 줍니다. 파일 위키는 `WIKI_SOURCE=file`로 평가·테스트에만 씁니다. 개발용 `.mcp.json`도 위키 모드라서 `docker compose up -d`, `uv run wiki-rag-seed`, `uv run wiki-rag-worker`가 떠 있어야 합니다.
+- 검색 서버는 기본으로 위키 API를 씁니다(`WIKI_SOURCE=wiki`). 그룹은 `GET /internal/users/{id}/groups`를 Redis에 60초 캐시하고(`auth/groups.py`), 본문은 `GET /internal/users/{id}/documents/{doc}`로 위키가 권한을 다시 판단해 줍니다. 파일 위키는 `WIKI_SOURCE=file`로 평가·테스트에만 씁니다. 로컬 stdio 서버도 위키 모드라서 `docker compose up -d`, `uv run wiki-rag-seed`, `uv run wiki-rag-worker`가 떠 있어야 합니다.
 - 그룹 캐시는 사용자별 세대 번호로 무효화합니다. 키만 지우면 무효화 직전에 읽은 옛 그룹이 다시 캐시됩니다(stale set). 인덱서 워커가 `wiki:membership`을 문서 이벤트보다 먼저 읽어 번호를 올립니다. 위키에 없는 사용자는 오류로 돌려주고 캐시하지 않습니다. 세부와 이유는 설계서 4장 "구현 세부 (M4)"입니다.
 - 권한 테스트셋(`tests/test_permissions_integration.py`)은 파일 위키와 위키 서비스 양쪽에서 돕니다. 권한 회수 종단 테스트는 `tests/test_wiki_permissions_e2e.py`입니다. 통합 테스트는 서비스가 없으면 건너뛰지만 `REQUIRE_SERVICES=1`이면 실패합니다(CI).
 - CI는 `.github/workflows/ci.yml`입니다. Python 테스트와 권한 테스트셋, 골든셋 회귀 검사(`uv run wiki-rag-eval regress`, Recall@5가 `data/golden/baseline.json`보다 2%p 이상 떨어지거나 권한 위반이 1건이면 실패), 위키 서비스 테스트를 돌립니다. 회귀 검사는 임베딩을 `.cache/ci-embeddings.npz`에 캐시합니다. 저장소는 공개 `zxcv718/wiki-rag-mcp`이고, 캐시가 있을 때 CI 전체가 4~5분입니다(임베딩 캐시가 모두 버려지는 PR은 골든셋 작업이 15분쯤).
@@ -54,7 +54,7 @@
 구현 원칙:
 
 - 위키 접근은 `wiki/source.py`의 인터페이스로 감쌉니다. 파일 위키(`data/wiki/`, 평가·테스트용)와 Spring 위키 API(`wiki/http.py`) 두 구현이 있고, 인덱서는 M3부터, 검색 서버는 M4부터 위키 API를 읽습니다.
-- 로컬 개발(`.mcp.json`)은 OAuth 없이 stdio로 돕니다. 사용자는 환경 변수(`WIKI_USER=user:alice`)로 정하고, 그룹은 위키에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다. 운영은 HTTP + OAuth입니다(M5).
+- 로컬 개발은 OAuth 없이 stdio로 돕니다. Claude Code에는 저장소 밖의 local scope로 등록하고(README "로컬 개발"의 `claude mcp add` 명령), `.mcp.json`은 저장소에 두지 않습니다. 사용자는 환경 변수(`WIKI_USER=jiho`)로 정하고, 그룹은 위키에서 읽습니다. 클라이언트 신뢰 등급 기본값은 "외부"입니다. 운영은 HTTP + OAuth입니다(M5).
 - 서버 밖 LLM 작업(가상 위키 생성, 데모 에이전트와 그 채점)은 코디세이 Public API(`https://copa.codyssey.kr`)의 OpenAI 호환 엔드포인트(`/v1/chat/completions`)를 씁니다. 생성과 데모 에이전트는 `gpt-5.4`, 에이전트 답변 채점은 다른 계열인 `claude-opus-4-8`입니다. 2026-09-28부터 이 키로 Claude 모델도 응답하며, `claude-opus-4-8`에는 `temperature`를 넘기지 않습니다(502). 키는 `.env`의 `COPA_API_KEY`에 두고(형식은 `.env.example`), `.env`는 커밋하지 않습니다.
 
 로드맵: M1, M2(골든셋·평가·판정 실험), M3(Spring 위키·아웃박스·증분 인덱싱), M4(권한 pre-filter·CI), M5(HTTP·OAuth·부하·관측성), M6(README·데모) 순서로 진행합니다.

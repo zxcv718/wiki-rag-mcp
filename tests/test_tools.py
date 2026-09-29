@@ -177,7 +177,7 @@ def test_body_recheck_does_not_trust_the_group_cache():
 
 
 def test_server_startup_wires_the_wiki_api_behind_the_group_cache(monkeypatch):
-    """실행 설정(.mcp.json)이 쓰는 경로. 그룹은 위키 앞의 캐시로, 본문 재확인은 위키로 간다."""
+    """로컬 stdio 실행이 쓰는 경로. 그룹은 위키 앞의 캐시로, 본문 재확인은 위키로 간다."""
     import wiki_rag_mcp.indexing.embedder as embedder
     import wiki_rag_mcp.search.backend as backend
     from wiki_rag_mcp.auth.groups import GroupCache
