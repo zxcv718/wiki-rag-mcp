@@ -143,44 +143,6 @@
 | 호출 제한, 감사 로그, 민감정보 차단 | 설계서 9장에 적었지만 넣지 않았습니다 | 실사용자나 실제 문서를 받기 전에 넣습니다 |
 | 액세스 토큰 회수 | 인가를 취소해도 발급한 토큰은 만료(10분)까지 쓰입니다. 그룹과 문서 권한은 요청마다 해석하므로 권한 회수와는 관계없습니다 | 필요하면 수명을 줄이거나 토큰 조회(RFC 7662)로 바꿉니다 |
 
-## 써 보기
-
-**Claude Code에 붙이기**
-
-```bash
-claude mcp add --transport http wiki-rag https://mcp.dmssh.store/mcp
-```
-
-- Claude Code에서 `/mcp`로 연결하면 브라우저에서 위키 로그인과 동의 화면이 열립니다.
-- 로그인에는 가상 회사의 계정이 필요합니다. 데모 비밀번호는 공개하지 않습니다.
-
-**데모 에이전트**
-
-```bash
-uv run wiki-rag-demo "주말 온콜 수당 얼마야?"
-```
-
-- 같은 운영 서버에 브라우저로 로그인해 답합니다.
-- LLM은 코디세이 COPA의 `gpt-5.4`라서 `.env`에 `COPA_API_KEY`가 있어야 합니다.
-
-**로컬 개발**
-
-```bash
-docker compose up -d        # 검색 DB, 위키 DB, Redis, 위키 서비스
-uv run wiki-rag-seed        # 가상 위키 200문서를 위키 서비스로 옮김
-uv run wiki-rag-worker      # 이벤트를 받아 색인
-uv run pytest               # Python 테스트 (서비스가 떠 있으면 통합 테스트까지)
-```
-
-- 로컬 서버를 Claude Code에 붙이려면 stdio 서버로 등록합니다. 로그인이 없는 대신 사용자를 환경 변수 `WIKI_USER`로 정하고(ADR-06), 이 값은 운영(HTTP) 모드에서는 받지 않습니다.
-
-  ```bash
-  claude mcp add --scope local wiki-rag -e WIKI_SOURCE=wiki -e WIKI_USER=jiho \
-    -e TOKENIZERS_PARALLELISM=false -- uv run --quiet wiki-rag-mcp
-  ```
-
-- 위키 서비스 테스트는 `cd wiki-service && ./gradlew test`입니다.
-
 ## 저장소 구조
 
 | 경로 | 내용 |
