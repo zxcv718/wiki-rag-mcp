@@ -51,13 +51,13 @@ AWS 밖에도 지울 것이 있다. 반납한 Elastic IP는 다른 고객에게 
 ### 평가용 스택 (평가마다)
 
 1. 배포 사용자로 로그인했는지 본다(`aws sts get-caller-identity --profile wiki-rag`가 `user/wiki-rag-deployer`).
-2. 평가자 앞에서 지운다. 스크립트가 지울 목록을 보여 주고 확인(`yes`)을 받은 뒤 지우고, 남은 자원을 세고, DuckDNS 값을 비운다.
+2. 평가자 앞에서 지운다. 스크립트가 먼저 DuckDNS 값을 비우고, 지울 목록을 보여 주고 확인(`yes`)을 받은 뒤 지우고, 남은 자원을 센다. DNS를 먼저 비우는 이유는, 지우기나 점검이 중간에 실패해도 도메인이 반납한 IP를 가리키지 않게 하기 위해서다.
 
    ```
    infra/b3-1.sh down
    ```
 
-   `Destroy complete! Resources: 13 destroyed.`와 `check-leftovers.sh`의 모든 줄 0, `DuckDNS ... 값 비움 (지금 조회 값: 없음)`이 나와야 한다.
+   `DuckDNS ... 값 비움 (권한 서버 조회 값: 없음)`, `Destroy complete! Resources: 13 destroyed.`, `check-leftovers.sh`의 모든 줄 0이 나와야 한다.
 3. 출력을 아래 "정리 실행 기록"에 적는다.
 
 실제 인증서는 같은 이름(`b3-1.dmssh.store`)으로 7일에 5장까지 발급된다. 연습으로 만들 때는 `infra/b3-1.sh up --staging`(시험 인증서)을 쓰고, 실제 발급은 평가 때만 한다.

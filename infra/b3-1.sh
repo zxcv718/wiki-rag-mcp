@@ -59,16 +59,18 @@ case "${1:-}" in
     terraform output -raw ssh; echo
     ;;
   down)
+    # 반납한 IP는 다른 고객에게 갈 수 있다. DuckDNS 값이 남으면 가비아 CNAME을 따라 내 도메인이 남의 서버를 가리킨다.
+    # 그래서 IP를 반납하기 전에 먼저 비운다. 지우기나 점검이 중간에 실패해도 DNS는 이미 정리돼 있다
+    [ "$(curl -sf "https://www.duckdns.org/update?domains=$DUCKDNS_SUBDOMAIN&token=$DUCKDNS_TOKEN&clear=true" || true)" = OK ] \
+      || { echo "DuckDNS 값 비우기 실패. duckdns.org에서 직접 비운 뒤 다시 실행한다" >&2; exit 1; }
+    # 권한 서버에 바로 묻는다. 공용 리졸버는 TTL 동안 옛 IP를 줄 수 있다
+    left=$(dig +short "$DUCKDNS_SUBDOMAIN.duckdns.org" @ns1.duckdns.org 2>/dev/null | tail -1 || true)
+    echo "DuckDNS $DUCKDNS_SUBDOMAIN.duckdns.org 값 비움 (권한 서버 조회 값: ${left:-없음})"
+    echo
     start=$(date +%s)
     terraform destroy
     echo "삭제 $(( $(date +%s) - start ))초 (승인 입력 포함)"
     echo
     STACK=b3-1 ./check-leftovers.sh
-    # 반납한 IP는 다른 고객에게 갈 수 있다. DuckDNS 값을 남겨 두면 가비아 CNAME을 따라 내 도메인이 남의 서버를 가리킨다
-    [ "$(curl -sf "https://www.duckdns.org/update?domains=$DUCKDNS_SUBDOMAIN&token=$DUCKDNS_TOKEN&clear=true" || true)" = OK ] \
-      || { echo "DuckDNS 값 비우기 실패. duckdns.org에서 직접 비운다" >&2; exit 1; }
-    # 권한 서버에 바로 묻는다. 공용 리졸버는 TTL 동안 옛 IP를 줄 수 있다
-    left=$(dig +short "$DUCKDNS_SUBDOMAIN.duckdns.org" @ns1.duckdns.org 2>/dev/null | tail -1 || true)
-    echo "DuckDNS $DUCKDNS_SUBDOMAIN.duckdns.org 값 비움 (권한 서버 조회 값: ${left:-없음})"
     ;;
 esac
