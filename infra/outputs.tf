@@ -8,6 +8,11 @@ output "ssh" {
   value       = "ssh -i ~/.ssh/wiki-rag-m5.pem ubuntu@${aws_eip.server.public_ip}"
 }
 
+output "site_url" {
+  description = "b3-1 스택의 HTTPS 주소 (보너스 1)"
+  value       = local.b3_1 ? "https://${var.b3_1_domain}" : null
+}
+
 output "health_url" {
   description = "외부 접속 확인 주소 (과제 검증 방식 B)"
   value       = "http://${aws_eip.server.public_ip}/health"

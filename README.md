@@ -166,18 +166,38 @@
 
 아래는 서버를 AWS에 올린 기록이며, 코디세이 과제 B3-1의 제출 문서를 겸합니다.
 
+### 평가 방식: 평가마다 만들고 지움
+
+과제 평가항목은 한 항목 안에서 "웹 서버가 실행 중인가"와 "정리 5종(EC2, EBS, Elastic IP, 인터넷 게이트웨이, VPC)을 완료했는가"를 함께 봅니다. 그래서 평가용 스택을 평가마다 새로 만들어 보여 드리고, 평가 끝에 그 자리에서 지웁니다. 평가용 스택은 운영 서버와 같은 Terraform 코드로 만들지만 상태 파일(workspace `b3-1`)이 따로라서, 지워도 운영 서버에는 닿지 않습니다.
+
+```bash
+infra/b3-1.sh up     # 평가 전: 만들고 접속 주소를 출력 (리허설에서 시작부터 HTTPS 응답까지 84초)
+infra/b3-1.sh down   # 평가 끝: 지우고 남은 자원을 셈 (리허설에서 37초)
+```
+
+| | 평가용 스택 (`b3-1`) | 운영 스택 (`default`) |
+|---|---|---|
+| 용도 | 과제 평가 | MCP 서버 운영 (M5, M6) |
+| 수명 | 평가마다 만들고 지움 | 계속 둠 |
+| EC2 | `t3.micro`, 8GiB (과제 권장 사양) | `m7i-flex.large`, 20GB |
+| 서버 안 | Caddy 컨테이너 하나(소개 페이지, `/health`) | Caddy와 위키, 검색 서버, 워커, DB, Redis |
+| 공인 IP | 만들 때마다 바뀜 | Elastic IP `52.78.251.4` |
+| 도메인 | `b3-1.dmssh.store` | `mcp.dmssh.store`, `auth.dmssh.store` |
+
+리허설 시간은 Terraform의 승인 질문을 건너뛰고 잰 값이라, 평가 때는 `yes`를 입력하는 시간이 더해집니다. 실제 인증서는 같은 이름으로 7일에 5장까지 발급되므로, 연습은 시험 인증서(`up --staging`)로 하고 실제 발급은 평가 때만 합니다. 리허설 기록(만들기, 서버 안팎 확인, 지우기, 남은 자원 0, 운영 스택 무변경)은 [`docs/evidence/b3-1-rehearsal.txt`](docs/evidence/b3-1-rehearsal.txt)에 있습니다.
+
 ### 접속 정보와 검증 방식
 
-**검증 방식: B** (`GET http://<퍼블릭 IP>/health`가 200과 고정 응답 `OK`를 돌려줌). 방식 A(브라우저로 `http://<퍼블릭 IP>`)도 함께 확인했습니다.
+**검증 방식: B** (`GET http://<퍼블릭 IP>/health`가 200과 고정 응답 `OK`를 돌려줌). 방식 A(브라우저로 `http://<퍼블릭 IP>`)도 함께 확인합니다. 평가용 스택은 만들 때마다 IP가 바뀌므로, 주소는 `infra/b3-1.sh up`이 마지막에 출력합니다.
 
 | 주소 | 기대 응답 |
 |---|---|
-| http://52.78.251.4/health | `200 OK`, 본문 `OK` (방식 B) |
-| http://52.78.251.4 | 소개 페이지 (방식 A) |
-| https://mcp.dmssh.store/health | HTTPS로 `200`, 본문 `OK` (보너스 1) |
-| http://mcp.dmssh.store | `308`으로 HTTPS 주소로 넘김 (보너스 1) |
+| `http://<퍼블릭 IP>/health` | `200 OK`, 본문 `OK` (방식 B) |
+| `http://<퍼블릭 IP>` | 소개 페이지 (방식 A) |
+| https://b3-1.dmssh.store/health | HTTPS로 `200`, 본문 `OK` (보너스 1) |
+| http://b3-1.dmssh.store | `308`으로 HTTPS 주소로 넘김 (보너스 1) |
 
-과제 평가를 받은 뒤 맨 마지막에 [정리 체크리스트](docs/cleanup-checklist.md)대로 자원을 지우므로, 그 뒤에는 위 주소가 닿지 않습니다. 접속 결과는 아래 스크린샷과 [`docs/evidence/`](docs/evidence/)의 원래 출력으로 남겼습니다.
+아래 스크린샷은 운영 서버(`52.78.251.4`, `mcp.dmssh.store`)에서 같은 확인을 했을 때의 화면입니다(2026-09-28). 원래 출력은 [`docs/evidence/`](docs/evidence/)에 있습니다.
 
 | 방식 B: 노트북 터미널에서 `curl -i` | 방식 B: 브라우저 |
 |---|---|
@@ -193,7 +213,7 @@
 
 ![AWS 배포 아키텍처](docs/architecture.png)
 
-사용자는 가비아 DNS에서 `mcp.dmssh.store`의 주소(Elastic IP)를 받아 요청을 보냅니다. 요청은 인터넷 게이트웨이를 지나 퍼블릭 서브넷의 EC2에 닿고, 보안 그룹이 허용한 80·443만 들어와 Caddy 컨테이너가 응답합니다. 운영자의 SSH(22)는 지정한 IP 한 곳에서만 들어옵니다. 다이어그램은 B3-1 제출 시점(Caddy만 있던 때)의 구성이고, M5에서 늘어난 컨테이너는 아래 "보너스 2"에 적었습니다. 원본은 [`docs/architecture.archify.json`](docs/architecture.archify.json)이고, 확대해 볼 수 있는 HTML은 [`docs/architecture.html`](docs/architecture.html)입니다.
+사용자는 가비아 DNS에서 `mcp.dmssh.store`의 주소(Elastic IP)를 받아 요청을 보냅니다. 요청은 인터넷 게이트웨이를 지나 퍼블릭 서브넷의 EC2에 닿고, 보안 그룹이 허용한 80·443만 들어와 Caddy 컨테이너가 응답합니다. 운영자의 SSH(22)는 지정한 IP 한 곳에서만 들어옵니다. 다이어그램은 B3-1 제출 시점(Caddy만 있던 때)의 구성이고, M5에서 늘어난 컨테이너는 아래 "보너스 2"에 적었습니다. 평가용 스택도 같은 구조이고, 도메인만 `b3-1.dmssh.store`가 DuckDNS를 거쳐 만들 때마다 바뀌는 IP를 가리킵니다(보너스 1). 원본은 [`docs/architecture.archify.json`](docs/architecture.archify.json)이고, 확대해 볼 수 있는 HTML은 [`docs/architecture.html`](docs/architecture.html)입니다.
 
 | 구성 | 값 | 코드 |
 |---|---|---|
@@ -205,11 +225,11 @@
 | 공인 IP | Elastic IP `52.78.251.4` (다시 시작해도 주소가 바뀌지 않아 DNS 레코드를 고정할 수 있음) | `infra/main.tf` |
 | 웹 서버 | Caddy 2.11.4 컨테이너 | `deploy/` |
 
-인프라는 모두 Terraform으로 만들었습니다. 평가를 받은 뒤 `terraform destroy` 한 번으로 지우고, 데모 등으로 다시 필요하면 `terraform apply`로 같은 구성을 다시 만들기 위해서입니다. 결정 이유와 다른 선택지(오라클 무료 등급, GCP, 유료 VPS) 비교는 [ADR-23](docs/adr/ADR-23.md)에 있습니다.
+위 표는 운영 스택입니다. 인프라는 모두 Terraform으로 만들었습니다. 같은 코드로 두 스택을 만들고, workspace가 `b3-1`일 때만 이름에 `-b3-1`과 `stack=b3-1` 태그를 붙이고 `t3.micro`·8GiB와 평가용 부팅 스크립트([`infra/cloud-init-b3-1.yaml.tftpl`](infra/cloud-init-b3-1.yaml.tftpl))를 씁니다. 운영 스택의 이름과 태그는 그대로라서, 평가용 스택을 추가한 뒤에도 운영 스택의 `terraform plan`은 바뀌는 것이 없습니다. 결정 이유와 다른 선택지(오라클 무료 등급, GCP, 유료 VPS) 비교는 [ADR-23](docs/adr/ADR-23.md)에 있습니다.
 
-### 인스턴스와 볼륨을 권장보다 크게 잡은 이유
+### 운영 서버의 인스턴스와 볼륨을 권장보다 크게 잡은 이유
 
-과제는 micro 인스턴스와 8~10GiB 볼륨을 권장하지만, 이 서버는 `m7i-flex.large`(vCPU 2개, 메모리 8GiB)와 20GB를 씁니다.
+과제는 micro 인스턴스와 8~10GiB 볼륨을 권장합니다. 평가용 스택은 그대로 `t3.micro`와 8GiB이고(리허설에서 디스크 6.8G 중 2.7G 사용), 운영 서버만 `m7i-flex.large`(vCPU 2개, 메모리 8GiB)와 20GB를 씁니다.
 
 - 이 서버는 검색 질의를 임베딩하려고 모델(BAAI/bge-m3)을 프로세스 안에 올립니다. 모델을 올린 프로세스 하나가 최대 약 2.2GB였고, 검색 서버와 인덱서 두 프로세스에 DB·위키 서비스까지 합치면 5~6GB가 필요합니다. micro(1GiB)에서는 모델을 올릴 수 없습니다. 실제로 전체 구성을 올린 뒤 색인하는 동안 서버 전체 사용량은 3.0GB였습니다. 이때는 검색 서버가 아직 질의를 받지 않았으므로, 부하 측정 때 다시 잽니다.
 - 2025년 7월 15일 이후 만든 계정은 무료 플랜 대상 유형이 `t3.micro`, `t3.small`, `t4g.micro`, `t4g.small`, `c7i-flex.large`, `m7i-flex.large`입니다([AWS 문서](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html)). 이 중 메모리 5GB 이상은 `m7i-flex.large`뿐입니다. 비용은 무료 플랜 크레딧에서 나갑니다.
@@ -222,10 +242,10 @@
 |---|---|---|---|
 | 인바운드 | 80 (HTTP) | `0.0.0.0/0` | 외부 접속 검증, Let's Encrypt 인증서 발급(HTTP-01), HTTPS로 넘김 |
 | 인바운드 | 443 (HTTPS) | `0.0.0.0/0` | 보너스 1 |
-| 인바운드 | 22 (SSH) | 운영자 IP `/32` 하나 | 배포와 점검. Terraform 변수 `ssh_cidr`에 기본값이 없고, `0.0.0.0/0`을 넣으면 검증에서 막힘 |
+| 인바운드 | 22 (SSH) | 운영자 IP `/32` 하나 | 배포와 점검. Terraform 변수 `ssh_cidr`에 기본값이 없고, `0.0.0.0/0`을 넣으면 검증에서 막힘. 평가용 스택은 `infra/b3-1.sh up`이 그때 노트북의 공인 IP를 넣음 |
 | 아웃바운드 | 전체 | `0.0.0.0/0` | 패키지 설치, 이미지 내려받기, 인증서 발급 |
 
-전체 포트(0-65535)를 여는 인바운드 규칙은 없습니다. DB, Redis, 위키 서비스 포트도 밖으로 열지 않습니다.
+두 스택의 규칙은 같습니다. 전체 포트(0-65535)를 여는 인바운드 규칙은 없습니다. DB, Redis, 위키 서비스 포트도 밖으로 열지 않습니다.
 
 ### IAM 최소 권한
 
@@ -246,6 +266,8 @@
 - 도메인: 가비아에서 산 `dmssh.store`에 A 레코드 `mcp`를 만들어 Elastic IP를 가리키게 했습니다. M5에서 인가 서버용 `auth`를 더했고, 이 인증서도 Caddy가 같은 방식으로 받습니다.
 - 인증서: Caddy가 Let's Encrypt에서 HTTP-01 방식으로 자동 발급하고 만료 전에 갱신합니다. 발급된 인증서는 `CN=mcp.dmssh.store`, 발급자 Let's Encrypt, 유효 기간 2026-09-28~2026-12-27이고, 인증서 체인 검증도 통과합니다([`docs/evidence/https-certificate.txt`](docs/evidence/https-certificate.txt)).
 - 도메인으로 온 HTTP 요청은 `308`로 HTTPS 주소에 넘깁니다. IP로 온 HTTP 요청은 인증서를 쓸 수 없으므로 그대로 응답합니다(방식 A·B 검증용). 설정은 [`deploy/Caddyfile`](deploy/Caddyfile)입니다.
+- 평가용 스택은 만들 때마다 IP가 바뀌어 A 레코드를 고정할 수 없습니다. 가비아에는 `b3-1` CNAME을 `b3-1.duckdns.org`로 한 번만 넣고, 서버가 켜질 때 부팅 스크립트가 무료 동적 DNS인 DuckDNS에 자기 IP를 등록합니다. 도메인이 새 IP를 가리키는 것을 확인한 뒤 Caddy를 띄워, 옛 IP 때문에 인증서 검증이 실패하지 않게 합니다(검증 실패는 이름마다 시간당 5번까지). 지울 때는 `infra/b3-1.sh down`이 DuckDNS 값을 비워, 반납한 IP를 가리키지 않게 합니다.
+- DuckDNS 토큰은 저장소 밖(`~/.config/wiki-rag/duckdns.env`)에 둡니다. 다만 서버에 넘기는 부팅 스크립트(user_data)에 들어가고, 스택을 지운 뒤에도 노트북의 Terraform 상태 백업(`infra/terraform.tfstate.d/b3-1/terraform.tfstate.backup`, 커밋 안 함)에 남습니다. user_data는 이 계정의 EC2 조회 권한으로 읽을 수 있습니다. 서버 안에서는 메타데이터 응답이 한 홉만 가게 해서(`http_put_response_hop_limit = 1`), Caddy 컨테이너에서는 user_data를 읽지 못합니다(리허설에서 확인).
 
 ### 보너스 2: Docker 배포
 
@@ -267,7 +289,9 @@ deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
 
 서버의 비밀(DB 비밀번호, 서비스 토큰, 토큰 서명 키)은 `deploy/init-secrets.sh`가 서버에서 처음 한 번 만들고 저장소에는 없습니다. 인증서를 이름 있는 볼륨에 두는 이유는, 컨테이너를 다시 만들 때마다 새로 발급받으면 Let's Encrypt 발급 한도에 걸리기 때문입니다.
 
-B3-1 제출 시점(Caddy만 있을 때)의 확인 화면입니다.
+평가용 스택은 compose 없이 부팅 스크립트가 같은 이미지를 `docker run`으로 띄웁니다. 포트 매핑과 재시작 정책(`--restart unless-stopped`)은 위와 같고, 설정과 페이지는 부팅 스크립트가 서버에 써 둔 파일을 읽기 전용으로 붙입니다. 리허설의 `docker ps` 결과는 [`docs/evidence/b3-1-rehearsal.txt`](docs/evidence/b3-1-rehearsal.txt)에 있습니다.
+
+아래는 운영 서버에 Caddy만 있던 때의 확인 화면입니다.
 
 | 서버 안: `docker ps`와 `curl http://localhost` | 외부: `/health` 호출 |
 |---|---|
@@ -314,6 +338,8 @@ ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
 - 동시 50에서 오류율 목표는 맞췄고, p95 목표(800ms)는 2.3초로 못 맞췄습니다. 물리 코어 하나가 쿼리 임베딩으로 차 있어, 맞추려면 임베딩에 쓸 계산 능력이 지금의 두 배쯤 필요합니다. 검색 품질을 낮추는 작은 모델로 바꾸지는 않았습니다.
 
 ### 다시 만들기
+
+평가용 스택은 DuckDNS 이름과 토큰을 `~/.config/wiki-rag/duckdns.env`에 두고(`DUCKDNS_SUBDOMAIN`, `DUCKDNS_TOKEN`) `infra/b3-1.sh up`만 실행합니다. 운영 스택은 아래 순서입니다.
 
 1. 배포용 IAM 사용자로 로그인합니다. `aws sts get-caller-identity --profile wiki-rag`가 `user/wiki-rag-deployer`여야 합니다.
 2. `infra/terraform.tfvars.example`을 `infra/terraform.tfvars`로 복사하고 `ssh_cidr`에 내 IP(`/32`)를 넣습니다.

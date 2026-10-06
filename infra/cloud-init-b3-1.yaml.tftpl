@@ -1,0 +1,67 @@
+#cloud-config
+# 과제 B3-1 평가용 서버(b3-1 스택). 평가마다 새로 만들고 지우므로, 켜질 때 웹 서비스까지 스스로 띄운다.
+#
+# 순서가 중요하다.
+# 1. Elastic IP는 인스턴스가 뜬 뒤에 붙는다. 붙기 전에는 밖으로 나갈 수 없으니 공인 IP가 생길 때까지 기다린다.
+# 2. DuckDNS에 새 IP를 등록한다. 가비아의 ${domain} CNAME이 이 DuckDNS 이름을 가리킨다.
+# 3. 도메인이 새 IP를 가리킬 때까지 기다렸다가 Caddy를 띄운다. 옛 IP를 가리키는 동안 인증서를 요청하면 검증이
+#    실패하고, 실패는 이름마다 시간당 5번으로 제한된다.
+# DuckDNS 등록과 DNS 대기는 각각 5분에서 끊고 Caddy를 그냥 띄운다. HTTPS는 보너스이고, IP로 받는 HTTP(방식 A·B)는
+# DuckDNS가 막혀도 열려야 한다.
+write_files:
+  - path: /opt/web/Caddyfile
+    content: |
+      {
+        ${acme_staging ? "acme_ca https://acme-staging-v02.api.letsencrypt.org/directory" : "# 인증서는 Let's Encrypt 실제 서버에서 받는다"}
+      }
+
+      # 도메인으로 온 요청: 인증서를 받아 HTTPS로 응답하고, 같은 이름의 HTTP 요청은 HTTPS로 넘긴다 (보너스 1)
+      ${domain} {
+        respond /health "OK" 200
+        root * /srv
+        file_server
+      }
+
+      # 공인 IP나 localhost로 온 HTTP 요청 (과제 검증: curl http://localhost, http://<공인 IP>/health)
+      :80 {
+        respond /health "OK" 200
+        root * /srv
+        file_server
+      }
+  - path: /opt/web/site/index.html
+    content: |
+      ${indent(6, index_html)}
+  - path: /opt/web/start.sh
+    permissions: "0700"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      imds() {
+        local t
+        t=$(curl -sf -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')
+        curl -sf -H "X-aws-ec2-metadata-token: $t" "http://169.254.169.254/latest/meta-data/$1"
+      }
+
+      until ip=$(imds public-ipv4) && [ -n "$ip" ]; do sleep 5; done
+      echo "[b3-1] 공인 IP $ip"
+
+      until apt-get update -q && apt-get install -yq docker.io dnsutils; do sleep 10; done
+      systemctl enable --now docker
+      usermod -aG docker ubuntu
+
+      for _ in $(seq 30); do
+        [ "$(curl -sf "https://www.duckdns.org/update?domains=${duckdns_subdomain}&token=${duckdns_token}&ip=$ip")" = OK ] && { echo "[b3-1] DuckDNS ${duckdns_subdomain}.duckdns.org -> $ip"; break; }
+        sleep 10
+      done
+
+      for _ in $(seq 30); do
+        [ "$(dig +short ${domain} @1.1.1.1 | tail -1)" = "$ip" ] && { echo "[b3-1] ${domain} -> $ip"; break; }
+        sleep 10
+      done
+
+      docker run -d --name web --restart unless-stopped -p 80:80 -p 443:443 \
+        -v /opt/web/Caddyfile:/etc/caddy/Caddyfile:ro -v /opt/web/site:/srv:ro -v caddy-data:/data \
+        caddy:2.11.4-alpine
+      echo "[b3-1] Caddy 시작"
+runcmd:
+  - /opt/web/start.sh
