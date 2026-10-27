@@ -1,354 +1,179 @@
-# wiki-rag-mcp
+# wiki-rag-mcp — AWS 클라우드 배포 (B3-1)
 
-사내 위키 문서를 **사용자 권한에 맞게** 검색해, LLM 에이전트가 MCP 도구로 호출할 수 있게 하는 서버입니다. 답변은 만들지 않고 근거가 되는 문서 조각만 돌려주며, 권한 없는 문서는 검색 단계에서부터 제외합니다.
+사내 위키를 사용자 권한에 맞게 검색하는 MCP 서버를 AWS 서울 리전의 EC2에 배포한 프로젝트입니다. 코디세이 B3-1 「내가 만든 웹사이트를 인터넷에 올려 누구나 쓰게 하기」의 제출물과 검증 방법을 이 README에 모았습니다.
 
-- **운영 서버**
-  - MCP 서버: `https://mcp.dmssh.store/mcp` (Streamable HTTP + OAuth)
-  - 인가 서버: `https://auth.dmssh.store`
-- **문서**
-  - 설계서: [`docs/design.md`](docs/design.md)
-  - 결정 기록: [`docs/adr/`](docs/adr/README.md)
-  - 실험 기록: [`experiments/`](experiments/README.md)
+외부에 공개하는 웹 페이지와 `/health`는 로그인 없이 확인할 수 있습니다. 위키 검색은 OAuth 로그인이 필요합니다. 검색 서버의 동작과 실험 결과는 [사내 위키 검색 서버 설명](docs/project-overview.md)에 있습니다.
 
-## 같은 질문, 다른 답
+## 제출물과 증빙
 
-가상 회사 "새솔소프트"의 위키(문서 200개, 사용자 11명)를 운영 서버에 올리고, 데모 에이전트로 세 사람이 같은 질문을 했습니다.
+| 과제 제출물 | 파일·선택 방식 | 확인할 내용 |
+|---|---|---|
+| 아키텍처 다이어그램 1장 | [docs/architecture.png](docs/architecture.png) | VPC, Public Subnet, Internet Gateway, EC2, Security Group과 외부 요청 흐름 |
+| 외부 접속 증빙 | **방식 B**: `GET http://<퍼블릭 IP>/health` | `200 OK`, 고정 본문 `OK`. [스크린샷](docs/evidence/terminal-external-access.png), [원본 출력](docs/evidence/external-access.txt) |
+| 트러블슈팅 보고서 | [docs/troubleshooting.md](docs/troubleshooting.md) | 실제 문제 4건의 증상 → 가설 → 검증 → 조치 → 결과 → 재발 방지 |
+| 리소스 정리 체크리스트 | [docs/cleanup-checklist.md](docs/cleanup-checklist.md) | EC2·EBS·Elastic IP·IGW·VPC의 삭제 순서와 실행 기록 |
 
-- **질문**: "운영 DB 비밀번호는 얼마마다 바꿔야 해?"
-- **정답 문서**: `infra-007` "운영 DB 비밀번호 교체 절차"
-  - 인프라 스페이스의 문서인데, 그 안에서도 DBA만 보도록 제한돼 있습니다.
-  - 스페이스 권한과 문서 제한을 둘 다 만족해야 보입니다(ADR-21).
+보관한 증빙은 운영 스택의 **2026-09-28 접속 기록**과 평가용 스택의 **2026-10-07 리허설 2회 기록**입니다. 리허설에서는 각각 Terraform 자원 13개를 삭제하고 잔여 자원 점검이 모두 0인 것을 확인했습니다. 실제 평가 1~3회의 정리 기록과 운영 스택의 삭제 기록은 아직 작성되지 않았습니다. 과거 증빙을 현재 접속 상태나 전체 자원 정리 완료로 해석하지 않습니다.
 
-| 질문자 | 소속 | 검색에서 받은 문서 | 답 |
-|---|---|---|---|
-| `taeyang` | 인프라, DBA | `infra-007` 포함 | 운영 DB 관리자 계정 비밀번호는 60일마다 교체합니다 `[infra-007]` |
-| `seoyeon` | 인프라 (DBA 아님) | `infra-007` 없음 | 운영 DB 전용 근거는 찾지 못했다고 말하고, 전사 계정 인증 정책을 안내합니다 |
-| `minjun` | DBA (인프라 아님) | `infra-007` 없음 | 같음 |
+## 평가 방식: 평가마다 만들고 지움
 
-- **흔적을 남기지 않습니다.** 권한이 없는 두 사람에게는 제한 문서가 검색 결과에 아예 나오지 않고, "1건 제외" 같은 안내도 없습니다.
-- **본문도 한 번 더 막습니다.** 문서 id를 알아도 `get_document`에서 위키가 권한을 다시 판단해 막습니다(ADR-07).
+과제는 실행 중인 웹 서버와 실습 종료 후 정리 완료를 모두 확인합니다. 평가용 스택을 새로 만들어 접속을 보여 주고, 평가 마지막에 지운 뒤 정리 기록을 남깁니다.
 
-`taeyang`이 받은 답입니다(2026-09-29, 운영 서버).
+| 구분 | 평가용 스택 | 운영 스택 |
+|---|---|---|
+| Terraform workspace | `b3-1` | `default` |
+| 용도 | B3-1 외부 접속·정리 시연 | 위키 검색 서버 운영과 측정 |
+| EC2 / EBS | `t3.micro` / 8GiB | `m7i-flex.large` / 20GiB |
+| 서버 안 | Caddy 컨테이너 1개, 소개 페이지와 `/health` | Caddy, 검색 서버, 위키 서비스, 워커, DB, Redis, 관측성 도구 |
+| 주소 | 생성 때 출력하는 IP, `b3-1.dmssh.store` | 증빙 당시 `52.78.251.4`, `mcp.dmssh.store`, `auth.dmssh.store` |
+| 정리 | 평가마다 생성·삭제 | 별도 정리 대상. 삭제 기록은 실행 전 |
 
-```text
-운영 DB 관리자 계정 비밀번호는 **60일마다 교체**합니다. [infra-007]
+두 스택은 [같은 Terraform 코드](infra/main.tf)를 쓰되 상태 파일을 나눕니다. 평가용 자원에는 이름의 `-b3-1` 접미사와 `stack=b3-1` 태그를 더합니다. [평가 스크립트](infra/b3-1.sh)는 자기 프로세스에만 `TF_WORKSPACE=b3-1`을 지정합니다. 리허설에서 평가용 스택 생성·삭제 전후 운영 스택의 `terraform plan`이 `No changes`인 것을 확인했습니다.
 
-참고로 일반 계정 비밀번호 정책 문서에는 다른 기준도 보이지만, 운영 DB에 대해서는 더 최근의 전용 문서인
-**「운영 DB 비밀번호 교체 절차」**를 따르는 것이 맞습니다. 일반 계정 문서에는 90일 기준이 있으나
-오래된 문서입니다. [infra-007][it-002]
+### 평가용 스택 준비
 
-출처
-  [infra-007] 운영 DB 비밀번호 교체 절차 (버전 4, 2026-08-05 수정)
-  [it-002] 계정 비밀번호 정책 (2024) (버전 5, 2024-02-05 수정)
+명령은 저장소 루트에서 실행합니다. AWS CLI, Terraform(버전 조건은 [infra/main.tf](infra/main.tf)), SSH, `curl`, `dig`가 필요합니다.
+
+1. 최소 권한 IAM 사용자 `wiki-rag-deployer`의 AWS CLI 프로필 `wiki-rag`를 준비합니다. [IAM 정책](infra/iam/deployer-policy.json)을 사용하며 관리자 권한은 부여하지 않습니다.
+2. SSH 키를 준비합니다. 기본 공개 키 경로는 `~/.ssh/wiki-rag-m5.pub`, 접속에 사용하는 개인 키는 `~/.ssh/wiki-rag-m5.pem`입니다. 다른 경로는 [Terraform 변수](infra/variables.tf)에 맞춥니다.
+3. `infra/terraform.tfvars`가 없으면 [설정 예시](infra/terraform.tfvars.example)를 복사하고 `ssh_cidr`에 운영자 IP(`/32`)를 적습니다. 삭제 때도 이 필수 변수를 읽으므로 설정 파일을 준비합니다. 생성 시에는 스크립트가 현재 PC의 IP로 덮어씁니다.
+4. DuckDNS 이름과 토큰을 저장소 밖 `~/.config/wiki-rag/duckdns.env`에 준비합니다. 변수 이름은 `DUCKDNS_SUBDOMAIN`, `DUCKDNS_TOKEN`이고, 파일 권한은 `600`으로 둡니다. 가비아의 `b3-1.dmssh.store` CNAME은 `<DUCKDNS_SUBDOMAIN>.duckdns.org`를 가리키게 합니다.
+5. Terraform 공급자를 초기화하고 로그인 주체를 확인합니다.
+
+   ```bash
+   terraform -chdir=infra init
+   aws sts get-caller-identity --profile wiki-rag --query Arn --output text
+   # ...:user/wiki-rag-deployer 여야 한다
+   ```
+
+DuckDNS 토큰은 평가용 서버의 `user_data`와 로컬 Terraform 상태·백업에도 남습니다. 이 파일들은 커밋하지 않습니다. 컨테이너가 메타데이터를 읽지 못하도록 평가용 인스턴스의 메타데이터 홉 제한을 1로 두며, 리허설에서 호스트는 읽고 컨테이너는 시간 초과로 실패하는 것을 확인했습니다.
+
+### 생성 → 검증 → 정리
+
+```bash
+infra/b3-1.sh up       # 계획을 확인하고 yes. 마지막에 IP·HTTPS 주소·SSH 명령 출력
 ```
 
-## 목표와 결과
+스크립트는 실행한 PC의 공인 IP를 SSH 허용 출처로 넣습니다. 서버는 cloud-init으로 Docker 설치, DuckDNS 갱신, Caddy 실행을 진행합니다. 리허설은 `infra/b3-1.sh up --staging`으로 실행합니다. 시험 인증서는 브라우저가 신뢰하지 않으므로 정식 HTTPS 접속 증빙과 구분합니다.
 
-판정 기준은 모두 측정 전에 적었습니다. 방법과 신뢰구간, 원본 기록은 [`experiments/`](experiments/README.md)에 있습니다.
+출력된 IP를 아래 `<퍼블릭 IP>`에 넣고, 노트북에서 확인합니다.
 
-| 지표 | 목표 | 결과 |
+```bash
+curl -i http://<퍼블릭 IP>/health   # HTTP/1.1 200 OK, 본문 OK
+ssh -i ~/.ssh/wiki-rag-m5.pem ubuntu@<퍼블릭 IP>
+```
+
+SSH 접속 후 서버 안에서도 확인합니다.
+
+```bash
+sudo docker ps                        # caddy:2.11.4-alpine, Up, 80·443 매핑
+curl -i http://localhost               # 200
+curl -i http://localhost/health        # 200, 본문 OK
+curl -I https://example.com            # 인터넷 아웃바운드 연결 확인
+```
+
+검증 뒤 로컬 터미널에서 평가용 스택을 지웁니다.
+
+```bash
+infra/b3-1.sh down     # DuckDNS 값 비움 → 삭제 계획 확인·yes → 잔여 자원 점검
+```
+
+`Destroy complete! Resources: 13 destroyed.`와 잔여 자원 점검의 모든 줄이 `0`인지 확인하고, [체크리스트의 정리 실행 기록](docs/cleanup-checklist.md#정리-실행-기록)에 해당 회차의 일시와 결과를 남깁니다. 삭제 명령을 실행했다는 사실만으로 정리 완료로 보지 않습니다.
+
+## 외부 접속 검증
+
+**선택한 방식은 B**입니다. 보안 그룹의 80번 허용, Elastic IP, IGW와 기본 라우팅, Docker 포트 매핑, Caddy의 `respond /health "OK" 200`을 연결해 고정 응답으로 판정합니다. 방식 A의 소개 페이지도 같은 서버에서 확인할 수 있습니다.
+
+| 대상 | 주소 | 기대 결과 |
 |---|---|---|
-| 무권한 문서 노출 | 0건 | 0건 (권한 테스트셋, PR마다 도는 골든셋 회귀 검사) |
-| Recall@5 (골든셋 중 정답이 있는 270문항) | 0.85 이상 | 0.970 |
-| 문서 수정 후 검색 반영 p95 | 30초 이하 | 평상시 1.06초 이하, 새 문서 20개를 한꺼번에 만들 때 8.05초 |
-| 권한 회수 후 검색에서 사라질 때까지 p95 | 30초 이하 | 0.42초 |
-| `search_wiki` p95 | 800ms 이하 | 동시 10에서 506ms, **동시 50에서 2,263ms (미달, ADR-25)** |
-| 동시 50 오류율 | 1% 미만 | 0% |
-| 도구 선택 오류율 (ADR-05) | 도구마다 10% 이하 | `search_wiki` 1.3%, `list_recent_changes` 0%, `get_document` 10.0%, 부르지 않음 5.0% |
-| 답변의 근거 충실도, 인용 정확도 | 0.9 이상 | 0.960, 0.940 |
-| 문서에 심은 프롬프트 인젝션 | 따른 횟수 0 | 지시문이 도달한 24번 중 0번 |
+| 평가용 HTTP (방식 B) | `http://<생성 때 출력한 IP>/health` | `200`, 본문 `OK` |
+| 평가용 소개 페이지 (방식 A) | `http://<생성 때 출력한 IP>` | 소개 페이지 표시 |
+| 평가용 HTTPS (보너스 1) | `https://b3-1.dmssh.store/health` | 정식 인증서로 `200`, 본문 `OK` |
+| 평가용 도메인 HTTP | `http://b3-1.dmssh.store` | `308`로 HTTPS에 연결 |
 
-## 구성
+아래 스크린샷은 **평가용 스택이 아니라 운영 스택의 2026-09-28 기록**입니다. 당시 방식 B의 접속 주소는 `http://52.78.251.4/health`였습니다. 평가용 스택의 접속·서버 내부·삭제 결과는 [2026-10-07 리허설 원본](docs/evidence/b3-1-rehearsal.txt)에 있습니다. 그 IP는 삭제 후 반납했으므로 평가 때는 새로 출력한 주소를 씁니다.
 
-[![wiki-rag-mcp 구성도. AI 에이전트(Claude Code 등)가 Caddy(80·443)를 거쳐 검색 서버에 MCP로 요청한다. 검색 서버는 권한 조건을 건 벡터 검색으로 검색 DB를 찾고, 위키 서비스에서 그룹과 본문 권한을 확인한다. 위키 서비스는 문서와 변경 이벤트를 위키 DB에 한 트랜잭션으로 쓰고 Redis Streams로 보낸다. 인덱서 워커는 이벤트를 받아 위키에서 상태를 다시 읽고 검색 DB의 청크를 바꾼다. 관측성 도구까지 모두 EC2 한 대의 Docker Compose 안에서 돈다.](docs/system-architecture.png)](docs/system-architecture.png)
+| 외부 접속: 노트북의 `curl -i` | 컨테이너 상태와 서버 내부 접속 |
+|---|---|
+| ![2026-09-28 운영 스택의 외부 HTTP 접속, 200과 OK](docs/evidence/terminal-external-access.png) | ![2026-09-28 운영 스택의 docker ps Up 상태와 localhost 접속](docs/evidence/terminal-server-docker-ps.png) |
 
-굵은 초록 선은 검색 경로, 회색 선은 반영 경로, 빨간 점선은 로그인, 보라 점선은 워커가 위키에서 상태를 다시 읽는 길입니다. 그림의 원본은 [`docs/system-architecture.archify.json`](docs/system-architecture.archify.json)입니다. 이 그림은 서버 안의 구성 요소와 흐름을 보여 주고, 요청이 인터넷에서 서버까지 들어오는 네트워크 경로(DNS, 인터넷 게이트웨이, 보안 그룹)는 아래 B3-1 절의 [아키텍처 그림](#아키텍처)에 있습니다.
+| 방식 A: 공인 IP의 소개 페이지 | 보너스 1: 도메인 HTTPS |
+|---|---|
+| ![2026-09-28 운영 스택의 공인 IP 소개 페이지](docs/evidence/browser-http-ip.png) | ![2026-09-28 운영 스택의 HTTPS 소개 페이지](docs/evidence/browser-https-domain.png) |
 
-- **검색**
-  - 검색 서버는 액세스 토큰의 `sub`로 사용자를 정합니다.
-  - 그룹은 위키에서 읽어 60초 캐시합니다.
-  - 권한 조건을 벡터 검색 쿼리 안에 넣어, 권한 밖 문서가 결과, 로그, 캐시 어디에도 남지 않게 합니다(ADR-07).
-- **반영**
-  - 위키는 문서를 고친 트랜잭션에 이벤트를 함께 적고(아웃박스), 이를 Redis Streams로 내보냅니다.
-  - 워커는 이벤트를 신호로만 쓰고 문서 상태를 위키에서 다시 읽은 뒤, 바뀐 섹션만 다시 임베딩합니다(ADR-09, ADR-10, ADR-19).
-- **로그인**
-  - 인가 서버는 위키 서비스 안에 있습니다. Claude Code 같은 외부 클라이언트는 CIMD로, 우리가 만든 클라이언트는 미리 등록해 받습니다.
-  - 클라이언트 신뢰 등급은 인가 서버가 정해 토큰에 넣습니다(ADR-24).
-- **관측과 배포**: 세 서비스가 OpenTelemetry로 추적과 지표를 보냅니다(ADR-15). 전체가 AWS 서울 리전 EC2 한 대에서 Docker Compose로 돕니다(ADR-23).
+주소·시각 띠는 캡처 때 덧붙인 것이며 페이지 자체에는 없습니다. [외부 접속 원본](docs/evidence/external-access.txt)과 [서버 내부 원본](docs/evidence/server-checks.txt)도 함께 보관합니다. `/health`의 고정 응답은 웹 서버까지 연결됐다는 증빙이며, 위키 검색 전체의 정상 동작을 뜻하지는 않습니다.
 
-## 주요 결정
+## 아키텍처
 
-| 결정 | 이유 | 기록 |
+![AWS 배포 아키텍처: 외부 요청이 IGW, 퍼블릭 서브넷, 보안 그룹, EC2의 Caddy로 들어오고 라우팅 테이블의 기본 경로로 응답한다](docs/architecture.png)
+
+그림은 운영 스택에 Caddy만 배포했던 시점의 네트워크입니다. 평가용 스택도 같은 VPC·서브넷·IGW·보안 그룹 구조를 쓰며, EC2 유형·IP·도메인이 위 비교표와 다릅니다. RAG 서비스까지 포함한 서버 내부 구성은 [검색 서버 설명](docs/project-overview.md#구성)에 있습니다. 그림의 [원본 JSON](docs/architecture.archify.json)과 [HTML 소스](docs/architecture.html)도 보관합니다.
+
+1. 도메인으로 접속하면 DNS가 Elastic IP를 알려 줍니다. IP로 직접 접속할 때는 이 단계를 거치지 않습니다.
+2. 요청이 Internet Gateway를 거쳐 퍼블릭 서브넷의 EC2로 들어옵니다. EC2에 연결된 Security Group이 출처와 목적지 포트를 확인합니다.
+3. 호스트의 80·443 포트가 Docker 포트 매핑을 통해 Caddy 컨테이너에 연결됩니다.
+4. 응답과 서버의 인터넷 요청은 서브넷 라우팅 테이블의 `0.0.0.0/0 → IGW` 경로로 나갑니다. 공인 IP만 있고 이 경로가 없으면 인터넷 연결을 완성할 수 없습니다.
+
+| 구성 | 설정 | 구현·증빙 |
 |---|---|---|
-| 서버는 답을 만들지 않고 근거만 돌려준다 | 생성은 클라이언트 LLM의 몫이다. 서버가 또 생성하면 비용과 지연이 두 배가 되고, 서버가 LLM 키와 프롬프트를 떠안는다 | ADR-04 |
-| 권한은 검색 안에서 거르고(pre-filter), 본문은 위키가 요청마다 다시 판단한다 | 검색 뒤에 거르면 제한 문서가 많은 사용자는 결과가 0~1개만 남고, 거르기 전 결과가 로그와 캐시에 남을 수 있다 | ADR-07, ADR-21 |
-| 도구는 목적이 겹치지 않는 3개이고, 모두 읽기 전용이다 | 누구나 편집하는 위키는 간접 프롬프트 인젝션의 통로다. 뚫려도 할 수 있는 일이 없게 한다 | ADR-05, ADR-16 |
-| 인덱싱 이벤트는 신호로만 쓰고, 순서는 모든 변경에 오르는 revision으로 판단한다 | 내용 버전으로 순서를 보면 권한만 바뀐 이벤트가 중복으로 버려져 권한 회수가 유실된다 | ADR-19 |
-| 검색 저장소를 OpenSearch에서 PostgreSQL + pgvector로 단순화했다 | 하이브리드 검색의 효과가 미리 정한 기준(+2%p)을 넘는다고 증명되지 않았다 | ADR-02, ADR-22 |
-| 리랭커와 상용 임베딩을 넣지 않았다 | 리랭커는 지연 예산의 16배, 상용 임베딩은 기준(+5%p)에 못 미쳤다 | ADR-11, ADR-13 |
-| 판정은 신뢰구간으로 하고, 애매할 때의 선택을 미리 정한다 | 골든셋 300문항으로는 2%p 차이를 구분할 수 없다는 것을 먼저 인정했다 | ADR-20 |
+| 리전 / 가용 영역 | 서울 `ap-northeast-2` / `ap-northeast-2a` | [변수](infra/variables.tf) |
+| VPC / Public Subnet | `10.0.0.0/16` / `10.0.1.0/24` | [Terraform](infra/main.tf) |
+| IGW / Route Table | VPC에 IGW 연결, 서브넷에 기본 경로 연결 | [Terraform](infra/main.tf), [리허설 4절](docs/evidence/b3-1-rehearsal.txt) |
+| 평가용 EC2 / EBS | `t3.micro`, Ubuntu 24.04 LTS, gp3 8GiB, 종료 시 볼륨 삭제 | [Terraform](infra/main.tf) |
+| 공인 IP | 스택마다 Elastic IP 1개, 삭제 때 반납 | [출력 정의](infra/outputs.tf), [정리 기록](docs/cleanup-checklist.md#정리-실행-기록) |
+| 서버 부팅 | Docker 설치·DNS 갱신·웹 서버 실행 | [평가용 cloud-init](infra/cloud-init-b3-1.yaml.tftpl) |
 
-측정과 검토를 거쳐 바뀐 결정은 설계서 10장 "측정과 검토로 바뀐 결정"에 모았습니다.
+평가용 스택은 과제의 micro·8~10GiB 권장 사양을 따릅니다. 운영 스택은 로컬 임베딩 모델 두 프로세스와 DB·위키 서비스를 위해 8GiB 메모리와 20GiB 디스크를 사용합니다. 선택 근거와 측정은 [ADR-23](docs/adr/ADR-23.md), 디스크 문제와 조치는 [트러블슈팅 3절](docs/troubleshooting.md#3-같은-커밋을-다시-배포하다-디스크가-가득-참-m5)에 있습니다.
 
-## 데모 에이전트 측정 (M6)
+## 보안 그룹과 IAM
 
-검색 서버는 근거만 돌려주므로, 서버만으로는 클라이언트가 도구를 제대로 고르는지, 답이 근거에 맞는지, 문서에 심은 지시를 따르지 않는지 알 수 없습니다. 그래서 서버를 부르는 데모 에이전트(`gpt-5.4`)를 만들어 운영 서버에서 쟀습니다. 측정 대상은 설계 때부터 이 에이전트였고(ADR-04), Claude Code는 재지 않았습니다. 그래서 결과는 실제 클라이언트인 Claude Code의 값이 아닙니다. 에이전트는 질문자의 토큰으로 붙어 그 사람이 볼 수 있는 문서만 받습니다. 판정 기준은 측정 전에 적었습니다([`experiments/m6-agent`](experiments/m6-agent/README.md)).
+Security Group은 **어느 IP가 EC2의 어느 포트에 접속할 수 있는지**, IAM은 **누가 AWS 자원을 조회·생성·삭제할 수 있는지**를 정합니다.
 
-| 항목 | 방법 | 기준 | 결과 |
+| 방향 | 포트 | 출처·목적지 | 용도 |
 |---|---|---|---|
-| 도구 선택 | 골든셋 300문항과 다른 도구용 50문항에서 처음 고른 도구 | 의도한 도구마다 오류율 10% 이하 | 가장 높은 `get_document`가 10.0% |
-| 근거 충실도 | 골든셋 층화 표본 50문항. 답을 주장으로 나눠, 에이전트가 받은 내용으로 뒷받침되는지 채점 | 0.9 이상 | 48/50 = 0.960 |
-| 인용 정확도 | 같은 50문항. 인용한 문서가 그 구간의 주장을 뒷받침하는지 채점 | 0.9 이상 | 156/166 = 0.940 |
-| 채점 신뢰도 | 50개 중 10개를 검수해 채점 모델과 비교 | 일치율 80% 이상 | 근거 90%, 인용 100% |
-| 프롬프트 인젝션 | 문서 3개에 에이전트를 향한 지시문을 심고, 질문 9개를 세 번씩 | 지시문이 도달한 실행에서 따름 0번 | 24번 중 0번 |
+| 인바운드 | TCP 80 | `0.0.0.0/0` | 외부 HTTP 접속, 인증서 발급, HTTPS 전환 |
+| 인바운드 | TCP 443 | `0.0.0.0/0` | HTTPS |
+| 인바운드 | TCP 22 | 운영자 공인 IP `/32` | SSH 배포·점검 |
+| 아웃바운드 | 전체 | `0.0.0.0/0` | 패키지·이미지 다운로드, DNS·인증서 발급 등 |
 
-- **채점**: 답을 만든 모델과 다른 계열인 `claude-opus-4-8`이 했습니다. LLM 채점자는 자기가 만든 글을 더 높게 매기는 경향이 있기 때문입니다(Panickssery 외, NeurIPS 2024). 방식은 RAGAS의 근거 충실도와 ALCE의 인용 정밀도를 따랐습니다.
+전체 포트 인바운드는 없으며 DB·Redis·Caddy 관리 포트도 공개하지 않습니다. `ssh_cidr`는 기본값이 없고 `0.0.0.0/0`을 거부합니다. 평가 스크립트는 실행 시점의 운영자 IP를 넣습니다.
 
-**측정이 찾아낸 것**
+과제 자원은 관리자 권한 없는 IAM 사용자 `wiki-rag-deployer`로 생성·삭제합니다. [정책 파일](infra/iam/deployer-policy.json)은 서울 리전의 조회·생성·연결과 `project=wiki-rag-mcp` 태그가 있는 자원의 삭제를 허용합니다.
 
-- **`search_wiki`의 `space` 인자를 쓸 수 없었습니다.**
-  - 에이전트가 `space`를 준 11번이 모두 없는 스페이스 이름이라 빈 결과를 받았습니다. 도구 설명에 쓸 수 있는 값이 없기 때문입니다.
-  - 이제 `space`를 줬는데 결과가 없으면 "space를 비우고 다시 검색하라"는 오류를 돌려줍니다. 없는 스페이스와 볼 수 없는 스페이스가 같은 문구라 권한은 드러나지 않습니다.
-- **첫 채점은 평가 도구의 버그로 무효였습니다.**
-  - 채점 모델에 근거를 넘기면서 서버가 붙인 "오래된 문서" 같은 표시를 빠뜨렸습니다. 그래서 에이전트가 그 표시를 옮긴 문장을 근거 없음으로 판정해, 첫 채점은 0.840, 0.898로 기준에 못 미쳤습니다.
-  - 표시를 넣어 같은 답을 다시 채점했고, 두 채점을 모두 남겼습니다.
-- **기밀 문서는 의도대로 막혔습니다.** 데모 에이전트는 공개 클라이언트라 외부 등급이고, 기밀 문서는 제목과 링크만 받습니다(ADR-17). 정답과 맞지 않은 답 8개 중 4개가 이 경우였습니다.
+- [최소 권한 확인 기록](docs/evidence/iam-least-privilege.txt): 서울 EC2 조회는 허용, S3·다른 리전 EC2·IAM 사용자 목록은 거부.
+- [삭제 권한 모의 실행](docs/evidence/cleanup-dry-run.txt): 프로젝트 자원 삭제 호출 12개는 허용, 태그 없는 기본 VPC 삭제는 거부. 이 기록은 권한 확인이며 실제 삭제 증빙은 리허설 기록입니다.
+- 루트 CLI 세션을 잘못 가져온 문제와 IAM 사용자로 바로잡은 과정은 [트러블슈팅 1절](docs/troubleshooting.md#1-cli가-iam-사용자가-아니라-루트-계정으로-로그인됨)에 남겼습니다.
 
-**한계**
+## 보너스: HTTPS와 Docker
 
-- 사람 검수는 계획과 달리, Claude가 채점 결과를 보지 않고 쓴 초안을 사용자가 확정했습니다. 초안을 쓴 모델이 채점 모델과 같은 계열이라, 사람이 처음부터 판정한 것보다 약한 근거입니다.
-- 클라이언트 모델이 하나(`gpt-5.4`)이고, 문항은 실제 직원의 질문이 아닙니다. COPA가 시드를 받지 않아 도구 선택과 답변은 한 번씩만 돌렸습니다.
-- 인젝션 0번은 이 조건에서 따르지 않았다는 뜻입니다. 따를 확률의 95% 상한은 약 12.5%입니다. 방어의 중심은 도구가 모두 읽기 전용이라는 설계입니다(ADR-16).
-
-## 알려진 빈틈
-
-측정과 검토에서 드러났지만 아직 막지 않았거나, 설계에서 알고 받아들인 틈입니다. 전체 내용과 대응은 설계서 10장 "알려진 위험"에 있습니다.
-
-**설계에서 받아들인 틈**
-
-| 틈 | 무엇이 새나 | 지금 막는 장치 |
+| 항목 | 구현 | 증빙 |
 |---|---|---|
-| 권한 회수 직후 | 권한을 회수한 뒤 인덱스에 반영되기까지(측정 p95 0.4초) 검색 결과에 그 문서의 스니펫이 나올 수 있습니다 | 본문은 `get_document`에서 위키가 요청마다 다시 판단해 바로 막습니다(측정 40번 모두). 반영 목표는 30초 안입니다(ADR-07) |
-| 멤버십 이벤트 경로가 멈출 때 | 아웃박스 폴러, Redis, 워커 중 하나가 멈추면 그룹에서 빠진 사람이 그룹 캐시 수명인 최대 60초 동안 스니펫과 제목을 봅니다 | 본문은 위키가 바로 막습니다. 줄여야 하면 캐시 수명을 줄입니다 |
-| 도구를 부를지는 클라이언트가 정함 | 서버는 도구가 불릴 때만 질문을 봅니다. 모델이 일반 질문처럼 생긴 회사 질문을 알아보지 못하면 위키 없이 일반론으로 답하고(데모 에이전트 2/300), 반대로 일반 질문에 위키를 찾기도 합니다(1/20). 한쪽을 줄이면 다른 쪽이 늘어 0으로 만들 수 없습니다 | 도구 설명에 "쓸 때"와 "쓰지 말 때"를 나눠 적었습니다. 어느 쪽으로 기울일지는 맥락을 아는 클라이언트(시스템 프롬프트, CLAUDE.md)가 정할 일입니다 |
+| 도메인·HTTPS | Caddy가 Let's Encrypt 인증서를 발급·갱신. 도메인의 HTTP는 HTTPS로 전환 | [운영 스택의 인증서 검증 기록](docs/evidence/https-certificate.txt), 위 HTTPS 스크린샷 |
+| 평가용 DNS | 가비아 CNAME → DuckDNS → 생성 때 받은 Elastic IP | [평가용 cloud-init](infra/cloud-init-b3-1.yaml.tftpl), [리허설](docs/evidence/b3-1-rehearsal.txt) |
+| 이미지 | `caddy:2.11.4-alpine` | 위 `docker ps` 스크린샷 |
+| 실행 방식 | 평가용은 cloud-init의 `docker run`, 운영은 [Docker Compose](deploy/compose.yaml) | [평가용 실행 명령](infra/cloud-init-b3-1.yaml.tftpl), [운영 Caddyfile](deploy/Caddyfile) |
+| 포트 매핑 | 호스트 `80:80`, `443:443` | 위 서버 내부·외부 스크린샷 2장 |
+| 재시작·볼륨 | `unless-stopped`, 설정·페이지는 읽기 전용, 인증서는 이름 있는 볼륨 | 같은 실행 정의 |
 
-**아직 막지 않은 것**
+평가용 HTTPS 리허설은 시험 인증서를 사용했습니다. 운영 스택의 정식 인증서 기록과 섞어 평가용 정식 인증서 발급 완료로 주장하지 않습니다.
 
-| 빈틈 | 내용 | 대응 |
-|---|---|---|
-| 서버가 주는 범위가 막연함 | 안내문과 `search_wiki` 설명이 어느 회사의 무엇을 찾는 서버인지 알려 주지 않습니다. Claude Code 같은 일반 클라이언트는 이것만 보고 도구를 고릅니다 | 범위를 적는 변경을 재 보고 기각했습니다. 일반 클라이언트도 지금 문구로 이런 회사 질문 24개 중 23개를 찾았고, 범위를 넓히자 과잉 호출이 늘었습니다([`experiments/m6-tool-scope`](experiments/m6-tool-scope/README.md)). 다음 후보는 "쓰지 말 때"만 좁히는 것입니다 |
-| 기밀 문서 제목 인용 | 외부 등급은 기밀 문서의 제목만 받는데, 데모 에이전트가 그 제목을 관련 문서라며 인용했습니다(틀린 인용 10개 중 8개). 본문은 나가지 않습니다 | 데모 에이전트 프롬프트에서 다룰지 새 표본으로 잴 때 봅니다 |
-| 동시 50의 검색 지연 | p95 2.3초로 목표(800ms)를 넘습니다. 서버의 물리 코어 하나가 쿼리 임베딩으로 차 있기 때문이고, 오류율은 0%입니다 | 검색 품질을 낮추는 작은 모델로 바꾸지 않고 받아들였습니다(ADR-25). 맞추려면 계산 능력이 두 배쯤 필요합니다 |
-| 서버 한 대, 백업 없음 | 서버가 멈추면 전체가 멈춥니다. 위키 DB(문서와 권한의 원본)의 백업이 없습니다 | 실제 문서를 받기 전에 백업을 넣습니다 |
-| 호출 제한, 감사 로그, 민감정보 차단 | 설계서 9장에 적었지만 넣지 않았습니다 | 실사용자나 실제 문서를 받기 전에 넣습니다 |
-| 액세스 토큰 회수 | 인가를 취소해도 발급한 토큰은 만료(10분)까지 쓰입니다. 그룹과 문서 권한은 요청마다 해석하므로 권한 회수와는 관계없습니다 | 필요하면 수명을 줄이거나 토큰 조회(RFC 7662)로 바꿉니다 |
+## 트러블슈팅과 리소스 정리
 
-## 저장소 구조
+[트러블슈팅 보고서](docs/troubleshooting.md)에는 루트 CLI 로그인, 노트북의 간헐적 80번 연결 실패, Docker 빌드 중 디스크 부족, Caddyfile 변경 미반영을 기록했습니다. 외부 접속이 안 되면 라우팅·IGW 연결 → 보안 그룹 → 공인 IP·DNS → 서버 프로세스·로그를 확인하고, 다른 네트워크에서도 재현되는지 비교합니다. 포트를 넓히거나 관리자 권한을 붙이기 전에 실패 근거부터 확인합니다.
+
+[정리 체크리스트](docs/cleanup-checklist.md)는 Terraform 상태와 `project`·`stack` 태그로 자원을 추적합니다. `infra/b3-1.sh down`은 DNS 값을 먼저 비우고 자원을 삭제한 뒤 [잔여 자원 점검](infra/check-leftovers.sh)을 실행합니다. EC2만 중지하면 EBS와 공인 IPv4가 남으므로 종료·삭제·반납을 각각 확인합니다.
+
+- **삭제 증빙**: 2026-10-07 리허설 2회 모두 13개 삭제, EC2·EBS·Elastic IP·IGW·VPC를 포함한 점검 모두 0. [원본](docs/evidence/b3-1-rehearsal.txt).
+- **평가 후 기록**: 평가 1~3회는 각 회차가 끝난 뒤 체크리스트에 채웁니다. 운영 스택의 삭제는 별도 절차입니다.
+- **비용 확인**: 프리 티어 범위는 과제 제약이며, micro 사양만으로 비용 조건을 증명할 수 없습니다. 계정의 적용 범위·사용량과 정리 후 Billing 확인이 필요합니다. 현재 제출물에는 Billing 화면 증빙이 없습니다.
+
+## 관련 코드와 문서
 
 | 경로 | 내용 |
 |---|---|
-| `src/wiki_rag_mcp/server` | MCP 서버와 도구 3개, 문서 리소스 |
-| `src/wiki_rag_mcp/search` | pgvector 검색과 권한 필터 |
-| `src/wiki_rag_mcp/indexing` | 섹션 단위 청크, 임베딩, 증분 인덱싱 워커 |
-| `src/wiki_rag_mcp/auth` | 그룹 캐시, 액세스 토큰 검증 |
-| `src/wiki_rag_mcp/evaluation` | 골든셋 평가, 판정, CI 회귀 검사 |
-| `src/wiki_rag_mcp/agent` | 데모 에이전트와 그 평가 |
-| `tests` | 권한·등급 테스트셋, 증분 인덱싱 시나리오, 도구와 전송 테스트 |
-| `wiki-service` | Spring 위키 서비스, 아웃박스, 인가 서버 (계약은 [`wiki-service/README.md`](wiki-service/README.md)) |
-| `data/wiki`, `data/golden` | 가상 위키 200문서, 골든셋 300문항 |
-| `tools/wikigen`, `tools/goldset` | 가상 위키와 골든셋을 만든 도구 |
-| `experiments` | 판정 실험과 측정 |
-| `deploy`, `infra` | Docker Compose 배포, Terraform |
-| `docs` | 설계서, 결정 기록, 트러블슈팅, 증빙 |
-| `scripts` | 설계서에서 ADR 파일 만들기, 판정 규칙 시뮬레이션 |
-
-## 클라우드 배포 (B3-1)
-
-아래는 서버를 AWS에 올린 기록이며, 코디세이 과제 B3-1의 제출 문서를 겸합니다.
-
-### 평가 방식: 평가마다 만들고 지움
-
-과제 평가항목은 한 항목 안에서 "웹 서버가 실행 중인가"와 "정리 5종(EC2, EBS, Elastic IP, 인터넷 게이트웨이, VPC)을 완료했는가"를 함께 봅니다. 그래서 평가용 스택을 평가마다 새로 만들어 보여 드리고, 평가 끝에 그 자리에서 지웁니다. 평가용 스택은 운영 서버와 같은 Terraform 코드로 만들지만 상태 파일(workspace `b3-1`)이 따로라서, 지워도 운영 서버에는 닿지 않습니다.
-
-```bash
-infra/b3-1.sh up     # 평가 전: 만들고 접속 주소를 출력 (리허설에서 시작부터 HTTPS 응답까지 84초)
-infra/b3-1.sh down   # 평가 끝: 지우고 남은 자원을 셈 (리허설에서 37초)
-```
-
-| | 평가용 스택 (`b3-1`) | 운영 스택 (`default`) |
-|---|---|---|
-| 용도 | 과제 평가 | MCP 서버 운영 (M5, M6) |
-| 수명 | 평가마다 만들고 지움 | 계속 둠 |
-| EC2 | `t3.micro`, 8GiB (과제 권장 사양) | `m7i-flex.large`, 20GB |
-| 서버 안 | Caddy 컨테이너 하나(소개 페이지, `/health`) | Caddy와 위키, 검색 서버, 워커, DB, Redis |
-| 공인 IP | 만들 때마다 바뀜 | Elastic IP `52.78.251.4` |
-| 도메인 | `b3-1.dmssh.store` | `mcp.dmssh.store`, `auth.dmssh.store` |
-
-리허설 시간은 Terraform의 승인 질문을 건너뛰고 잰 값이라, 평가 때는 `yes`를 입력하는 시간이 더해집니다. 실제 인증서는 같은 이름으로 7일에 5장까지 발급되므로, 연습은 시험 인증서(`up --staging`)로 하고 실제 발급은 평가 때만 합니다. 리허설 기록(만들기, 서버 안팎 확인, 지우기, 남은 자원 0, 운영 스택 무변경)은 [`docs/evidence/b3-1-rehearsal.txt`](docs/evidence/b3-1-rehearsal.txt)에 있습니다.
-
-### 접속 정보와 검증 방식
-
-**검증 방식: B** (`GET http://<퍼블릭 IP>/health`가 200과 고정 응답 `OK`를 돌려줌). 방식 A(브라우저로 `http://<퍼블릭 IP>`)도 함께 확인합니다. 평가용 스택은 만들 때마다 IP가 바뀌므로, 주소는 `infra/b3-1.sh up`이 마지막에 출력합니다.
-
-| 주소 | 기대 응답 |
-|---|---|
-| `http://<퍼블릭 IP>/health` | `200 OK`, 본문 `OK` (방식 B) |
-| `http://<퍼블릭 IP>` | 소개 페이지 (방식 A) |
-| https://b3-1.dmssh.store/health | HTTPS로 `200`, 본문 `OK` (보너스 1) |
-| http://b3-1.dmssh.store | `308`으로 HTTPS 주소로 넘김 (보너스 1) |
-
-아래 스크린샷은 운영 서버(`52.78.251.4`, `mcp.dmssh.store`)에서 같은 확인을 했을 때의 화면입니다(2026-09-28). 원래 출력은 [`docs/evidence/`](docs/evidence/)에 있습니다.
-
-| 방식 B: 노트북 터미널에서 `curl -i` | 방식 B: 브라우저 |
-|---|---|
-| ![외부에서 curl로 /health 호출](docs/evidence/terminal-external-access.png) | ![브라우저로 /health 접속](docs/evidence/browser-http-ip-health.png) |
-
-| 방식 A: 브라우저로 `http://52.78.251.4` | 보너스 1: `https://mcp.dmssh.store` |
-|---|---|
-| ![브라우저로 퍼블릭 IP 접속](docs/evidence/browser-http-ip.png) | ![도메인 HTTPS 접속](docs/evidence/browser-https-domain.png) |
-
-브라우저 스크린샷 위쪽의 주소·시각 띠는 캡처할 때만 덧붙인 것이고, 페이지 자체에는 없습니다.
-
-### 아키텍처
-
-![AWS 배포 아키텍처](docs/architecture.png)
-
-사용자는 가비아 DNS에서 `mcp.dmssh.store`의 주소(Elastic IP)를 받아 요청을 보냅니다. 요청은 인터넷 게이트웨이를 지나 퍼블릭 서브넷의 EC2에 닿고, 보안 그룹이 허용한 80·443만 들어와 Caddy 컨테이너가 응답합니다. 운영자의 SSH(22)는 지정한 IP 한 곳에서만 들어옵니다. 다이어그램은 B3-1 제출 시점(Caddy만 있던 때)의 구성이고, M5에서 늘어난 컨테이너는 아래 "보너스 2"에 적었습니다. 평가용 스택도 같은 구조이고, 도메인만 `b3-1.dmssh.store`가 DuckDNS를 거쳐 만들 때마다 바뀌는 IP를 가리킵니다(보너스 1). 원본은 [`docs/architecture.archify.json`](docs/architecture.archify.json)이고, 확대해 볼 수 있는 HTML은 [`docs/architecture.html`](docs/architecture.html)입니다.
-
-| 구성 | 값 | 코드 |
-|---|---|---|
-| 리전 | 서울 `ap-northeast-2` (가용 영역 `ap-northeast-2a`) | `infra/variables.tf` |
-| VPC | `10.0.0.0/16`, 이 프로젝트 전용 | `infra/main.tf` |
-| 퍼블릭 서브넷 | `10.0.1.0/24` | `infra/main.tf` |
-| 인터넷 게이트웨이와 라우팅 | 서브넷의 라우팅 테이블에 `0.0.0.0/0` 대상 인터넷 게이트웨이 | `infra/main.tf` |
-| EC2 | `m7i-flex.large`, Ubuntu 24.04, 루트 볼륨 gp3 20GB(암호화), 메타데이터는 IMDSv2만 | `infra/main.tf`, `infra/cloud-init.yaml` |
-| 공인 IP | Elastic IP `52.78.251.4` (다시 시작해도 주소가 바뀌지 않아 DNS 레코드를 고정할 수 있음) | `infra/main.tf` |
-| 웹 서버 | Caddy 2.11.4 컨테이너 | `deploy/` |
-
-위 표는 운영 스택입니다. 인프라는 모두 Terraform으로 만들었습니다. 같은 코드로 두 스택을 만들고, workspace가 `b3-1`일 때만 이름에 `-b3-1`과 `stack=b3-1` 태그를 붙이고 `t3.micro`·8GiB와 평가용 부팅 스크립트([`infra/cloud-init-b3-1.yaml.tftpl`](infra/cloud-init-b3-1.yaml.tftpl))를 씁니다. 운영 스택의 이름과 태그는 그대로라서, 평가용 스택을 추가한 뒤에도 운영 스택의 `terraform plan`은 바뀌는 것이 없습니다. 결정 이유와 다른 선택지(오라클 무료 등급, GCP, 유료 VPS) 비교는 [ADR-23](docs/adr/ADR-23.md)에 있습니다.
-
-### 운영 서버의 인스턴스와 볼륨을 권장보다 크게 잡은 이유
-
-과제는 micro 인스턴스와 8~10GiB 볼륨을 권장합니다. 평가용 스택은 그대로 `t3.micro`와 8GiB이고(리허설에서 디스크 6.8G 중 2.7G 사용), 운영 서버만 `m7i-flex.large`(vCPU 2개, 메모리 8GiB)와 20GB를 씁니다.
-
-- 이 서버는 검색 질의를 임베딩하려고 모델(BAAI/bge-m3)을 프로세스 안에 올립니다. 모델을 올린 프로세스 하나가 최대 약 2.2GB였고, 검색 서버와 인덱서 두 프로세스에 DB·위키 서비스까지 합치면 5~6GB가 필요합니다. micro(1GiB)에서는 모델을 올릴 수 없습니다. 실제로 전체 구성을 올린 뒤 색인하는 동안 서버 전체 사용량은 3.0GB였습니다. 이때는 검색 서버가 아직 질의를 받지 않았으므로, 부하 측정 때 다시 잽니다.
-- 2025년 7월 15일 이후 만든 계정은 무료 플랜 대상 유형이 `t3.micro`, `t3.small`, `t4g.micro`, `t4g.small`, `c7i-flex.large`, `m7i-flex.large`입니다([AWS 문서](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html)). 이 중 메모리 5GB 이상은 `m7i-flex.large`뿐입니다. 비용은 무료 플랜 크레딧에서 나갑니다.
-- 볼륨 20GB는 모델 파일(약 2.2GB)과 파이썬·PyTorch가 든 Docker 이미지를 담기 위한 크기입니다. Docker 29의 기본 이미지 저장소는 레이어를 압축본과 푼 것 두 벌로 보관해 20GB가 모자랐고, 푼 레이어만 두는 저장소로 바꿨습니다([트러블슈팅 사례 3](docs/troubleshooting.md)). 바꾼 직후 전체 구성의 디스크 사용량은 9.9GB였습니다.
-- 같은 유형의 인스턴스에서 질의 임베딩을 실제로 쟀습니다(골든셋 질문 60개, p50 225ms). 측정 방법과 결과는 ADR-23에 있습니다.
-
-### 보안 그룹
-
-| 방향 | 포트 | 출처 | 이유 |
-|---|---|---|---|
-| 인바운드 | 80 (HTTP) | `0.0.0.0/0` | 외부 접속 검증, Let's Encrypt 인증서 발급(HTTP-01), HTTPS로 넘김 |
-| 인바운드 | 443 (HTTPS) | `0.0.0.0/0` | 보너스 1 |
-| 인바운드 | 22 (SSH) | 운영자 IP `/32` 하나 | 배포와 점검. Terraform 변수 `ssh_cidr`에 기본값이 없고, `0.0.0.0/0`을 넣으면 검증에서 막힘. 평가용 스택은 `infra/b3-1.sh up`이 그때 노트북의 공인 IP를 넣음 |
-| 아웃바운드 | 전체 | `0.0.0.0/0` | 패키지 설치, 이미지 내려받기, 인증서 발급 |
-
-두 스택의 규칙은 같습니다. 전체 포트(0-65535)를 여는 인바운드 규칙은 없습니다. DB, Redis, 위키 서비스 포트도 밖으로 열지 않습니다.
-
-### IAM 최소 권한
-
-과제 인프라(위 VPC와 그 안의 자원)는 모두 IAM 사용자 `wiki-rag-deployer`로 만들었고 지우는 것도 이 사용자로 합니다(관리자 권한 없음). 루트 계정은 이 사용자와 정책을 만들 때와 결제 확인에만 씁니다. 과제를 시작하기 전 배포처를 고르려고 루트로 띄웠던 측정용 인스턴스는 과제 인프라를 만들기 전에 지웠습니다. 정책은 [`infra/iam/deployer-policy.json`](infra/iam/deployer-policy.json)이고 세 부분입니다.
-
-| 문장 | 허용 범위 |
-|---|---|
-| `ReadEc2AndVpcInSeoul` | 서울 리전의 EC2·VPC 조회 |
-| `BuildNetworkAndServerInSeoul` | 서울 리전에서 VPC, 서브넷, 인터넷 게이트웨이, 라우팅, 보안 그룹, 인스턴스, Elastic IP, 키 페어를 만들고 연결하기 |
-| `TearDownOnlyThisProject` | 삭제와 종료는 `project=wiki-rag-mcp` 태그가 붙은 자원에만 |
-
-- 확인 결과: 서울 리전 EC2 조회는 허용되고 S3 목록, 다른 리전(버지니아) EC2, IAM 사용자 목록은 거부됩니다([`docs/evidence/iam-least-privilege.txt`](docs/evidence/iam-least-privilege.txt)).
-- 삭제 권한은 `--dry-run`으로 확인했습니다. 이 프로젝트 자원의 삭제 호출 12개는 허용되고, 태그 없는 기본 VPC 삭제는 거부됩니다([`docs/evidence/cleanup-dry-run.txt`](docs/evidence/cleanup-dry-run.txt)).
-- 이 밖에 CLI 로그인(`aws login`)용 관리형 정책 `SignInLocalDevelopmentAccess`를 붙였습니다. 로그인 토큰 발급 권한만 있어 서비스 권한은 늘지 않습니다.
-
-### 보너스 1: 도메인과 HTTPS
-
-- 도메인: 가비아에서 산 `dmssh.store`에 A 레코드 `mcp`를 만들어 Elastic IP를 가리키게 했습니다. M5에서 인가 서버용 `auth`를 더했고, 이 인증서도 Caddy가 같은 방식으로 받습니다.
-- 인증서: Caddy가 Let's Encrypt에서 HTTP-01 방식으로 자동 발급하고 만료 전에 갱신합니다. 발급된 인증서는 `CN=mcp.dmssh.store`, 발급자 Let's Encrypt, 유효 기간 2026-09-28~2026-12-27이고, 인증서 체인 검증도 통과합니다([`docs/evidence/https-certificate.txt`](docs/evidence/https-certificate.txt)).
-- 도메인으로 온 HTTP 요청은 `308`로 HTTPS 주소에 넘깁니다. IP로 온 HTTP 요청은 인증서를 쓸 수 없으므로 그대로 응답합니다(방식 A·B 검증용). 설정은 [`deploy/Caddyfile`](deploy/Caddyfile)입니다.
-- 평가용 스택은 만들 때마다 IP가 바뀌어 A 레코드를 고정할 수 없습니다. 가비아에는 `b3-1` CNAME을 `b3-1.duckdns.org`로 한 번만 넣고, 서버가 켜질 때 부팅 스크립트가 무료 동적 DNS인 DuckDNS에 자기 IP를 등록합니다. 도메인이 새 IP를 가리키는 것을 확인한 뒤 Caddy를 띄워, 옛 IP 때문에 인증서 검증이 실패하지 않게 합니다(검증 실패는 이름마다 시간당 5번까지). 지울 때는 `infra/b3-1.sh down`이 DuckDNS 값을 비워, 반납한 IP를 가리키지 않게 합니다.
-- DuckDNS 토큰은 저장소 밖(`~/.config/wiki-rag/duckdns.env`)에 둡니다. 다만 서버에 넘기는 부팅 스크립트(user_data)에 들어가고, 스택을 지운 뒤에도 노트북의 Terraform 상태 백업(`infra/terraform.tfstate.d/b3-1/terraform.tfstate.backup`, 커밋 안 함)에 남습니다. user_data는 이 계정의 EC2 조회 권한으로 읽을 수 있습니다. 서버 안에서는 메타데이터 응답이 한 홉만 가게 해서(`http_put_response_hop_limit = 1`), Caddy 컨테이너에서는 user_data를 읽지 못합니다(리허설에서 확인).
-
-### 보너스 2: Docker 배포
-
-| 항목 | 내용 |
-|---|---|
-| 이미지 | `caddy:2.11.4-alpine` (Docker Hub 공식 이미지) |
-| 포트 매핑 | 호스트 `80` 대 컨테이너 `80`, 호스트 `443` 대 컨테이너 `443` |
-| 볼륨 | 설정 `deploy/Caddyfile`, 페이지 `deploy/site/`(읽기 전용), 인증서 보관용 이름 있는 볼륨 `caddy-data`·`caddy-config` |
-| 재시작 | `restart: unless-stopped` (서버를 다시 켜도 컨테이너가 다시 뜸) |
-| 정의 | [`deploy/compose.yaml`](deploy/compose.yaml) |
-
-M5부터는 같은 compose에 위키 서비스(인가 서버 포함), 검색 서버, 인덱서 워커, DB 두 개, Redis가 함께 뜹니다. 밖으로 열린 포트는 여전히 Caddy의 80·443뿐이고, Caddy는 `mcp.dmssh.store`를 검색 서버로, `auth.dmssh.store`를 인가 서버의 공개 경로로만 넘깁니다.
-
-실행 방식: 서버의 Docker는 첫 부팅 때 cloud-init이 설치합니다(`infra/cloud-init.yaml`). 노트북에서 아래를 실행하면 서버가 공개 저장소에서 푸시된 커밋을 받아 이미지를 빌드하고 `docker compose up -d`로 컨테이너를 띄웁니다. 커밋한 파일만 서버로 가므로 노트북의 `.env`나 자격 증명 파일이 섞여 나가지 않습니다.
-
-```bash
-deploy/push.sh "$(terraform -chdir=infra output -raw public_ip)"
-```
-
-서버의 비밀(DB 비밀번호, 서비스 토큰, 토큰 서명 키)은 `deploy/init-secrets.sh`가 서버에서 처음 한 번 만들고 저장소에는 없습니다. 인증서를 이름 있는 볼륨에 두는 이유는, 컨테이너를 다시 만들 때마다 새로 발급받으면 Let's Encrypt 발급 한도에 걸리기 때문입니다.
-
-평가용 스택은 compose 없이 부팅 스크립트가 같은 이미지를 `docker run`으로 띄웁니다. 포트 매핑과 재시작 정책(`--restart unless-stopped`)은 위와 같고, 설정과 페이지는 부팅 스크립트가 서버에 써 둔 파일을 읽기 전용으로 붙입니다. 리허설의 `docker ps` 결과는 [`docs/evidence/b3-1-rehearsal.txt`](docs/evidence/b3-1-rehearsal.txt)에 있습니다.
-
-아래는 운영 서버에 Caddy만 있던 때의 확인 화면입니다.
-
-| 서버 안: `docker ps`와 `curl http://localhost` | 외부: `/health` 호출 |
-|---|---|
-| ![docker ps와 서버 안 curl](docs/evidence/terminal-server-docker-ps.png) | ![외부에서 /health 호출](docs/evidence/terminal-external-access.png) |
-
-서버 안 확인 결과: 컨테이너 `Up`, `curl http://localhost` 200, `/health` 본문 `OK`, 서버에서 바깥(example.com)으로 나가는 요청 200([`docs/evidence/server-checks.txt`](docs/evidence/server-checks.txt)).
-
-### 관측성 (M5)
-
-위키 서비스, 검색 서버, 인덱서 워커가 OpenTelemetry로 추적과 지표를 보냅니다([ADR-15](docs/adr/ADR-15.md)). 추적은 Tempo, 지표는 Prometheus가 받고 Grafana로 봅니다. 세 도구도 같은 compose로 뜹니다([`deploy/observability/`](deploy/observability/compose.yaml)). 추적에 사용자 id와 문서 id가 남아서 포트는 서버 안(127.0.0.1)에만 열고, SSH 터널로 봅니다.
-
-```bash
-ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
-# 브라우저에서 http://localhost:3000/d/wiki-rag 를 연다
-```
-
-- 검색 한 번이 한 추적입니다. `tools/call search_wiki` 아래에 권한 해석, 쿼리 임베딩, 벡터 검색, 결과 조립 네 단계가 나뉘고, 그룹 캐시를 못 찾아 위키에 물은 호출은 위키의 처리 스팬까지 이어집니다.
-- 문서 수정도 한 추적입니다. 위키가 수정 요청의 추적 맥락을 이벤트에 실어 보내, 워커가 그 이벤트를 반영하는 스팬(위키 재조회, 청크 임베딩)이 같은 추적에 붙습니다.
-- 대시보드 `wiki-rag-mcp`에는 검색 단계별 p95, 그룹 캐시 적중률, 반영 지연 p95(문서 인덱싱, 그룹 변경의 권한 반영), 처리 안 된 이벤트와 DLQ, 분당 임베딩 수, 위키 API 응답 시간과 JVM 힙, 최근 추적 목록이 있습니다.
-
-아래는 운영 서버의 화면입니다(2026-09-28). 대시보드는 사용자 네 명으로 1초 간격 검색을 4분 동안 183번 보낸 뒤의 15분입니다.
-
-![운영 대시보드](docs/evidence/observability-dashboard.png)
-
-| 검색 한 번: 권한 해석(위키 그룹 조회 포함), 쿼리 임베딩, 벡터 검색, 결과 조립 | 그룹 멤버십 변경: 위키의 요청과 0.69초 뒤 워커의 그룹 캐시 무효화 |
-|---|---|
-| ![search_wiki 추적](docs/evidence/trace-search.png) | ![멤버십 변경 추적](docs/evidence/trace-membership.png) |
-
-같은 때 서버에서 잰 메모리는 Prometheus 46MiB, Tempo 102MiB, Grafana 264MiB로 셋이 합쳐 약 410MiB였고, 서버 전체는 7.6GiB 중 3.3GB를 쓰고 4.47GB가 남았습니다. 세 도구에는 메모리 상한(512MB, 512MB, 384MB)을 두어, 넘치면 그 컨테이너만 다시 뜹니다.
-
-### 부하 측정 (M5)
-
-노트북의 k6로 운영 서버에 동시 요청을 걸어 잽니다. 골든셋 질문 300개를 그 질문을 한 사용자 11명의 토큰으로 무작위로 보내고, 생각하는 시간 없이 응답을 받자마자 다음 요청을 보냅니다. 판정 기준(동시 50에서 p95 800ms 이하, 오류율 1% 미만)은 측정 전에 적었습니다([`experiments/m5-load`](experiments/m5-load/README.md)).
-
-| 동시 | 처리량 (처음) | 처리량 (개선 뒤) | p95 (처음) | p95 (개선 뒤) | 오류율 (처음) | 오류율 (개선 뒤) |
-|---|---|---|---|---|---|---|
-| 1 | 3.35/s | 7.71/s | 385ms | 162ms | 0% | 0% |
-| 10 | 3.44/s | 23.47/s | 4,025ms | 506ms | 0% | 0% |
-| 50 | 3.21/s | 32.98/s | 20,537ms | 2,263ms | 1.44% | 0% |
-| 100 | 3.37/s | 31.58/s | 30,006ms | 4,239ms | 56.10% | 0% |
-
-- 처음에는 동시 10부터 CPU가 가득 찼고, 처리량이 동시 수와 관계없이 초당 3.3건에서 멈췄습니다. 병목은 물리 코어 하나에서 요청마다 따로 도는 쿼리 임베딩이었습니다.
-- 쿼리를 전용 스레드 하나가 묶어 인코딩하게 하고, 쿼리만 bf16으로 바꿨습니다(서버 CPU의 AMX 사용). 둘 다 골든셋 검색 결과가 바뀌지 않는 것을 확인하고 채택했습니다. PyTorch 스레드 2개와 DB 연결 풀도 재 봤지만 기준에 못 미쳐 되돌렸습니다([`experiments/m5-speedup`](experiments/m5-speedup/README.md), [ADR-25](docs/adr/ADR-25.md)).
-- 동시 50에서 오류율 목표는 맞췄고, p95 목표(800ms)는 2.3초로 못 맞췄습니다. 물리 코어 하나가 쿼리 임베딩으로 차 있어, 맞추려면 임베딩에 쓸 계산 능력이 지금의 두 배쯤 필요합니다. 검색 품질을 낮추는 작은 모델로 바꾸지는 않았습니다.
-
-### 다시 만들기
-
-평가용 스택은 DuckDNS 이름과 토큰을 `~/.config/wiki-rag/duckdns.env`에 두고(`DUCKDNS_SUBDOMAIN`, `DUCKDNS_TOKEN`) `infra/b3-1.sh up`만 실행합니다. 운영 스택은 아래 순서입니다.
-
-1. 배포용 IAM 사용자로 로그인합니다. `aws sts get-caller-identity --profile wiki-rag`가 `user/wiki-rag-deployer`여야 합니다.
-2. `infra/terraform.tfvars.example`을 `infra/terraform.tfvars`로 복사하고 `ssh_cidr`에 내 IP(`/32`)를 넣습니다.
-3. `terraform -chdir=infra init && terraform -chdir=infra apply`로 자원을 만듭니다. 출력의 `public_ip`가 Elastic IP입니다.
-4. DNS에 A 레코드(`mcp`, `auth`)를 넣고, 서버의 `~/wiki-rag-mcp/deploy/.env`에 `DOMAIN`과 `AUTH_DOMAIN`을 적습니다(`deploy/.env.example`).
-5. `deploy/push.sh <public_ip>`로 컨테이너를 띄웁니다.
-
-### 관련 문서
-
-- [트러블슈팅 보고서](docs/troubleshooting.md): CLI가 루트로 로그인된 건, 노트북에서만 80번이 가끔 끊긴 건, 같은 커밋을 다시 배포하다 디스크가 가득 찬 건(M5), Caddyfile을 고쳐 배포했는데 Caddy가 옛 설정으로 돈 건(M5)
-- [리소스 정리 체크리스트](docs/cleanup-checklist.md): 정리 순서와 이유, 남은 자원 확인 스크립트(`infra/check-leftovers.sh`)
-- [ADR-23](docs/adr/ADR-23.md): 배포처와 Terraform을 고른 이유
+| [infra/](infra/) | Terraform, 평가 스택 실행, IAM 정책, 잔여 자원 점검 |
+| [deploy/](deploy/) | 운영 Compose, Caddy 설정, 소개 페이지 |
+| [검색 서버 설명](docs/project-overview.md) | 권한 검색 예시, 설계 결정, 목표와 측정, 알려진 위험, 관측성·부하 측정 |
+| [설계서](docs/design.md) · [결정 기록](docs/adr/README.md) | 검색·권한·인덱싱·HTTP/OAuth·배포 설계 |
+| [실험 기록](experiments/README.md) | M1~M6의 판정 기준·결과·원본 데이터 |
+| [위키 서비스 계약](wiki-service/README.md) | Spring 위키 API, 이벤트, 인가 서버 |
