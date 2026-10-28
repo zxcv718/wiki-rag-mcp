@@ -1,6 +1,6 @@
 # 사내 위키 검색 서버
 
-이 문서는 검색 서버의 동작, 설계 결정, 측정 결과를 설명합니다. B3-1의 AWS 배포 제출물과 평가 절차는 [저장소 README](../README.md)에 있습니다.
+이 문서는 검색 서버의 동작, 설계 결정, 측정 결과를 설명합니다. B3-1의 AWS 배포 제출물과 검증 방법은 [저장소 README](../README.md)에 있습니다.
 
 사내 위키 문서를 **사용자 권한에 맞게** 검색해, LLM 에이전트가 MCP 도구로 호출할 수 있게 하는 서버입니다. 답변은 만들지 않고 근거가 되는 문서 조각만 돌려주며, 권한 없는 문서는 검색 단계에서부터 제외합니다.
 
@@ -204,7 +204,7 @@ ssh -i <키 파일> -L 3000:127.0.0.1:3000 ubuntu@<public_ip>
 
 ## 운영 스택 배포
 
-운영 스택은 `default` workspace를 사용합니다. 평가용 스택의 생성·삭제 절차는 [README](../README.md#평가-방식-평가마다-만들고-지움)에 있습니다.
+운영 스택은 `default` workspace를 사용합니다. 지우는 절차와 지운 뒤 다시 만드는 절차는 [정리 체크리스트](cleanup-checklist.md)에 있습니다.
 
 1. `aws sts get-caller-identity --profile wiki-rag`로 주체가 `user/wiki-rag-deployer`인지 확인합니다.
 2. [infra/terraform.tfvars.example](../infra/terraform.tfvars.example)을 `infra/terraform.tfvars`로 복사하고 `ssh_cidr`에 운영자 IP(`/32`)를 넣습니다.

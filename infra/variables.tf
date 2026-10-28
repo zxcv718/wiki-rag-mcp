@@ -43,30 +43,3 @@ variable "root_volume_gb" {
   type        = number
   default     = 20
 }
-
-# 아래는 b3-1 스택(과제 평가용)에서만 쓴다. infra/b3-1.sh가 넘긴다
-
-variable "b3_1_domain" {
-  description = "b3-1 스택의 HTTPS 주소. 가비아에 DuckDNS 이름을 가리키는 CNAME을 한 번 넣어 둔다"
-  type        = string
-  default     = "b3-1.dmssh.store"
-}
-
-variable "duckdns_subdomain" {
-  description = "DuckDNS 이름(<이름>.duckdns.org의 <이름>). 서버가 켜질 때 자기 IP를 여기에 등록한다"
-  type        = string
-  default     = ""
-}
-
-variable "duckdns_token" {
-  description = "DuckDNS 토큰. 저장소 밖 ~/.config/wiki-rag/duckdns.env에서 읽는다"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "acme_staging" {
-  description = "true면 Let's Encrypt 시험 서버에서 인증서를 받는다. 리허설에서 실제 발급 한도(같은 이름 7일 5장)를 쓰지 않으려고"
-  type        = bool
-  default     = false
-}

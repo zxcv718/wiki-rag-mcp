@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # 서울 리전에 과금될 수 있는 이 프로젝트 자원이 남았는지 본다 (docs/cleanup-checklist.md).
 #
-#   AWS_PROFILE=wiki-rag infra/check-leftovers.sh                # 이 프로젝트 전체
-#   AWS_PROFILE=wiki-rag STACK=b3-1 infra/check-leftovers.sh     # 과제 평가용 스택만 (운영 서버는 그대로 둔 채)
+#   AWS_PROFILE=wiki-rag infra/check-leftovers.sh
 #
 # 태그로 찾은 자원과, 태그와 상관없이 과금되는 것(연결 안 된 볼륨, NAT 게이트웨이)을 함께 본다.
-# Elastic IP는 STACK이 없으면 계정 전체를, 있으면 그 스택 태그가 붙은 것만 센다(운영 서버의 IP를 빼고 보려고).
 # 정리가 끝났으면 모든 줄이 0이다.
 set -euo pipefail
 # 셸에 다른 리전이 export돼 있으면 엉뚱한 리전을 세어 모두 0이 나온다. 이 프로젝트는 서울에만 만든다
 export AWS_REGION=ap-northeast-2
 tag=(--filters Name=tag:project,Values=wiki-rag-mcp)
-[ -n "${STACK:-}" ] && tag+=("Name=tag:stack,Values=$STACK")
 
 # 조회가 실패하면(권한, 로그인 만료, 네트워크) 0으로 찍지 않고 멈춘다. 0은 "정리 완료"의 근거라서
 count() {
@@ -24,11 +21,7 @@ count "EC2 (종료되지 않은 것)" describe-instances "${tag[@]}" Name=instan
   --query 'Reservations[].Instances[].InstanceId'
 count "EBS 볼륨 (프로젝트)" describe-volumes "${tag[@]}" --query 'Volumes[].VolumeId'
 count "EBS 볼륨 (연결 안 됨, 전체)" describe-volumes --filters Name=status,Values=available --query 'Volumes[].VolumeId'
-if [ -n "${STACK:-}" ]; then
-  count "Elastic IP ($STACK)" describe-addresses "${tag[@]}" --query 'Addresses[].AllocationId'
-else
-  count "Elastic IP (전체)" describe-addresses --query 'Addresses[].AllocationId'
-fi
+count "Elastic IP (전체)" describe-addresses --query 'Addresses[].AllocationId'
 count "인터넷 게이트웨이" describe-internet-gateways "${tag[@]}" --query 'InternetGateways[].InternetGatewayId'
 count "VPC" describe-vpcs "${tag[@]}" --query 'Vpcs[].VpcId'
 count "서브넷" describe-subnets "${tag[@]}" --query 'Subnets[].SubnetId'
