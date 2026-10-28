@@ -1,0 +1,463 @@
+data.aws_ami.ubuntu: Reading...
+aws_key_pair.operator: Refreshing state... [id=wiki-rag-operator]
+aws_vpc.main: Refreshing state... [id=vpc-0b900133c37418e1b]
+data.aws_ami.ubuntu: Read complete after 1s [id=ami-05b2d28c4a1614552]
+aws_security_group.server: Refreshing state... [id=sg-0ab61932333ffdfc3]
+aws_internet_gateway.main: Refreshing state... [id=igw-023e2ba76f935ad15]
+aws_subnet.public: Refreshing state... [id=subnet-05d8c7e84536436cd]
+aws_vpc_security_group_egress_rule.all: Refreshing state... [id=sgr-013ebe2bc6be00644]
+aws_vpc_security_group_ingress_rule.https: Refreshing state... [id=sgr-09aaab707f10e6924]
+aws_vpc_security_group_ingress_rule.ssh: Refreshing state... [id=sgr-0b484db75a336d348]
+aws_vpc_security_group_ingress_rule.http: Refreshing state... [id=sgr-0ba00f99b90995a9f]
+aws_route_table.public: Refreshing state... [id=rtb-031342c5cabae623b]
+aws_instance.server: Refreshing state... [id=i-01edbaf39408d24ef]
+aws_route_table_association.public: Refreshing state... [id=rtbassoc-02826bd3a6b1217a7]
+aws_eip.server: Refreshing state... [id=eipalloc-0c18065934a830a35]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_eip.server will be destroyed
+  - resource "aws_eip" "server" {
+      - allocation_id            = "eipalloc-0c18065934a830a35" -> null
+      - arn                      = "arn:aws:ec2:ap-northeast-2:488914879507:elastic-ip/eipalloc-0c18065934a830a35" -> null
+      - association_id           = "eipassoc-02a9e6686cd86e0e4" -> null
+      - domain                   = "vpc" -> null
+      - id                       = "eipalloc-0c18065934a830a35" -> null
+      - instance                 = "i-01edbaf39408d24ef" -> null
+      - network_border_group     = "ap-northeast-2" -> null
+      - network_interface        = "eni-05cbb6e6411735bf4" -> null
+      - private_dns              = "ip-10-0-1-121.ap-northeast-2.compute.internal" -> null
+      - private_ip               = "10.0.1.121" -> null
+      - public_dns               = "ec2-52-78-251-4.ap-northeast-2.compute.amazonaws.com" -> null
+      - public_ip                = "52.78.251.4" -> null
+      - public_ipv4_pool         = "amazon" -> null
+      - region                   = "ap-northeast-2" -> null
+      - tags                     = {
+          - "Name" = "wiki-rag-eip"
+        } -> null
+      - tags_all                 = {
+          - "Name"       = "wiki-rag-eip"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_instance.server will be destroyed
+  - resource "aws_instance" "server" {
+      - ami                                  = "ami-0d222b26b6fb4eeed" -> null
+      - arn                                  = "arn:aws:ec2:ap-northeast-2:488914879507:instance/i-01edbaf39408d24ef" -> null
+      - associate_public_ip_address          = true -> null
+      - availability_zone                    = "ap-northeast-2a" -> null
+      - disable_api_stop                     = false -> null
+      - disable_api_termination              = false -> null
+      - ebs_optimized                        = false -> null
+      - force_destroy                        = false -> null
+      - get_password_data                    = false -> null
+      - hibernation                          = false -> null
+      - id                                   = "i-01edbaf39408d24ef" -> null
+      - instance_initiated_shutdown_behavior = "stop" -> null
+      - instance_state                       = "running" -> null
+      - instance_type                        = "m7i-flex.large" -> null
+      - ipv6_address_count                   = 0 -> null
+      - ipv6_addresses                       = [] -> null
+      - key_name                             = "wiki-rag-operator" -> null
+      - monitoring                           = false -> null
+      - placement_partition_number           = 0 -> null
+      - primary_network_interface_id         = "eni-05cbb6e6411735bf4" -> null
+      - private_dns                          = "ip-10-0-1-121.ap-northeast-2.compute.internal" -> null
+      - private_ip                           = "10.0.1.121" -> null
+      - public_dns                           = "ec2-52-78-251-4.ap-northeast-2.compute.amazonaws.com" -> null
+      - public_ip                            = "52.78.251.4" -> null
+      - region                               = "ap-northeast-2" -> null
+      - secondary_private_ips                = [] -> null
+      - security_groups                      = [] -> null
+      - source_dest_check                    = true -> null
+      - subnet_id                            = "subnet-05d8c7e84536436cd" -> null
+      - tags                                 = {
+          - "Name" = "wiki-rag-server"
+        } -> null
+      - tags_all                             = {
+          - "Name"       = "wiki-rag-server"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - tenancy                              = "default" -> null
+      - user_data                            = <<-EOT
+            #cloud-config
+            # 서버가 처음 켜질 때 한 번 돈다. Docker와 git만 설치하고, 앱 배포는 deploy/ 스크립트가 따로 한다.
+            # 다시 배포할 때마다 서버를 새로 만들지 않도록 여기에는 한 번만 필요한 일만 둔다.
+            package_update: true
+            packages:
+              - docker.io
+              - docker-compose-v2
+              - git
+            runcmd:
+              - systemctl enable --now docker
+              - usermod -aG docker ubuntu
+        EOT -> null
+      - user_data_replace_on_change          = false -> null
+      - vpc_security_group_ids               = [
+          - "sg-0ab61932333ffdfc3",
+        ] -> null
+        # (8 unchanged attributes hidden)
+
+      - capacity_reservation_specification {
+          - capacity_reservation_preference = "open" -> null
+        }
+
+      - cpu_options {
+          - core_count            = 1 -> null
+          - threads_per_core      = 2 -> null
+            # (2 unchanged attributes hidden)
+        }
+
+      - enclave_options {
+          - enabled = false -> null
+        }
+
+      - maintenance_options {
+          - auto_recovery = "default" -> null
+        }
+
+      - metadata_options {
+          - http_endpoint               = "enabled" -> null
+          - http_protocol_ipv6          = "disabled" -> null
+          - http_put_response_hop_limit = 2 -> null
+          - http_tokens                 = "required" -> null
+          - instance_metadata_tags      = "disabled" -> null
+        }
+
+      - primary_network_interface {
+          - delete_on_termination = true -> null
+          - network_interface_id  = "eni-05cbb6e6411735bf4" -> null
+        }
+
+      - private_dns_name_options {
+          - enable_resource_name_dns_a_record    = false -> null
+          - enable_resource_name_dns_aaaa_record = false -> null
+          - hostname_type                        = "ip-name" -> null
+        }
+
+      - root_block_device {
+          - delete_on_termination = true -> null
+          - device_name           = "/dev/sda1" -> null
+          - encrypted             = true -> null
+          - iops                  = 3000 -> null
+          - kms_key_id            = "arn:aws:kms:ap-northeast-2:488914879507:key/93169d52-f486-47f7-8e01-814a016cd7b6" -> null
+          - tags                  = {
+              - "Name" = "wiki-rag-root"
+            } -> null
+          - tags_all              = {
+              - "Name"       = "wiki-rag-root"
+              - "managed-by" = "terraform"
+              - "project"    = "wiki-rag-mcp"
+            } -> null
+          - throughput            = 125 -> null
+          - volume_id             = "vol-0c3df9448c49869d0" -> null
+          - volume_size           = 20 -> null
+          - volume_type           = "gp3" -> null
+        }
+    }
+
+  # aws_internet_gateway.main will be destroyed
+  - resource "aws_internet_gateway" "main" {
+      - arn      = "arn:aws:ec2:ap-northeast-2:488914879507:internet-gateway/igw-023e2ba76f935ad15" -> null
+      - id       = "igw-023e2ba76f935ad15" -> null
+      - owner_id = "488914879507" -> null
+      - region   = "ap-northeast-2" -> null
+      - tags     = {
+          - "Name" = "wiki-rag-igw"
+        } -> null
+      - tags_all = {
+          - "Name"       = "wiki-rag-igw"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - vpc_id   = "vpc-0b900133c37418e1b" -> null
+    }
+
+  # aws_key_pair.operator will be destroyed
+  - resource "aws_key_pair" "operator" {
+      - arn             = "arn:aws:ec2:ap-northeast-2:488914879507:key-pair/wiki-rag-operator" -> null
+      - fingerprint     = "HlNnJme1dJw6Cb8Hz6PPbr4Zt0Vc6+HWMVgYzhP7L5g=" -> null
+      - id              = "wiki-rag-operator" -> null
+      - key_name        = "wiki-rag-operator" -> null
+      - key_pair_id     = "key-0dc528892f70a512b" -> null
+      - key_type        = "ed25519" -> null
+      - public_key      = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMSyWdH3Lh9aO66Ed0rHli0y+GUs7ZXY+NBIupv37uM6" -> null
+      - region          = "ap-northeast-2" -> null
+      - tags            = {} -> null
+      - tags_all        = {
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table.public will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:ap-northeast-2:488914879507:route-table/rtb-031342c5cabae623b" -> null
+      - id               = "rtb-031342c5cabae623b" -> null
+      - owner_id         = "488914879507" -> null
+      - propagating_vgws = [] -> null
+      - region           = "ap-northeast-2" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-023e2ba76f935ad15"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "wiki-rag-public-rt"
+        } -> null
+      - tags_all         = {
+          - "Name"       = "wiki-rag-public-rt"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - vpc_id           = "vpc-0b900133c37418e1b" -> null
+    }
+
+  # aws_route_table_association.public will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-02826bd3a6b1217a7" -> null
+      - region         = "ap-northeast-2" -> null
+      - route_table_id = "rtb-031342c5cabae623b" -> null
+      - subnet_id      = "subnet-05d8c7e84536436cd" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_security_group.server will be destroyed
+  - resource "aws_security_group" "server" {
+      - arn                    = "arn:aws:ec2:ap-northeast-2:488914879507:security-group/sg-0ab61932333ffdfc3" -> null
+      - description            = "HTTP and HTTPS from anywhere, SSH from the operator IP only" -> null
+      - egress                 = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "Outbound to the internet"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 0
+            },
+        ] -> null
+      - id                     = "sg-0ab61932333ffdfc3" -> null
+      - ingress                = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTP"
+              - from_port        = 80
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 80
+            },
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTPS"
+              - from_port        = 443
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 443
+            },
+          - {
+              - cidr_blocks      = [
+                  - "121.135.181.x/32",
+                ]
+              - description      = "SSH from the operator only"
+              - from_port        = 22
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 22
+            },
+        ] -> null
+      - name                   = "wiki-rag-server" -> null
+      - owner_id               = "488914879507" -> null
+      - region                 = "ap-northeast-2" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "wiki-rag-server"
+        } -> null
+      - tags_all               = {
+          - "Name"       = "wiki-rag-server"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - vpc_id                 = "vpc-0b900133c37418e1b" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_subnet.public will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:ap-northeast-2:488914879507:subnet/subnet-05d8c7e84536436cd" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-northeast-2a" -> null
+      - availability_zone_id                           = "apne2-az1" -> null
+      - cidr_block                                     = "10.0.1.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-05d8c7e84536436cd" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "488914879507" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-northeast-2" -> null
+      - tags                                           = {
+          - "Name" = "wiki-rag-public"
+        } -> null
+      - tags_all                                       = {
+          - "Name"       = "wiki-rag-public"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - vpc_id                                         = "vpc-0b900133c37418e1b" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc.main will be destroyed
+  - resource "aws_vpc" "main" {
+      - arn                                  = "arn:aws:ec2:ap-northeast-2:488914879507:vpc/vpc-0b900133c37418e1b" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.0.0.0/16" -> null
+      - default_network_acl_id               = "acl-01861e2b404f7dab3" -> null
+      - default_route_table_id               = "rtb-075ec8dfb9f50673f" -> null
+      - default_security_group_id            = "sg-0deef74b6ac5e9370" -> null
+      - dhcp_options_id                      = "dopt-0febe2233f6ba3a13" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-0b900133c37418e1b" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-075ec8dfb9f50673f" -> null
+      - owner_id                             = "488914879507" -> null
+      - region                               = "ap-northeast-2" -> null
+      - tags                                 = {
+          - "Name" = "wiki-rag-vpc"
+        } -> null
+      - tags_all                             = {
+          - "Name"       = "wiki-rag-vpc"
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc_security_group_egress_rule.all will be destroyed
+  - resource "aws_vpc_security_group_egress_rule" "all" {
+      - arn                    = "arn:aws:ec2:ap-northeast-2:488914879507:security-group-rule/sgr-013ebe2bc6be00644" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "Outbound to the internet" -> null
+      - id                     = "sgr-013ebe2bc6be00644" -> null
+      - ip_protocol            = "-1" -> null
+      - region                 = "ap-northeast-2" -> null
+      - security_group_id      = "sg-0ab61932333ffdfc3" -> null
+      - security_group_rule_id = "sgr-013ebe2bc6be00644" -> null
+      - tags_all               = {
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.http will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "http" {
+      - arn                    = "arn:aws:ec2:ap-northeast-2:488914879507:security-group-rule/sgr-0ba00f99b90995a9f" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTP" -> null
+      - from_port              = 80 -> null
+      - id                     = "sgr-0ba00f99b90995a9f" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-northeast-2" -> null
+      - security_group_id      = "sg-0ab61932333ffdfc3" -> null
+      - security_group_rule_id = "sgr-0ba00f99b90995a9f" -> null
+      - tags_all               = {
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - to_port                = 80 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.https will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "https" {
+      - arn                    = "arn:aws:ec2:ap-northeast-2:488914879507:security-group-rule/sgr-09aaab707f10e6924" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTPS" -> null
+      - from_port              = 443 -> null
+      - id                     = "sgr-09aaab707f10e6924" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-northeast-2" -> null
+      - security_group_id      = "sg-0ab61932333ffdfc3" -> null
+      - security_group_rule_id = "sgr-09aaab707f10e6924" -> null
+      - tags_all               = {
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - to_port                = 443 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.ssh will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "ssh" {
+      - arn                    = "arn:aws:ec2:ap-northeast-2:488914879507:security-group-rule/sgr-0b484db75a336d348" -> null
+      - cidr_ipv4              = "121.135.181.x/32" -> null
+      - description            = "SSH from the operator only" -> null
+      - from_port              = 22 -> null
+      - id                     = "sgr-0b484db75a336d348" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-northeast-2" -> null
+      - security_group_id      = "sg-0ab61932333ffdfc3" -> null
+      - security_group_rule_id = "sgr-0b484db75a336d348" -> null
+      - tags_all               = {
+          - "managed-by" = "terraform"
+          - "project"    = "wiki-rag-mcp"
+        } -> null
+      - to_port                = 22 -> null
+    }
+
+Plan: 0 to add, 0 to change, 13 to destroy.
+
+Changes to Outputs:
+  - health_url   = "http://52.78.251.4/health" -> null
+  - public_ip    = "52.78.251.4" -> null
+  - resource_ids = {
+      - elastic_ip       = "eipalloc-0c18065934a830a35"
+      - instance         = "i-01edbaf39408d24ef"
+      - internet_gateway = "igw-023e2ba76f935ad15"
+      - key_pair         = "wiki-rag-operator"
+      - root_volume      = "vol-0c3df9448c49869d0"
+      - route_table      = "rtb-031342c5cabae623b"
+      - security_group   = "sg-0ab61932333ffdfc3"
+      - subnet           = "subnet-05d8c7e84536436cd"
+      - vpc              = "vpc-0b900133c37418e1b"
+    } -> null
+  - ssh          = "ssh -i ~/.ssh/wiki-rag-m5.pem ubuntu@52.78.251.4" -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.

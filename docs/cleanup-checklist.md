@@ -12,7 +12,7 @@
 
 ## 정리 대상
 
-두 스택이 같은 자원 13개를 만든다. 아래 ID는 운영 스택의 것이고, 평가용 스택의 ID는 만들 때마다 바뀌어 아래 "정리 실행 기록"과 증빙에 남긴다.
+두 스택이 같은 자원 13개를 만든다. 아래 ID는 2026-10-28에 지운 운영 스택의 것이다. 다시 만든 운영 스택의 ID는 `terraform -chdir=infra output resource_ids`로 본다. 평가용 스택의 ID는 만들 때마다 바뀌어 아래 "정리 실행 기록"과 증빙에 남긴다.
 
 | 자원 | 운영 스택 ID | 남으면 과금되는 이유 | 정리 방식 |
 |---|---|---|---|
@@ -101,6 +101,39 @@ AWS 밖에도 지울 것이 있다. 반납한 Elastic IP는 다른 고객에게 
    - 검색 서버 설명의 "운영 서버"를 "운영 기록"으로 바꾼다. 반납한 IP와 도메인은 운영 당시 주소로만 남기고 접속 링크는 없앤다.
    - `docs/architecture.html`을 지울 때는 README의 HTML 소스 링크도 함께 지운다.
 
+### 운영 스택 다시 만들기 (삭제 뒤)
+
+지운 뒤 서버가 다시 필요하면 같은 코드로 새로 만든다. 인프라와 배포는 [검색 서버 설명의 "운영 스택 배포"](project-overview.md#운영-스택-배포) 1~6단계를 따른다. 지운 뒤라서 달라지는 점과 더 할 일은 아래와 같다. 2026-10-28 정리 직후 이 절차로 다시 만들었다(배포 208초, 시드 문서 200개).
+
+| 대상 | 지운 뒤 | 할 일 |
+|---|---|---|
+| Elastic IP | 반납해서 `52.78.251.4`는 돌아오지 않는다. 새 IP를 받는다 | 가비아의 `mcp`, `auth` A 레코드 값을 새 IP로 고친다. 레코드를 새로 만들 필요는 없다. Caddy가 인증서를 받으려면 이 이름이 새 서버로 와야 하므로 `push.sh` 전에 고친다 |
+| 서버 비밀 (`deploy/.env`, `deploy/secrets/`) | 서버에만 있었으므로 함께 사라진다 | `push.sh`가 부르는 `init-secrets.sh`가 새로 만든다. 예전 토큰은 모두 무효라서 Claude Code 커넥터와 데모 에이전트는 다시 로그인한다. 데모 비밀번호도 바뀌므로 서버의 `deploy/.env`에서 확인한다 |
+| 위키 DB | 백업이 없어 사라진다 | 가상 위키를 다시 옮긴다(아래 1). `membership.sh`로 바꾼 그룹 멤버십은 원래 값으로 돌아간다 |
+| 검색 인덱스 | 사라진다 | 시드가 문서마다 이벤트를 내고, 워커가 처음부터 다시 색인한다. 2 vCPU에서 20분 안팎 걸린다 |
+| HTTPS 인증서 | Caddy 볼륨과 함께 사라진다 | Caddy가 처음 뜰 때 새로 받는다. 같은 이름으로 7일에 5장까지 받을 수 있다 |
+| SSH 허용 IP | `infra/terraform.tfvars`에 있는 값을 쓴다 | 지금 IP와 다르면 고친 뒤 apply한다 |
+
+지운 직후 바로 다시 만들 때는 5단계에서 A 레코드를 지우지 않고, 새 IP가 나오면 값만 고쳐도 된다. 다만 그 사이에는 레코드가 반납한 IP를 가리키므로, 지우기와 다시 만들기 사이를 비워 두지 않는다.
+
+`push.sh`가 끝나면 아래를 이어서 한다.
+
+1. 가상 위키를 옮긴다. `문서 200개`가 출력되어야 한다.
+
+   ```
+   ssh -i ~/.ssh/wiki-rag-m5.pem ubuntu@<public_ip> \
+     'cd ~/wiki-rag-mcp/deploy && docker compose --profile tools run --rm seed'
+   ```
+
+2. 색인이 끝났는지 본다. 결과가 200이면 끝난 것이다.
+
+   ```
+   ssh -i ~/.ssh/wiki-rag-m5.pem ubuntu@<public_ip> \
+     'cd ~/wiki-rag-mcp/deploy && docker compose exec -T postgres psql -U wiki -d wiki_search -tAc "select count(*) from wiki_chunks_doc_state where not deleted"'
+   ```
+
+3. `https://mcp.dmssh.store/health`가 `OK`를 돌려주는지 확인한다. 이어서 Claude Code 커넥터로 다시 로그인해 `search_wiki`가 근거를 돌려주는지 확인한다.
+
 ## 정리하지 않는 것
 
 | 대상 | 이유 |
@@ -129,17 +162,17 @@ AWS 밖에도 지울 것이 있다. 반납한 Elastic IP는 다른 고객에게 
 
 ### 운영 스택
 
-운영 서버는 과제 평가와 따로, 운영(M5, M6)을 끝낼 때 지운다. 지운 뒤 아래를 채운다.
+2026-10-28에 과제 명세대로 운영 스택을 모두 지우고, 바로 이어서 같은 코드로 다시 만들었다(위 "운영 스택 다시 만들기"). 지운 자원의 ID는 위 "정리 대상" 표와 삭제 출력에 있다. 운영 자체를 끝낼 때는 이 절차를 다시 하고 DNS 레코드 삭제와 문서 정리까지 한다.
 
 | 항목 | 확인 방법 | 결과 |
 |---|---|---|
-| 실행 일시와 실행 주체 | `aws sts get-caller-identity` | 실행 전 |
-| `terraform destroy` | 출력 마지막 줄 `Destroy complete! Resources: 13 destroyed.` | 실행 전 |
-| EC2 종료 | `check-leftovers.sh` 0, 인스턴스 상태 `terminated` | 실행 전 |
-| EBS 볼륨 삭제 | `check-leftovers.sh` 프로젝트 볼륨 0, 연결 안 된 볼륨 0 | 실행 전 |
-| Elastic IP 반납 | `check-leftovers.sh` Elastic IP 0 | 실행 전 |
-| 인터넷 게이트웨이 삭제 | `check-leftovers.sh` 0 | 실행 전 |
-| VPC, 서브넷, 라우팅 테이블, 보안 그룹 삭제 | `check-leftovers.sh` 모두 0 | 실행 전 |
-| DNS 레코드 삭제 | `dig +short A mcp.dmssh.store`와 `dig +short A auth.dmssh.store`가 빈 값 | 실행 전 |
-| 결제 콘솔 | 다음 날 서울 리전 과금 항목이 늘지 않음 (스크린샷) | 실행 전 |
-| 문서 정리 | README와 `docs/project-overview.md`의 운영 상태 갱신, 접속 링크 제거, `docs/architecture.html` 삭제 | 실행 전 |
+| 실행 일시와 실행 주체 | `aws sts get-caller-identity` | 2026-10-28 19:52 KST, `user/wiki-rag-deployer` |
+| 지울 목록 | `terraform plan -destroy` | `Plan: 0 to add, 0 to change, 13 to destroy.` [`evidence/prod-plan-destroy.txt`](evidence/prod-plan-destroy.txt) |
+| `terraform destroy` | 출력 마지막 줄 `Destroy complete! Resources: 13 destroyed.` | 13개 삭제, 37초. [`evidence/prod-destroy.txt`](evidence/prod-destroy.txt) |
+| EC2 종료 | `check-leftovers.sh` 0, 인스턴스 상태 `terminated` | 0, 콘솔에서 `i-01edbaf39408d24ef` 종료됨 (다시 만든 `i-06a3c904c6c3ea3e5`는 실행 중). [`evidence/prod-ec2-terminated.png`](evidence/prod-ec2-terminated.png) |
+| EBS 볼륨 삭제 | `check-leftovers.sh` 프로젝트 볼륨 0, 연결 안 된 볼륨 0 | 둘 다 0 (`vol-0c3df9448c49869d0`) |
+| Elastic IP 반납 | `check-leftovers.sh` Elastic IP 0 | 계정 전체 0 (`52.78.251.4` 반납) |
+| 인터넷 게이트웨이 삭제 | `check-leftovers.sh` 0 | 0 |
+| VPC, 서브넷, 라우팅 테이블, 보안 그룹 삭제 | `check-leftovers.sh` 모두 0 | 모두 0, 키 페어와 NAT 게이트웨이도 0. [`evidence/prod-leftovers.txt`](evidence/prod-leftovers.txt) |
+| DNS 레코드 | 다시 만들었으므로 지우지 않고 새 IP로 고침 | `mcp`, `auth` 모두 `54.116.149.126` (가비아 권한 서버 조회) |
+| 결제 콘솔 | 다음 날 옛 자원의 과금 항목이 늘지 않음 (스크린샷) | 확인 전 |
