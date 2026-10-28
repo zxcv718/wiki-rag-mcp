@@ -55,7 +55,8 @@
 - [x] **반납한 IP를 가리키는 DNS가 없다.** 반납한 Elastic IP는 다른 AWS 고객에게 갈 수 있어, 레코드가 남으면 내 도메인이 남의 서버를 가리킨다. 바로 다시 만들었으므로 가비아 `mcp`, `auth` A 레코드를 지우지 않고 새 IP `54.116.149.126`으로 고쳤다(가비아 권한 서버 조회). `www` CNAME(Vercel)은 이 과제와 무관하다.
 - [x] **예전 평가용 CNAME을 지웠다.** 가비아 CNAME `b3-1`(`b3-1.duckdns.org`를 가리킴)을 DuckDNS 이름보다 먼저 지운다. 반대로 지우면 CNAME이 남아 있는 동안 남이 그 DuckDNS 이름을 가져가 `b3-1.dmssh.store`로 온 요청을 받을 수 있다.
   근거: 2026-10-28 20:41 KST 가비아 권한 서버 조회 `dig b3-1.dmssh.store @ns.gabia.net` 결과 `NXDOMAIN`
-- [ ] **DuckDNS 이름 `b3-1`을 지운다.** CNAME을 지운 뒤라 이제 지워도 된다. 가리키는 값은 이미 비어 있다.
+- [x] **DuckDNS 이름 `b3-1`을 지웠다.** CNAME을 지운 뒤에 지웠다. 서버가 쓰던 DuckDNS 토큰 파일(`~/.config/wiki-rag/duckdns.env`)도 지웠다.
+  근거: 2026-10-28 DuckDNS 권한 서버 조회 `dig b3-1.duckdns.org @ns1.duckdns.org` 결과 `NXDOMAIN`
 - [x] **과금 위험을 확인했다.** 결제 화면 스크린샷(명세의 선택 항목)은 찍지 않았다. 결제 화면은 루트 계정이나 결제 권한을 받은 IAM 사용자만 볼 수 있는데, 과제 명세가 루트 계정 사용을 금지하고 배포 사용자는 최소 권한이라 결제 권한이 없다. 대신 위 잔여 자원 점검의 과금 기준 항목이 모두 0인 것을 확인했고, 뜻밖의 비용은 예산 경보 `wiki-rag-monthly`가 알린다.
 
 ## 참고
