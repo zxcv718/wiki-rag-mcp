@@ -11,7 +11,7 @@
 | 아키텍처 다이어그램 1장 | [docs/architecture.png](docs/architecture.png) | VPC, Public Subnet, Internet Gateway, EC2, Security Group과 외부 요청 흐름 |
 | 외부 접속 증빙 | **방식 B**: `GET http://<퍼블릭 IP>/health` | `200 OK`, 고정 본문 `OK`. [스크린샷](docs/evidence/terminal-external-access.png), [원본 출력](docs/evidence/external-access.txt) |
 | 트러블슈팅 보고서 | [docs/troubleshooting.md](docs/troubleshooting.md) | 실제 문제 4건의 증상 → 가설 → 검증 → 조치 → 결과 → 재발 방지 |
-| 리소스 정리 체크리스트 | [docs/cleanup-checklist.md](docs/cleanup-checklist.md) | EC2·EBS·Elastic IP·IGW·VPC의 삭제 순서와 실행 기록 |
+| 리소스 정리 체크리스트 | [docs/cleanup-checklist.md](docs/cleanup-checklist.md) | EC2·EBS·Elastic IP·IGW·VPC를 포함한 정리 항목별 체크와 근거 |
 
 리소스 정리는 **2026-10-28**에 했습니다. Terraform 자원 13개를 모두 지우고 잔여 자원 점검이 모두 0인 것을 확인한 뒤, 같은 코드로 다시 만들었습니다. 접속 스크린샷은 정리 전 서버의 **2026-09-28 기록**입니다.
 
@@ -84,7 +84,7 @@ curl -I https://example.com            # 인터넷 아웃바운드 연결 확인
 | VPC / Public Subnet | `10.0.0.0/16` / `10.0.1.0/24` | [Terraform](infra/main.tf) |
 | IGW / Route Table | VPC에 IGW 연결, 서브넷에 기본 경로 연결 | [Terraform](infra/main.tf) |
 | EC2 / EBS | `m7i-flex.large`, Ubuntu 24.04 LTS, gp3 20GiB, 종료 시 볼륨 삭제 | [Terraform](infra/main.tf), [변수](infra/variables.tf) |
-| 공인 IP | Elastic IP 1개, 삭제 때 반납 | [출력 정의](infra/outputs.tf), [정리 기록](docs/cleanup-checklist.md#정리-실행-기록) |
+| 공인 IP | Elastic IP 1개, 삭제 때 반납 | [출력 정의](infra/outputs.tf), [정리 기록](docs/cleanup-checklist.md#체크리스트-2026-10-28-정리) |
 | 서버 부팅·배포 | 첫 부팅에 Docker 설치, 배포 스크립트가 저장소를 받아 Compose로 실행 | [cloud-init](infra/cloud-init.yaml), [배포 스크립트](deploy/push.sh) |
 
 과제의 권장 사양(micro, 8~10GiB) 대신, 로컬 임베딩 모델 두 프로세스와 DB·위키 서비스를 위해 8GiB 메모리와 20GiB 디스크를 사용합니다. 선택 근거와 측정은 [ADR-23](docs/adr/ADR-23.md), 디스크 문제와 조치는 [트러블슈팅 3절](docs/troubleshooting.md#3-같은-커밋을-다시-배포하다-디스크가-가득-참-m5)에 있습니다.
@@ -126,7 +126,7 @@ Security Group은 **어느 IP가 EC2의 어느 포트에 접속할 수 있는지
 
 - **삭제 증빙**: 2026-10-28 19:52, Terraform 자원 13개 삭제, EC2·EBS·Elastic IP·IGW·VPC를 포함한 점검 모두 0. [삭제 계획](docs/evidence/prod-plan-destroy.txt), [삭제 출력](docs/evidence/prod-destroy.txt), [잔여 자원 점검](docs/evidence/prod-leftovers.txt), [콘솔의 종료된 인스턴스](docs/evidence/prod-ec2-terminated.png).
 - **다시 만들기**: 정리 직후 같은 코드로 다시 만들고 DNS 값을 새 IP로 고쳤습니다. 절차는 [체크리스트의 다시 만들기 절](docs/cleanup-checklist.md#운영-스택-다시-만들기-삭제-뒤)에 있습니다.
-- **비용 확인**: 프리 티어 범위는 과제 제약이며, micro 사양만으로 비용 조건을 증명할 수 없습니다. 계정의 적용 범위·사용량과 정리 후 Billing 확인이 필요합니다. 현재 제출물에는 Billing 화면 증빙이 없습니다.
+- **비용 확인**: 결제 화면 스크린샷(명세의 선택 항목)은 넣지 않았습니다. 결제 화면은 루트 계정이나 결제 권한을 받은 사용자만 볼 수 있는데, 명세가 루트 계정 사용을 금지하고 배포 사용자에게는 결제 권한을 주지 않았기 때문입니다. 과금 위험은 잔여 자원 점검으로 확인하고, 뜻밖의 비용은 예산 경보로 받습니다.
 
 ## 관련 코드와 문서
 
