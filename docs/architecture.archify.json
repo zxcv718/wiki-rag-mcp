@@ -2,23 +2,106 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "wiki-rag-mcp AWS 배포 아키텍처",
-    "output": "architecture.html",
-    "quality_profile": "showcase"
+    "title": "wiki-rag-mcp AWS 네트워크 배포 구조",
+    "locale": "ko",
+    "output": "docs/architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zxcv718/wiki-rag-mcp.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "ee642df1416f7a8483884cc16b8bcbcc6d722bcb"
+    }
   },
   "components": [
     {
       "id": "dns",
       "type": "external",
-      "label": "가비아 DNS",
+      "label": "DNS",
       "sublabel": "mcp.dmssh.store A 레코드",
       "pos": [
         40,
-        100
+        40
       ],
       "size": [
-        170,
-        64
+        180,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 67,
+          "end_line": 74,
+          "label": "Elastic IP를 가리키는 A 레코드"
+        },
+        {
+          "path": "docs/evidence/external-access.txt",
+          "line": 3,
+          "end_line": 20,
+          "label": "공인 IP와 도메인 접속 확인"
+        }
+      ]
+    },
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "운영자",
+      "sublabel": "지정 IP /32",
+      "pos": [
+        340,
+        40
+      ],
+      "size": [
+        160,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/variables.tf",
+          "line": 19,
+          "end_line": 26,
+          "label": "운영자 SSH CIDR 입력"
+        },
+        {
+          "path": "infra/main.tf",
+          "line": 117,
+          "end_line": 124,
+          "label": "운영자만 TCP 22 허용"
+        },
+        {
+          "path": "docs/evidence/server-checks.txt",
+          "line": 1,
+          "end_line": 5,
+          "label": "SSH 접속 후 서버 확인"
+        }
+      ]
+    },
+    {
+      "id": "le",
+      "type": "external",
+      "label": "Let's Encrypt",
+      "sublabel": "인증서 발급 기관",
+      "pos": [
+        1010,
+        40
+      ],
+      "size": [
+        160,
+        72
+      ],
+      "sources": [
+        {
+          "path": "deploy/Caddyfile",
+          "line": 1,
+          "end_line": 8,
+          "label": "Caddy의 자동 HTTPS"
+        },
+        {
+          "path": "docs/evidence/https-certificate.txt",
+          "line": 3,
+          "end_line": 10,
+          "label": "발급 기관과 인증서 검증"
+        }
       ]
     },
     {
@@ -28,128 +111,244 @@
       "sublabel": "브라우저 · MCP 클라이언트",
       "pos": [
         40,
-        250
+        300
       ],
       "size": [
-        170,
-        64
-      ]
-    },
-    {
-      "id": "operator",
-      "type": "external",
-      "label": "운영자",
-      "sublabel": "지정 IP /32에서만",
-      "pos": [
-        40,
-        400
+        180,
+        72
       ],
-      "size": [
-        170,
-        64
+      "sources": [
+        {
+          "path": "docs/evidence/external-access.txt",
+          "line": 3,
+          "end_line": 20,
+          "label": "외부 HTTP·HTTPS 접속"
+        },
+        {
+          "path": "deploy/Caddyfile",
+          "line": 4,
+          "end_line": 13,
+          "label": "MCP 엔드포인트와 소개 페이지"
+        }
       ]
     },
     {
       "id": "igw",
       "type": "cloud",
       "label": "인터넷 게이트웨이",
-      "sublabel": "VPC에 연결",
+      "sublabel": "VPC에 연결된 IGW",
       "pos": [
-        360,
-        250
+        340,
+        300
       ],
       "size": [
-        170,
-        64
+        160,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 49,
+          "end_line": 65,
+          "label": "VPC와 인터넷 게이트웨이"
+        },
+        {
+          "path": "infra/main.tf",
+          "line": 77,
+          "end_line": 88,
+          "label": "IGW를 가리키는 기본 경로"
+        },
+        {
+          "path": "infra/variables.tf",
+          "line": 1,
+          "end_line": 10,
+          "label": "서울 리전과 가용 영역"
+        }
       ]
     },
     {
-      "id": "rt",
-      "type": "cloud",
-      "label": "퍼블릭 라우팅 테이블",
-      "sublabel": "0.0.0.0/0 대상 IGW",
-      "pos": [
-        360,
-        400
-      ],
-      "size": [
-        170,
-        64
-      ]
-    },
-    {
-      "id": "ec2",
-      "type": "backend",
-      "label": "EC2 m7i-flex.large",
+      "id": "eni",
+      "type": "security",
+      "label": "EC2 ENI · 보안 그룹",
       "sublabel": "Elastic IP 52.78.251.4",
-      "tag": "IMDSv2",
+      "tag": "80·443 공개 / 22 지정 IP",
       "pos": [
-        640,
-        250
+        730,
+        300
       ],
       "size": [
-        190,
-        64
+        180,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 91,
+          "end_line": 144,
+          "label": "보안 그룹 규칙과 EC2 연결"
+        },
+        {
+          "path": "infra/main.tf",
+          "line": 183,
+          "end_line": 189,
+          "label": "EC2의 Elastic IP 연결"
+        },
+        {
+          "path": "docs/evidence/server-checks.txt",
+          "line": 1,
+          "end_line": 5,
+          "label": "운영 공인 IP와 열린 포트"
+        }
       ]
     },
     {
       "id": "caddy",
       "type": "frontend",
       "label": "Caddy 컨테이너",
-      "sublabel": "HTTPS · /health OK",
+      "sublabel": "Docker · HTTP/HTTPS",
       "pos": [
-        940,
-        250
+        1010,
+        300
       ],
       "size": [
-        170,
-        64
+        160,
+        72
+      ],
+      "sources": [
+        {
+          "path": "deploy/compose.yaml",
+          "line": 32,
+          "end_line": 47,
+          "label": "컨테이너와 80·443 포트 매핑"
+        },
+        {
+          "path": "deploy/Caddyfile",
+          "line": 1,
+          "end_line": 13,
+          "label": "HTTPS 응답과 MCP 프록시"
+        },
+        {
+          "path": "docs/evidence/server-checks.txt",
+          "line": 3,
+          "end_line": 11,
+          "label": "컨테이너와 health 응답 확인"
+        }
       ]
     },
     {
-      "id": "le",
-      "type": "external",
-      "label": "Let's Encrypt",
-      "sublabel": "인증서 발급·갱신",
+      "id": "rt",
+      "type": "cloud",
+      "label": "라우팅 테이블",
+      "sublabel": "0.0.0.0/0 → IGW",
+      "tag": "설정 규칙표",
       "pos": [
-        940,
-        100
+        300,
+        600
       ],
       "size": [
-        170,
-        64
+        150,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 76,
+          "end_line": 89,
+          "label": "기본 경로와 서브넷 연결"
+        }
+      ]
+    },
+    {
+      "id": "subnet-routing",
+      "type": "cloud",
+      "label": "서브넷 라우팅 연결",
+      "sublabel": "논리적 설정 관계",
+      "pos": [
+        550,
+        600
+      ],
+      "size": [
+        140,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 68,
+          "end_line": 89,
+          "label": "퍼블릭 서브넷의 테이블 연결"
+        }
+      ]
+    },
+    {
+      "id": "sshd",
+      "type": "backend",
+      "label": "sshd :22",
+      "sublabel": "EC2 호스트 SSH 접속",
+      "pos": [
+        1010,
+        600
+      ],
+      "size": [
+        160,
+        72
+      ],
+      "sources": [
+        {
+          "path": "infra/main.tf",
+          "line": 117,
+          "end_line": 159,
+          "label": "SSH 허용과 EC2 호스트 설정"
+        },
+        {
+          "path": "infra/variables.tf",
+          "line": 35,
+          "end_line": 38,
+          "label": "운영 EC2 인스턴스 유형"
+        },
+        {
+          "path": "docs/evidence/server-checks.txt",
+          "line": 1,
+          "end_line": 5,
+          "label": "운영 호스트 SSH 접속 기록"
+        }
       ]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "VPC 10.0.0.0/16 · 서울 리전",
+      "label": "AWS 서울 · VPC 10.0.0.0/16",
       "wraps": [
         "igw",
         "rt",
-        "ec2",
-        "caddy"
+        "subnet-routing",
+        "eni",
+        "caddy",
+        "sshd"
       ],
-      "pad": 56
+      "pad": 60
     },
     {
       "kind": "region",
       "label": "퍼블릭 서브넷 10.0.1.0/24",
       "wraps": [
-        "ec2",
-        "caddy"
+        "subnet-routing",
+        "eni",
+        "caddy",
+        "sshd"
       ],
-      "pad": 24
+      "pad": 38
     },
     {
-      "kind": "security-group",
-      "label": "보안 그룹: 80·443 전체, 22 운영자 IP만",
+      "kind": "region",
+      "label": "EC2 m7i-flex.large · Docker 실행 호스트",
       "wraps": [
-        "ec2",
-        "caddy"
+        "eni",
+        "caddy",
+        "sshd"
       ],
-      "pad": 12
+      "pad": 18
     }
   ],
   "connections": [
@@ -158,39 +357,14 @@
       "from": "user",
       "to": "dns",
       "label": "DNS 조회",
-      "variant": "dashed",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "variant": "default"
     },
     {
       "id": "user-igw",
       "from": "user",
       "to": "igw",
-      "label": "HTTP 80 · HTTPS 443",
+      "label": "HTTP · HTTPS",
       "variant": "emphasis"
-    },
-    {
-      "id": "igw-ec2",
-      "from": "igw",
-      "to": "ec2",
-      "label": "보안 그룹 통과",
-      "variant": "emphasis"
-    },
-    {
-      "id": "ec2-caddy",
-      "from": "ec2",
-      "to": "caddy",
-      "label": "포트 매핑 80·443",
-      "variant": "emphasis"
-    },
-    {
-      "id": "caddy-le",
-      "from": "caddy",
-      "to": "le",
-      "label": "ACME HTTP-01",
-      "variant": "dashed",
-      "fromSide": "top",
-      "toSide": "bottom"
     },
     {
       "id": "operator-igw",
@@ -200,38 +374,72 @@
       "variant": "security"
     },
     {
+      "id": "igw-eni",
+      "from": "igw",
+      "to": "eni",
+      "label": "공인 IP로 전달",
+      "variant": "emphasis"
+    },
+    {
+      "id": "eni-caddy",
+      "from": "eni",
+      "to": "caddy",
+      "label": "80·443 매핑",
+      "variant": "emphasis"
+    },
+    {
+      "id": "eni-sshd",
+      "from": "eni",
+      "to": "sshd",
+      "label": "SSH 22 허용",
+      "variant": "security"
+    },
+    {
+      "id": "caddy-le",
+      "from": "caddy",
+      "to": "le",
+      "label": "ACME 인증서 발급·갱신",
+      "variant": "default"
+    },
+    {
+      "id": "subnet-rt",
+      "from": "subnet-routing",
+      "to": "rt",
+      "label": "연결",
+      "variant": "dashed"
+    },
+    {
       "id": "rt-igw",
       "from": "rt",
       "to": "igw",
-      "label": "기본 경로",
-      "variant": "dashed",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "label": "기본 경로 대상",
+      "variant": "dashed"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "들어오는 길",
+      "title": "패킷 경로",
       "items": [
-        "DNS가 도메인을 Elastic IP로 알려 주고, 요청은 게이트웨이와 보안 그룹을 지나 Caddy에 닿는다",
-        "/health는 200과 OK를 돌려준다"
+        "웹 요청은 IGW와 EC2 ENI를 거쳐 EC2 안의 Caddy 컨테이너에 닿는다.",
+        "운영자 SSH도 IGW와 같은 ENI를 거쳐 EC2 호스트의 sshd:22까지 이어진다."
       ]
     },
     {
       "dot": "rose",
-      "title": "보안",
+      "title": "보안 그룹은 ENI의 규칙",
       "items": [
-        "인바운드는 80·443 전체와 22 운영자 IP뿐, 메타데이터는 IMDSv2만",
-        "Terraform은 최소 권한 IAM 사용자 wiki-rag-deployer로 실행"
+        "TCP 80·443은 0.0.0.0/0, TCP 22는 운영자 IP /32에 허용한다.",
+        "보안 그룹은 EC2 ENI에 적용되며, 별도 중계 장비를 뜻하지 않는다."
       ]
     },
     {
       "dot": "emerald",
-      "title": "정리",
+      "title": "설정 관계와 그림 범위",
       "items": [
-        "모든 자원에 project=wiki-rag-mcp 태그",
-        "terraform destroy로 한 번에 지운다"
+        "점선은 서브넷과 라우팅 테이블의 연결, 기본 경로의 IGW 대상을 나타내는 설정 관계다.",
+        "서브넷 라우팅 연결은 논리적 표시이고, 라우팅 테이블은 패킷이 통과하는 장비가 아니다.",
+        "이 그림은 AWS 네트워크 진입 구조를 다룬다. RAG 서비스 전체는 system-architecture.png에 있다."
       ]
     }
   ]
